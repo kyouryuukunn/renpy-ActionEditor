@@ -195,7 +195,7 @@ init -1600 python:
                             g = 1.
 
                         z = g*(goal[0]-start[0])+start[0]
-                        layer_z = get_layer_z(layer_check_points2, st, layer_loop)
+                        layer_z = get_at_time(layer_check_points2, st, layer_loop)
                         distance = float(layer_z - z)
                         if distance == 0:
                             distance = .1
@@ -215,7 +215,7 @@ init -1600 python:
                 else:
                     goal = camera_check_points2[-1]
                     z = goal[0]
-                    layer_z = get_layer_z(layer_check_points2, st, layer_loop)
+                    layer_z = get_at_time(layer_check_points2, st, layer_loop)
                     distance = float(layer_z - z)
                     if distance == 0:
                         distance = .1
@@ -268,7 +268,7 @@ init -1600 python:
                     g = 1.
 
                 z = g*(goal[0]-start[0])+start[0]
-                layer_z = get_layer_z(layer_check_points, st, layer_loop)
+                layer_z = get_at_time(layer_check_points, st, layer_loop)
                 distance = float(layer_z - z)
                 if distance == 0:
                     distance = .1
@@ -287,7 +287,7 @@ init -1600 python:
                 break
         else:
             goal = camera_check_points[-1]
-            layer_z = get_layer_z(layer_check_points, st, layer_loop)
+            layer_z = get_at_time(layer_check_points, st, layer_loop)
             distance = float(layer_z - goal[0])
             if distance == 0:
                 distance = .1
@@ -302,7 +302,8 @@ init -1600 python:
             # get_camera_coordinate(tran, goal[0], layer, layer_z)
         return .005
 
-    def get_layer_z(check_points, time, loop):
+    def get_at_time(check_points, time, loop):
+        # check_points = ((value, time, warper)...)
         if loop and check_points[-1][1]:
             time %= check_points[-1][1]
 
@@ -386,11 +387,13 @@ screen _action_editor(tab="images", layer="master", tag="", time=0):
                         if p not in _viewers.transform_viewer.force_float and ((state[tag][p] is None and isinstance(d, int)) or isinstance(state[tag][p], int)):
                             hbox:
                                 textbutton "[p]" action Function(_viewers.transform_viewer.put_prop_clipboard, p, prop)
+                                textbutton _("loop") action ToggleDict(_viewers.loops, tag+"_"+layer+"_"+p+"_loop")
                                 textbutton "[prop]" action Function(_viewers.transform_viewer.edit_value, f, True, default=prop)
                                 bar adjustment ui.adjustment(range=_viewers.transform_viewer.int_range*2, value=prop+_viewers.transform_viewer.int_range, page=1, changed=f) xalign 1.
                         else:
                             hbox:
                                 textbutton "[p]" action Function(_viewers.transform_viewer.put_prop_clipboard, p, prop)
+                                textbutton _("loop") action ToggleDict(_viewers.loops, tag+"_"+layer+"_"+p+"_loop")
                                 textbutton "[prop]" action Function(_viewers.transform_viewer.edit_value, f, False, default=prop)
                                 bar adjustment ui.adjustment(range=_viewers.transform_viewer.float_range*2, value=prop+_viewers.transform_viewer.float_range, page=.05, changed=f) xalign 1.
             elif tab == "3D Camera" or tab == "2D Camera":
@@ -643,114 +646,122 @@ init -1600 python in _viewers:
                 self.state[layer] = {}
             renpy.restart_interaction()
 
-        def set_anchor_point(self, layer, tag, kwargs):
+        def set_anchor_point(self, layer, tag, prop, value):
 
-            anchor_points = all_anchor_points.get((tag, layer), [])
+            anchor_points = all_anchor_points.get((tag, layer, prop), [])
             if anchor_points:
-                for i, (t, c, w) in enumerate(anchor_points):
+                for i, (t, c) in enumerate(anchor_points):
                     if time < t:
-                        anchor_points.insert(i, (time, kwargs, warper))
+                        anchor_points.insert(i, (time, (value, time, warper)))
                         break
                     elif time == t:
-                        anchor_points[i] = (time, kwargs, warper)
+                        anchor_points[i] = (time, (value, time, warper))
                         break
                 else:
-                    anchor_points.append((time, kwargs, warper))
+                    anchor_points.append((time, (value, time, warper)))
             else:
                 if time == 0:
-                    all_anchor_points[(tag, layer)] = [(time, kwargs, warper)]
+                    all_anchor_points[(tag, layer, prop)] = [(time, (value, time, warper))]
                 else:
-                    kwargs_org = {k: v for dic in [self.state_org[layer], self.state[layer]] for k, v in dic.items()}[tag]
-                    all_anchor_points[(tag, layer)] = [(0, kwargs_org, warper), (time, kwargs, warper)]
+                    org = {k: v for dic in [self.state_org[layer], self.state[layer]] for k, v in dic.items()}[tag][prop]
+                    all_anchor_points[(tag, layer, prop)] = [(0, (org, 0, None)), (time, (value, time, warper))]
             sort_anchor_points()
 
         def play(self, play):
             for layer in renpy.config.layers:
                 for tag in {k: v for dic in [self.state_org[layer], self.state[layer]] for k, v in dic.items()}:
-                    if (tag, layer) in all_anchor_points:
-                        check_points=all_anchor_points[(tag, layer)]
-                        if play:
-                            renpy.show(tag, [renpy.store.Transform(function=renpy.curry(self.transform)(check_points=check_points, loop=loops[layer+"_"+tag+"_loop"]))], layer=layer)
-                        else:
-                            kwargs = {}
-                            # check_points = [(time, kwargs, warper)..]
-                            kwargs.subpixel = True
-                            st = time
-                            if loops[layer+"_"+tag+"_loop"]:
-                                st %= check_points[-1][0]
+                    check_points = []
+                    for prop, d in self.props:
+                        if (tag, layer, prop) in all_anchor_points:
+                            check_points.append((prop, [ c for t, c in all_anchor_points[(tag, layer, prop)] ]))
+                    loop = {prop+"_loop": loops[tag+"_"+layer+"_"+prop+"_loop"] for prop, d in self.props}
+                    if play:
+                        renpy.show(tag, [renpy.store.Transform(function=renpy.curry(self.transform)(check_points=check_points, loop=loop))], layer=layer)
+                    else:
+                        # check_points = ((prop, ( (value, time, warper).. ))...)
+                        kwargs = {}
+                        kwargs.subpixel = True
+                        kwargs.transform_anchor = True
+                        st = time
 
-                            if st < check_points[-1][0]:
-                                for i in xrange(1, len(check_points)):
-                                    checkpoint = check_points[i][0]
-                                    pre_checkpoint = check_points[i-1][0]
-                                    if st <= checkpoint:
-                                        start = check_points[i-1][1]
-                                        goal = check_points[i][1]
-                                        if checkpoint != pre_checkpoint:
-                                            g = renpy.atl.warpers[check_points[i][2]]((st - pre_checkpoint) / float(checkpoint - pre_checkpoint))
+                        for p, cs in check_points:
+                            if loop[p+"_loop"] and cs[-1][1]:
+                                st %= cs[-1][1]
+
+                            for i in xrange(1, len(cs)):
+                                checkpoint = cs[i][1]
+                                pre_checkpoint = cs[i-1][1]
+                                if st < checkpoint:
+                                    start = cs[i-1]
+                                    goal = cs[i]
+                                    if checkpoint != pre_checkpoint:
+                                        g = renpy.atl.warpers[goal[2]]((st - pre_checkpoint) / float(checkpoint - pre_checkpoint))
+                                    else:
+                                        g = 1.
+                                    for p2, d in self.props:
+                                        if p2 == p:
+                                            default = d
+                                    if goal[0] is not None:
+                                        if isinstance(goal[0], int) and p not in self.force_float:
+                                            if start[0] is None:
+                                                v = g*(goal[0]-default)+default
+                                            else:
+                                                v = g*(goal[0]-start[0])+start[0]
+                                            v = int(v)
                                         else:
-                                            g = 1.
-                                        for p, d in self.props:
-                                            if goal[p] is not None:
-                                                if isinstance(goal[p], int) and p not in self.force_float:
-                                                    if start[p] is None:
-                                                        v = g*(goal[p]-d)+d
-                                                    else:
-                                                        v = g*(goal[p]-start[p])+start[p]
-                                                    v = int(v)
-                                                else:
-                                                    if start[p] is None:
-                                                        v = g*(goal[p]-d)+d
-                                                    else:
-                                                        v = g*(goal[p]-start[p])+start[p]
-                                                    v = round(v, 2)
-                                                kwargs[p] = v
-                                        renpy.show(tag, [renpy.store.Transform(**kwargs)], layer=layer)
-                                        break
+                                            if start[0] is None:
+                                                v = g*(goal[0]-default)+default
+                                            else:
+                                                v = g*(goal[0]-start[0])+start[0]
+                                            v = round(v, 2)
+                                        kwargs[p] = v
+                                    break
                             else:
+                                kwargs[p] = cs[-1][0]
 
-                                for k, v in check_points[-1][1].iteritems():
-                                    if isinstance(v, float):
-                                        v = round(v, 2)
-                                    kwargs[k] = v
-                                renpy.show(tag, [renpy.store.Transform(**kwargs)], layer=layer)
+                        renpy.show(tag, [renpy.store.Transform(**kwargs)], layer=layer)
 
-        def transform(self, tran, st, at, check_points, subpixel=True, loop=False):
-            # check_points = [(time, kwargs, warper)..]
+        def transform(self, tran, st, at, check_points, loop, subpixel=True):
+            # check_points = ((prop, [ (value, time, warper).. ])...)
             tran.subpixel = subpixel
-            if loop:
-                st %= check_points[-1][0]
+            tran.anchor_points = True
 
-            if st < check_points[-1][0]:
-                for i in xrange(1, len(check_points)):
-                    checkpoint = check_points[i][0]
-                    pre_checkpoint = check_points[i-1][0]
-                    if st <= checkpoint:
-                        start = check_points[i-1][1]
-                        goal = check_points[i][1]
+            for p, cs in check_points:
+                if loop[p+"_loop"] and cs[-1][1]:
+                    st %= cs[-1][1]
+
+                for i in xrange(1, len(cs)):
+                    checkpoint = cs[i][1]
+                    pre_checkpoint = cs[i-1][1]
+                    if st < checkpoint:
+                        start = cs[i-1]
+                        goal = cs[i]
                         if checkpoint != pre_checkpoint:
-                            g = renpy.atl.warpers[check_points[i][2]]((st - pre_checkpoint) / float(checkpoint - pre_checkpoint))
+                            g = renpy.atl.warpers[goal[2]]((st - pre_checkpoint) / float(checkpoint - pre_checkpoint))
                         else:
                             g = 1.
-                        for p, d in self.props:
-                            if goal[p] is not None:
-                                if isinstance(goal[p], int) and p not in self.force_float:
-                                    if start[p] is None:
-                                        v = g*(goal[p]-d)+d
-                                    else:
-                                        v = g*(goal[p]-start[p])+start[p]
-                                    v = int(v)
+                        for p2, d in self.props:
+                            if p2 == p:
+                                default = d
+                        if goal[0] is not None:
+                            if isinstance(goal[0], int) and p not in self.force_float:
+                                if start[0] is None:
+                                    v = g*(goal[0]-default)+default
                                 else:
-                                    if start[p] is None:
-                                        v = g*(goal[p]-d)+d
-                                    else:
-                                        v = g*(goal[p]-start[p])+start[p]
-                                setattr(tran, p, v)
+                                    v = g*(goal[0]-start[0])+start[0]
+                                v = int(v)
+                            else:
+                                if start[0] is None:
+                                    v = g*(goal[0]-default)+default
+                                else:
+                                    v = g*(goal[0]-start[0])+start[0]
+                                v = round(v, 2)
+                            setattr(tran, p, v)
+                        break
+                else:
+                    setattr(tran, p, cs[-1][0])
+            return .02
 
-                        return .005
-            for k, v in check_points[-1][1].iteritems():
-                setattr(tran, k, v)
-            return None
 
         def generate_changed(self, layer, tag, prop):
             state={k: v for dic in [self.state_org[layer], self.state[layer]] for k, v in dic.items()}[tag][prop]
@@ -765,7 +776,7 @@ init -1600 python in _viewers:
                 else:
                     kwargs[prop] = round(v -self.float_range, 2)
 
-                self.set_anchor_point(layer, tag, kwargs)
+                self.set_anchor_point(layer, tag, prop, kwargs[prop])
                 renpy.show(tag, [renpy.store.Transform(**kwargs)], layer=layer)
                 renpy.restart_interaction()
             return changed
@@ -926,44 +937,44 @@ init -1600 python in _viewers:
         def set_camera_anchor_point(self):
             anchor_points = all_anchor_points.get("camera", [])
             if anchor_points:
-                for i, (t, c, w) in enumerate(anchor_points):
+                for i, (t, c) in enumerate(anchor_points):
                     if time < t:
-                        anchor_points.insert(i, (time, (renpy.store._camera_x, renpy.store._camera_y, renpy.store._camera_z, renpy.store._camera_rotate, time, warper), warper))
+                        anchor_points.insert(i, (time, (renpy.store._camera_x, renpy.store._camera_y, renpy.store._camera_z, renpy.store._camera_rotate, time, warper)))
                         break
                     elif time == t:
-                        anchor_points[i] = (time, (renpy.store._camera_x, renpy.store._camera_y, renpy.store._camera_z, renpy.store._camera_rotate, time, warper), warper)
+                        anchor_points[i] = (time, (renpy.store._camera_x, renpy.store._camera_y, renpy.store._camera_z, renpy.store._camera_rotate, time, warper))
                         break
                 else:
-                    anchor_points.append((time, (renpy.store._camera_x, renpy.store._camera_y, renpy.store._camera_z, renpy.store._camera_rotate, time, warper), warper))
+                    anchor_points.append((time, (renpy.store._camera_x, renpy.store._camera_y, renpy.store._camera_z, renpy.store._camera_rotate, time, warper)))
             else:
                 if time == 0:
-                    all_anchor_points["camera"] = [(time, (renpy.store._camera_x, renpy.store._camera_y, renpy.store._camera_z, renpy.store._camera_rotate, time, warper), warper)]
+                    all_anchor_points["camera"] = [(time, (renpy.store._camera_x, renpy.store._camera_y, renpy.store._camera_z, renpy.store._camera_rotate, time, warper))]
                 else:
-                    all_anchor_points["camera"] = [(0, (self._camera_x, self._camera_y, self._camera_z, self._camera_rotate, 0, None), None), (time, (renpy.store._camera_x, renpy.store._camera_y, renpy.store._camera_z, renpy.store._camera_rotate, time, warper), warper)]
+                    all_anchor_points["camera"] = [(0, (self._camera_x, self._camera_y, self._camera_z, self._camera_rotate, 0, None)), (time, (renpy.store._camera_x, renpy.store._camera_y, renpy.store._camera_z, renpy.store._camera_rotate, time, warper))]
             sort_anchor_points()
 
         def set_layer_anchor_point(self, layer):
             anchor_points = all_anchor_points.get("layer "+layer, [])
             if anchor_points:
-                for i, (t, c, w) in enumerate(anchor_points):
+                for i, (t, c) in enumerate(anchor_points):
                     if time < t:
-                        anchor_points.insert(i, (time, (renpy.store._3d_layers[layer], time, warper), warper))
+                        anchor_points.insert(i, (time, (renpy.store._3d_layers[layer], time, warper)))
                         break
                     elif time == t:
-                        anchor_points[i] = (time, (renpy.store._3d_layers[layer], time, warper), warper)
+                        anchor_points[i] = (time, (renpy.store._3d_layers[layer], time, warper))
                         break
                 else:
-                    anchor_points.append((time, (renpy.store._3d_layers[layer], time, warper), warper))
+                    anchor_points.append((time, (renpy.store._3d_layers[layer], time, warper)))
             else:
                 if time == 0:
-                    all_anchor_points["layer "+layer] = [(time, (renpy.store._3d_layers[layer], time, warper), warper)]
+                    all_anchor_points["layer "+layer] = [(time, (renpy.store._3d_layers[layer], time, warper))]
                 else:
-                    all_anchor_points["layer "+layer] = [(0, (self._3d_layers[layer], 0, None), None), (time, (renpy.store._3d_layers[layer], time, warper), warper)]
+                    all_anchor_points["layer "+layer] = [(0, (self._3d_layers[layer], 0, None)), (time, (renpy.store._3d_layers[layer], time, warper))]
             sort_anchor_points()
 
         def play(self, play):
             if "camera" in all_anchor_points:
-                camera_check_points = [c for t, c, w in all_anchor_points["camera"]]
+                camera_check_points = [c for t, c in all_anchor_points["camera"]]
             else:
                 camera_check_points = None
 
@@ -971,7 +982,7 @@ init -1600 python in _viewers:
             layer_loop = {}
             for layer in renpy.store._3d_layers:
                 if "layer "+layer in all_anchor_points:
-                    layer_check_points[layer]=[c for t, c, w in all_anchor_points["layer "+layer]]
+                    layer_check_points[layer]=[c for t, c in all_anchor_points["layer "+layer]]
                 layer_loop[layer+"_loop"] = loops[layer+"_loop"]
             layer_loop["loop"] = loops["camera_loop"]
             if camera_check_points or layer_check_points:
@@ -1104,7 +1115,7 @@ init -1600 python in _viewers:
         if time == 0 and len(sorted_anchor_points) > 1:
             return
 
-        remove_list=[(k, (t, c, w)) for k, v in all_anchor_points.items() for t, c, w in v if t == time]
+        remove_list=[(k, (t, c)) for k, v in all_anchor_points.items() for t, c in v if t == time]
         for k, a in remove_list:
             if len(all_anchor_points[k]) == 1:
                 del all_anchor_points[k]
@@ -1116,7 +1127,7 @@ init -1600 python in _viewers:
         global sorted_anchor_points
         sorted_anchor_points[:] = []
         for anchor_points in all_anchor_points.values():
-            for t, c, w in anchor_points:
+            for t, c in anchor_points:
                 if t not in sorted_anchor_points:
                     sorted_anchor_points.append(t)
         sorted_anchor_points.sort()
@@ -1162,7 +1173,7 @@ init -1600 python in _viewers:
 
     def put_clipboard():
         if "camera" in all_anchor_points:
-            camera_check_points = [c for t, c, w in all_anchor_points["camera"]]
+            camera_check_points = [c for t, c in all_anchor_points["camera"]]
             if len(camera_check_points) == 1 and camera_check_points[0][0:5] == (camera_viewer._camera_x, camera_viewer._camera_y, camera_viewer._camera_z, camera_viewer._camera_rotate, 0,):
                 camera_check_points=None
         else:
@@ -1172,7 +1183,7 @@ init -1600 python in _viewers:
         layer_loop = {}
         for layer in renpy.store._3d_layers:
             if "layer "+layer in all_anchor_points:
-                layer_check_points[layer]=[c for t, c, w in all_anchor_points["layer "+layer]]
+                layer_check_points[layer]=[c for t, c in all_anchor_points["layer "+layer]]
                 if len(layer_check_points[layer]) == 1 and layer_check_points[layer][0][0] == camera_viewer._3d_layers[layer]:
                     del layer_check_points[layer]
                 layer_loop[layer+"_loop"] = loops[layer+"_loop"]
