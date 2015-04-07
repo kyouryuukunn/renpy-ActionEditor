@@ -1,8 +1,10 @@
- 日本語マニュアルは224行目からです。
+ 日本語マニュアルはドキュメント後半にあります。
 
  This script adds Ren'Py GUI Action editor and 3D camera functions. Please
  copy camera.rpy and camera.png to your game directory.
-####################################################################################################
+
+ Ren'Py <http://www.renpy.org/>
+
  Action editor
 ================
 
@@ -22,7 +24,7 @@
   * Anchor points can be added to the time bar.
   * Each transform property of images, coordinates of the camera and layers or actions can be putted on clipboard.(v6.99 or later, only winows?)
 
-####################################################################################################
+
  Camera
 ================
 
@@ -40,7 +42,7 @@
          config.layers = ['master', 'background', 'middle', 'forward', 'transient', 'screens', 'overlay']
 
  Second, register layers which participate to a 3D motion as 3d layers by
- :func:`register_3d_layer`. Z coordinates of these layers can be moved and
+ :func:`register_3d_layer`. The z coordinates of these layers can be moved and
  applied transforms to by positions of the camera and 3D layers. If anything
  isn't registered as 3D layers, this script registers 'master' layer as 3D
  layer.::
@@ -83,9 +85,7 @@
 
  * By default, the scene, hide statements use master or the given layer
    only. If you use 3D layers preferentially, write code like below.::
- * camera_move, camera_moves, layer_move, layer_moves, all_moves はそれぞれ排
-   他的です。ひとつのインタラクション中に複数回呼び出されると、最後に呼び出され
-   たもののみが正常に動作し、それ以外は瞬間移動になります。
+ * camera_move, camera_moves, layer_move, layer_moves, all_moves はそれぞれ排他的です。ひとつのインタラクション中に複数回呼び出されると、最後に呼び出されたもののみが正常に動作し、それ以外は瞬間移動になります。
 
          init -1 python hide:
              def hide(name, layer='master'):
@@ -230,19 +230,16 @@
               If keyword arguments 'layer name'_loop is given, the layer motion is repeats.
              """
 
-####################################################################################################
 
 
 
- このスクリプトはRen'PyにGUIの演出エディターとカメラ機能を追加します。
- camera.rpyとcamera.pngをgameフォルダにコピーしてください。
-####################################################################################################
+
+ このスクリプトはRen'PyにGUIの演出エディターとカメラ機能を追加します。camera.rpyとcamera.pngをgameフォルダにコピーしてください。
+
  演出エディター
 ================
 
- GUIを利用して画像の変換プロパティーやカメラ、レイヤーの座標調整、時間軸にそっ
- た演出作成を可能にします。設定した値からスクリプトを自動生成し、クリップボー
- ドに送ります。
+ GUIを利用して画像の変換プロパティーやカメラ、レイヤーの座標調整、時間軸にそった演出作成を可能にします。設定した値からスクリプトを自動生成し、クリップボードに送ります。
 
  config.developer が True なら、Shift+Pで演出エディターが起動します。
  
@@ -253,19 +250,13 @@
  * マウスのホイールからカメラのz座標を変更出来ます。
  * 各パラメーターをキーボードから入力出来ます。
  * アンカーポイントを設定して時間軸にそった演出が作れます。
- * 画像の変換プロパティーやカメラ、レイヤーの座標、時間軸にそった演出をそれぞ
-   れクリップボードに送れます。(v6.99以上, Windows限定? Macで動作するかは判りま
+ * 画像の変換プロパティーやカメラ、レイヤーの座標、時間軸にそった演出をそれぞれクリップボードに送れます。(v6.99以上, Windows限定? Macで動作するかは判りま
    せん。)
-####################################################################################################
+
  カメラ
 ================
 
- 三次元を再現する関数をRen'Py に追加します。これらは3Dレイヤーに登録された
- 各レイヤーにz座標を与え、カメラとの位置関係により拡大縮小移動させて三次元をシ
- ミュレートします。これにより奥行きの表現が簡単に可能になるでしょう。この機能
- を利用するには、先ず3Dレイヤーに登録するレイヤーを追加しなければなりません。
- 3Dレイヤーに何も登録されていない場合、"master"レイヤーのみを3Dレイヤーに登録
- します。
+ 三次元を再現する関数をRen'Py に追加します。これらは3Dレイヤーに登録された各レイヤーにz座標を与え、カメラとの位置関係により拡大縮小移動させて三次元をシミュレートします。これにより奥行きの表現が簡単に可能になるでしょう。この機能を利用するには、先ず3Dレイヤーに登録するレイヤーを追加しなければなりません。3Dレイヤーに何も登録されていない場合、"master"レイヤーのみを3Dレイヤーに登録します。
 
  例
 
@@ -273,9 +264,7 @@
 
                 config.layers = [ 'master', 'background', 'middle', 'forward', 'transient', 'screens', 'overlay']
 
- 次に register_3d_layer 関数で3Dレイヤーを登録します。これらのレイヤーはz座標
- を移動出来、カメラの影響を受けます。register_3d_layerが使用されないと、デフォ
- ルトで"master"レイヤーが登録されます。
+ 次に register_3d_layer 関数で3Dレイヤーを登録します。これらのレイヤーはz座標を移動出来、カメラの影響を受けます。register_3d_layerが使用されないと、デフォルトで"master"レイヤーが登録されます。
 
         init python:
             register_3d_layer( 'background', 'middle', 'forward',)
@@ -308,17 +297,11 @@
 
  カメラ機能にはいくつかの制限があることに注意してください。
 
- * カメラモーションは3Dレイヤーに対して変換を適用して再現しているため、3レイ
-   ヤーに対して show layer ステートメントや renpy.show_layer_at 関数は使用出来ま
-   せん。
+ * カメラモーションは3Dレイヤーに対して変換を適用して再現しているため、3レイヤーに対して show layer ステートメントや renpy.show_layer_at 関数は使用出来ません。
  * レイヤーの重なり順はレイヤーのz座標を反映しません。
- * camera_move, camera_moves, layer_move, layer_moves, all_moves はそれぞれ排
-   他的です。ひとつのインタラクション中に複数回呼び出されると、最後に呼び出され
-   たもののみが正常に動作し、それ以外は瞬間移動になります。
+ * camera_move, camera_moves, layer_move, layer_moves, all_moves はそれぞれ排他的です。ひとつのインタラクション中に複数回呼び出されると、最後に呼び出されたもののみが正常に動作し、それ以外は瞬間移動になります。
 
- デフォルトではRen'Pyの scene, show, hide ステートメントは master レイヤー又は
- 指定されたレイヤーにのみ作用します。3Dレイヤーに対して優先的に作用させたい場
- 合は以下のようにしてRen'Pyの設定を変更してください。
+ デフォルトではRen'Pyの scene, show, hide ステートメントは master レイヤー又は指定されたレイヤーにのみ作用します。3Dレイヤーに対して優先的に作用させたい場合は以下のようにしてRen'Pyの設定を変更してください。
 
         init -1 python hide:
 
