@@ -1,3 +1,6 @@
+ youtube sample
+ <https://www.youtube.com/watch?v=XQDl9x9L-es>
+
  日本語マニュアルはドキュメント後半にあります。
 
  This script adds Ren'Py GUI Action editor and 3D camera functions. Please
