@@ -223,7 +223,8 @@
              `camera_check_points`
                   A tuple of tuples of x, y, z, rotate, duration, warper.
              `layer_check_points`
-                  This is the map. Its key is the string of a layer name to be moved, value is A tuple of tuples of z, duration, warper
+                  This is the map from the string of a layer name to tuple of
+                  tuples of z, duration, warper.
              `loop`
                   Default False, if True, this sequence of motions repeats.
              `subpixel`

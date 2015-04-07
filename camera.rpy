@@ -670,21 +670,21 @@ init -1600 python in _viewers:
         def play(self, play):
             for layer in renpy.config.layers:
                 for tag in {k: v for dic in [self.state_org[layer], self.state[layer]] for k, v in dic.items()}:
-                    check_points = []
+                    check_points = {}
                     for prop, d in self.props:
                         if (tag, layer, prop) in all_anchor_points:
-                            check_points.append((prop, [ c for t, c in all_anchor_points[(tag, layer, prop)] ]))
+                            check_points[prop] =  [ c for t, c in all_anchor_points[(tag, layer, prop)] ]
                     loop = {prop+"_loop": loops[tag+"_"+layer+"_"+prop+"_loop"] for prop, d in self.props}
                     if play:
                         renpy.show(tag, [renpy.store.Transform(function=renpy.curry(self.transform)(check_points=check_points, loop=loop))], layer=layer)
                     else:
-                        # check_points = ((prop, ( (value, time, warper).. ))...)
+                        # check_points = { prop: ( (value, time, warper).. ) }
                         kwargs = {}
                         kwargs.subpixel = True
                         kwargs.transform_anchor = True
                         st = time
 
-                        for p, cs in check_points:
+                        for p, cs in check_points.items():
                             if loop[p+"_loop"] and cs[-1][1]:
                                 st %= cs[-1][1]
 
@@ -722,11 +722,11 @@ init -1600 python in _viewers:
                         renpy.show(tag, [renpy.store.Transform(**kwargs)], layer=layer)
 
         def transform(self, tran, st, at, check_points, loop, subpixel=True):
-            # check_points = ((prop, [ (value, time, warper).. ])...)
+            # check_points = { prop: [ (value, time, warper).. ] }
             tran.subpixel = subpixel
             tran.anchor_points = True
 
-            for p, cs in check_points:
+            for p, cs in check_points.items():
                 if loop[p+"_loop"] and cs[-1][1]:
                     st %= cs[-1][1]
 
