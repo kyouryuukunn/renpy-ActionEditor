@@ -642,21 +642,22 @@ init -1600 python in _viewers:
                         # check_points = { prop: ( (value, time, warper).. ) }
                         kwargs = {}
                         kwargs.subpixel = True
-                        kwargs.transform_anchor = True
-                        st = time
+                        # kwargs.transform_anchor = True
+                        st = renpy.store._viewers.time
 
                         for p, cs in check_points.items():
+                            time = st
                             if loop[p+"_loop"] and cs[-1][1]:
-                                st %= cs[-1][1]
+                                time = time % cs[-1][1]
 
                             for i in xrange(1, len(cs)):
                                 checkpoint = cs[i][1]
                                 pre_checkpoint = cs[i-1][1]
-                                if st < checkpoint:
+                                if time < checkpoint:
                                     start = cs[i-1]
                                     goal = cs[i]
                                     if checkpoint != pre_checkpoint:
-                                        g = renpy.atl.warpers[goal[2]]((st - pre_checkpoint) / float(checkpoint - pre_checkpoint))
+                                        g = renpy.atl.warpers[goal[2]]((time - pre_checkpoint) / float(checkpoint - pre_checkpoint))
                                     else:
                                         g = 1.
                                     for p2, d in self.props:
@@ -674,7 +675,6 @@ init -1600 python in _viewers:
                                                 v = g*(goal[0]-default)+default
                                             else:
                                                 v = g*(goal[0]-start[0])+start[0]
-                                            v = round(v, 2)
                                         kwargs[p] = v
                                     break
                             else:
@@ -688,17 +688,18 @@ init -1600 python in _viewers:
             # tran.transform_anchor = True
 
             for p, cs in check_points.items():
+                time = st
                 if loop[p+"_loop"] and cs[-1][1]:
-                    st %= cs[-1][1]
+                    time = st % cs[-1][1]
 
                 for i in xrange(1, len(cs)):
                     checkpoint = cs[i][1]
                     pre_checkpoint = cs[i-1][1]
-                    if st < checkpoint:
+                    if time < checkpoint:
                         start = cs[i-1]
                         goal = cs[i]
                         if checkpoint != pre_checkpoint:
-                            g = renpy.atl.warpers[goal[2]]((st - pre_checkpoint) / float(checkpoint - pre_checkpoint))
+                            g = renpy.atl.warpers[goal[2]]((time - pre_checkpoint) / float(checkpoint - pre_checkpoint))
                         else:
                             g = 1.
                         for p2, d in self.props:
@@ -716,7 +717,6 @@ init -1600 python in _viewers:
                                     v = g*(goal[0]-default)+default
                                 else:
                                     v = g*(goal[0]-start[0])+start[0]
-                                v = round(v, 2)
                             setattr(tran, p, v)
                         break
                 else:
