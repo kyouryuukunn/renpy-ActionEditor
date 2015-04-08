@@ -189,7 +189,7 @@
              Move a camera through check points.
 
              `check_points`
-                  A tuple of tuples of x, y, z, rotate, duration, warper.
+                  A list of tuples of x, y, z, rotate, duration, warper.
              `loop`
                   Default False, if True, this sequence of motions repeats.
              `subpixel`
@@ -206,7 +206,7 @@
              `layer`
                   the string of a layer name to be moved
              `check_points`
-                  A tuple of tuples of z, duration, warper
+                  A list of tuples of z, duration, warper
              `loop`
                   Default False, if True, this sequence of motions repeats.
              `subpixel`
@@ -214,18 +214,34 @@
                   using subpixel positioning
              """
 
-        def all_moves(camera_check_points=None, layer_check_points={}, loop=False, subpixel=True, **kwargs):
+        def all_moves(camera_check_points=None, layer_check_points=None, subpixel=True, play=True, x_loop=False, y_loop=False, z_loop=False, rotate_loop=False, **kwargs):
             """
              :doc: camera
 
              Move the camera and layers through check points.
 
              `camera_check_points`
-                  A tuple of tuples of x, y, z, rotate, duration, warper.
+                  This is the map from the string of a camera parameter name to list of
+                  tuples of value, duration, warper.
+                  {
+                      'x':[(x, duration, warper)...],
+                      'y':[(y, duration, warper)...],
+                      'z':[(z, duration, warper)...],
+                      'rotate':[(rotate, duration, warper)...],
+                  }
              `layer_check_points`
-                  This is the map from the string of a layer name to tuple of
+                  This is the map from the string of a layer name to list of
                   tuples of z, duration, warper.
-             `loop`
+                  {
+                      'layer name':[(z, duration, warper)...]
+                  }
+             `loop_x`
+                  Default False, if True, this sequence of motions repeats.
+             `loop_y`
+                  Default False, if True, this sequence of motions repeats.
+             `loop_z`
+                  Default False, if True, this sequence of motions repeats.
+             `loop_rotate`
                   Default False, if True, this sequence of motions repeats.
              `subpixel`
                   Default True, if True, causes things to be drawn on the screen
@@ -384,10 +400,10 @@
               1つ以上のチェックポイントを通ってカメラを動かします。
 
               `check_points`
-                   カメラのx,y,z座標、傾き、カメラの移動開始からその位置に到達する
-                   までの秒数、その間の時間補間関数名の文字列からなるタプルのタプ
-                   ルです。カメラはここで指定された各タプルを順番に移動するので、
-                   タプルは時系列に沿って並べてください。
+                   カメラのx,y,z座標、傾き、カメラの移動開始からその位置に到達
+                   するまでの秒数、その間の時間補間関数名の文字列からなるタプル
+                   のリストです。カメラはここで指定された各タプルを順番に移動す
+                   るので、タプルは時系列に沿って並べてください。
               `loop`
                    デフォルトは Falseで、True ならこのモーションが繰り替えされます。
               `subpixel`
@@ -427,7 +443,7 @@
                    移動するレイヤー名の文字列です。
               `check_points`
                    レイヤーのz座標の数字、レイヤーの移動開始からその位置に到達するまでの
-                   秒数の数字、その間の時間補間関数の文字列からなるタプルのタプルです。
+                   秒数の数字、その間の時間補間関数の文字列からなるタプルのlistです。
                    レイヤーはここで指定された各タプルを順番に移動するので、タプル
                    は時系列に沿って並べてください。
               `loop`
@@ -437,24 +453,36 @@
                    に描画します。
              """
 
-        def all_moves(camera_check_points=None, layer_check_points={}, loop=False, subpixel=True, **kwargs):
+        def all_moves(camera_check_points=None, layer_check_points=None, subpixel=True, play=True, x_loop=False, y_loop=False, z_loop=False, rotate_loop=False, **kwargs):
             """
              :doc: camera
 
               1つ以上のチェックポイントを通ってカメラと3Dレイヤーを同時に動かします。
 
              `camera_check_points`
-                   カメラのx,y,z座標、傾き、カメラの移動開始からその位置に到達する
-                   までの秒数、その間の時間補間関数名の文字列からなるタプルのタプ
-                   ルです。カメラはここで指定された各タプルを順番に移動するので、
-                   タプルは時系列に沿って並べてください。
+                   カメラの各パラメーター名の文字列をキーとし、その値、その値に
+                   なるまでの秒数、その間の時間補間関数名の文字列からなるタプル
+                   のリストを値に持つ辞書です。カメラはここで指定された各タプル
+                   を順番に移動するので、タプルは時系列に沿って並べてください。
+                  {
+                      'x':[(x, duration, warper)...],
+                      'y':[(y, duration, warper)...],
+                      'z':[(z, duration, warper)...],
+                      'rotate':[(rotate, duration, warper)...],
+                  }
              `layer_check_points`
                    移動するレイヤー名の文字列をキーとし、レイヤーのz座標の数字、レ
                    イヤーの移動開始からその位置に到達するまでの秒数の数字、その間
-                   の時間補間関数の文字列からなるタプルのタプルを値に持つ辞書で
+                   の時間補間関数の文字列からなるタプルのリストを値に持つ辞書で
                    す。レイヤーはここで指定された各タプルを順番に移動するので、タ
                    プルは時系列に沿って並べてください。
-              `loop`
+              `loop_x`
+                   デフォルトは Falseで、True ならカメラのモーションが繰り替えされます。
+              `loop_y`
+                   デフォルトは Falseで、True ならカメラのモーションが繰り替えされます。
+              `loop_z`
+                   デフォルトは Falseで、True ならカメラのモーションが繰り替えされます。
+              `loop_rotate`
                    デフォルトは Falseで、True ならカメラのモーションが繰り替えされます。
               `subpixel`
                    デフォルトは Trueで、 True なら、1 pixel 以下の値を使用して画面

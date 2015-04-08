@@ -43,8 +43,9 @@ init -1600 python:
          """
         global _3d_layers
         _3d_layers = _3d_layers.copy()
-        layer_check_points = {layer:((_layer_z, 0, None), ) for layer in _3d_layers}
-        all_moves(camera_check_points=((0, 0, 0, 0, 0, None), ), layer_check_points=layer_check_points)
+        for layer in _3d_layers:
+            layer_move(layer, _layer_z)
+        camera_move(0, 0, 0)
 
     def camera_move(x, y, z, rotate=0, duration=0, warper='linear', subpixel=True, loop=False):
         """
@@ -96,7 +97,7 @@ init -1600 python:
               Default False, if True, this motion repeats.
          """
 
-        layer_moves(layer, ((z, duration, warper), ), subpixel=subpixel, **{layer+"_loop":loop})
+        layer_moves(layer, ((z, duration, warper), ), subpixel=subpixel, loop=loop)
 
     def camera_moves(check_points, loop=False, subpixel=True):
         """
@@ -113,9 +114,20 @@ init -1600 python:
               Default True, if True, causes things to be drawn on the screen
               using subpixel positioning
          """
-        all_moves(camera_check_points=check_points, loop=loop, subpixel=subpixel)
+        camera_check_points = {}
+        camera_check_points["x"] = []
+        camera_check_points["y"] = []
+        camera_check_points["z"] = []
+        camera_check_points["rotate"] = []
+        for x, y, z, rotate, duration, warper in check_points:
+            camera_check_points["x"].append((x, duration, warper))
+            camera_check_points["y"].append((y, duration, warper))
+            camera_check_points["z"].append((z, duration, warper))
+            camera_check_points["rotate"].append((rotate, duration, warper))
+        kwargs = {coordinate+"_loop":loop for coordinate in ["x", "y", "z", "rotate"]}
+        all_moves(camera_check_points=camera_check_points, loop=loop, subpixel=subpixel, **kwargs)
 
-    def layer_moves(layer, check_points, loop=False, subpixel=True, **kwargs):
+    def layer_moves(layer, check_points, loop=False, subpixel=True):
         """
          :doc: camera
 
@@ -133,173 +145,119 @@ init -1600 python:
          """
         all_moves(layer_check_points={layer:check_points}, subpixel=subpixel, **{layer+"_loop":loop})
 
-    def all_moves(camera_check_points=None, layer_check_points=None, loop=False, subpixel=True, play=True, **kwargs):
+    def all_moves(camera_check_points=None, layer_check_points=None, subpixel=True, play=True, x_loop=False, y_loop=False, z_loop=False, rotate_loop=False, **kwargs):
         """
          :doc: camera
 
          Move a layer and camera through check points and apply transform to the layer.
 
          `camera_check_points`
-              A tuple of (x, y, z, rotate, duration, warper)
+              {
+                  'x':[(x, duration, warper)...]
+                  'y':[(y, duration, warper)...]
+                  'z':[(z, duration, warper)...]
+                  'rotate':[(rotate, duration, warper)...]
+              }
          `layer_check_points`
-              {layer:((z, duration, warper)...), ...}
-         `loop`
+              {
+                  'layer name':[(z, duration, warper)...]
+              }
+         `loop_x`
+              Default False, if True, this sequence of motions repeats.
+         `loop_y`
+              Default False, if True, this sequence of motions repeats.
+         `loop_z`
+              Default False, if True, this sequence of motions repeats.
+         `loop_rotate`
               Default False, if True, this sequence of motions repeats.
          `subpixel`
               Default True, if True, causes things to be drawn on the screen
               using subpixel positioning
+         '<layer name>_loop'
+              Default False, if True, this sequence of motions repeats.
          """
         global _camera_x, _camera_y, _camera_z, _camera_rotate, _3d_layers
         if camera_check_points is None:
-            camera_check_points = ((_camera_x, _camera_y, _camera_z, _camera_rotate, 0, None), )
-
+            camera_check_points = {}
         if layer_check_points is None:
             layer_check_points = {}
+        rotate_loop = kwargs.get("rotate_loop", False)
+        start_xanchor = _focal_length*_camera_x/(renpy.config.screen_width *_layer_z) + .5
+        start_yanchor = _focal_length*_camera_y/(renpy.config.screen_height*_layer_z) + .5
+        camera_check_points2 = { 'xanchor':[(start_xanchor, 0, None, )], 'yanchor':[(start_yanchor, 0, None, )], 'z': [(_camera_z, 0, None, )], 'rotate':[(_camera_rotate, 0, None, )] }
+
+        for coordinate in ["x", "y", "z", "rotate"]:
+            if coordinate not in camera_check_points:
+                camera_check_points[coordinate] = [(getattr(renpy.store, "_camera_"+coordinate), 0, None, )]
+        for c in camera_check_points['x']:
+            camera_check_points2['xanchor'].append((_focal_length*c[0]/(renpy.config.screen_width *_layer_z) + .5, c[1], c[2], ))
+        for c in camera_check_points['y']:
+            camera_check_points2['yanchor'].append((_focal_length*c[0]/(renpy.config.screen_height *_layer_z) + .5, c[1], c[2], ))
+        camera_check_points2['z'].extend(camera_check_points['z'])
+        camera_check_points2['rotate'].extend(camera_check_points['rotate'])
         for layer in _3d_layers:
+
             if layer not in layer_check_points:
                 layer_check_points[layer] = ((_3d_layers[layer], 0, None), )
-
-            start_xanchor = _focal_length*_camera_x/(renpy.config.screen_width *_layer_z) + .5
-            start_yanchor = _focal_length*_camera_y/(renpy.config.screen_height*_layer_z) + .5
-
-            camera_check_points2 = [(_camera_z, _camera_rotate, start_xanchor, start_yanchor, 0, None), ]
-            for c in camera_check_points:
-                xanchor = _focal_length*c[0]/(renpy.config.screen_width *_layer_z) + .5
-                yanchor = _focal_length*c[1]/(renpy.config.screen_height*_layer_z) + .5
-                duration = float(c[4])
-                camera_check_points2.append((c[2], c[3], xanchor, yanchor, duration, c[5]))
-
             layer_check_points2 = [(_3d_layers[layer], 0, None), ]
             for c in layer_check_points[layer]:
                 layer_check_points2.append((c[0], float(c[1]), c[2]))
-            
             layer_loop = kwargs.get(layer+"_loop", False)
 
             if play:
-                renpy.game.context().scene_lists.set_layer_at_list(layer, [Transform(function=renpy.curry(_camera_trans)(camera_check_points=camera_check_points2, layer_check_points=layer_check_points2, loop=loop, subpixel=subpixel, layer=layer, layer_loop=layer_loop))])
+                renpy.game.context().scene_lists.set_layer_at_list(layer, [Transform(function=renpy.curry(_camera_trans)(camera_check_points=camera_check_points2, layer_check_points=layer_check_points2, subpixel=subpixel, layer=layer, layer_loop=layer_loop, x_loop=x_loop, y_loop=y_loop, z_loop=z_loop, rotate_loop=rotate_loop))])
                 layer_z = layer_check_points2[-1][0]
             else:
-                st = _viewers.time
-                if loop:
-                    st %= camera_check_points2[-1][4]
                 # This is used when the time bar is changed by Action Editor
-                for i in xrange(1, len(camera_check_points2)):
-                    checkpoint = camera_check_points2[i][4]
-                    pre_checkpoint = camera_check_points2[i-1][4]
-                    if st <= checkpoint:
-                        start = camera_check_points2[i-1]
-                        goal = camera_check_points2[i]
-                        if checkpoint != pre_checkpoint:
-                            g = renpy.atl.warpers[goal[5]]((st - pre_checkpoint) / float(checkpoint - pre_checkpoint))
-                        else:
-                            g = 1.
-
-                        z = g*(goal[0]-start[0])+start[0]
-                        layer_z = get_at_time(layer_check_points2, st, layer_loop)
-                        distance = float(layer_z - z)
-                        if distance == 0:
-                            distance = .1
-
-                        xanchor = g*(goal[2]-start[2]) + start[2]
-                        yanchor = g*(goal[3]-start[3]) + start[3]
-                        rotate = g*(goal[1]  -  start[1]) + start[1]
-
-                        if distance >= 0:
-                            alpha = 1
-                            zoom = _layer_z / distance
-                            renpy.game.context().scene_lists.set_layer_at_list(layer, [Transform(xpos=.5, ypos=.5, alpha=alpha, transform_anchor=True, xanchor=xanchor, yanchor=yanchor, zoom=zoom, rotate=rotate)])
-                        else:
-                            alpha = 0
-                            renpy.game.context().scene_lists.set_layer_at_list(layer, [Transform(xpos=.5, ypos=.5, alpha=alpha, transform_anchor=True, xanchor=xanchor, yanchor=yanchor, rotate=rotate)])
-                        break
-                else:
-                    goal = camera_check_points2[-1]
-                    z = goal[0]
-                    layer_z = get_at_time(layer_check_points2, st, layer_loop)
-                    distance = float(layer_z - z)
-                    if distance == 0:
-                        distance = .1
-                    xanchor = goal[2]
-                    yanchor = goal[3]
+                st = _viewers.time
+                xanchor = get_at_time(camera_check_points2['xanchor'], st, x_loop)
+                yanchor = get_at_time(camera_check_points2['yanchor'], st, y_loop)
+                z = get_at_time(camera_check_points2['z'], st, z_loop)
+                rotate = get_at_time(camera_check_points2['rotate'], st, rotate_loop)
+                layer_z = get_at_time(layer_check_points2, st, layer_loop)
+                distance = float(layer_z - z)
+                if distance == 0:
+                    distance = .1
+                if distance >= 0:
+                    alpha = 1
                     zoom = _layer_z / distance
-                    rotate = goal[1]
-                    if distance >= 0:
-                        alpha = 1
-                    else:
-                        alpha = 0
                     renpy.game.context().scene_lists.set_layer_at_list(layer, [Transform(xpos=.5, ypos=.5, alpha=alpha, transform_anchor=True, xanchor=xanchor, yanchor=yanchor, zoom=zoom, rotate=rotate)])
+                else:
+                    alpha = 0
+                    renpy.game.context().scene_lists.set_layer_at_list(layer, [Transform(xpos=.5, ypos=.5, alpha=alpha, transform_anchor=True, xanchor=xanchor, yanchor=yanchor, rotate=rotate)])
 
             _3d_layers[layer] = int(layer_z)
         if play:
-            _camera_x = camera_check_points[-1][0]
-            _camera_y = camera_check_points[-1][1]
-            _camera_z = camera_check_points[-1][2]
-            _camera_rotate = camera_check_points[-1][3]
-            _3d_layers = _3d_layers
+            _camera_x = camera_check_points['x'][-1][0]
+            _camera_y = camera_check_points['y'][-1][0]
+            _camera_z = camera_check_points['z'][-1][0]
+            _camera_rotate = camera_check_points['rotate'][-1][0]
         else:
             _camera_x         = int(((xanchor-.5)*renpy.config.screen_width*_layer_z)/_focal_length)
             _camera_y         = int(((yanchor-.5)*renpy.config.screen_height*_layer_z)/_focal_length)
             _camera_z         = int(z)
             _camera_rotate    = int(rotate)
-            _3d_layers = _3d_layers
 
-
-
-    def _camera_trans(tran, st, at, camera_check_points, layer_check_points, loop, layer_loop, subpixel, layer):
+    def _camera_trans(tran, st, at, camera_check_points, layer_check_points, layer_loop, x_loop, y_loop, z_loop, rotate_loop, subpixel, layer):
         # camera_check_points = (z, r, xanchor, yanchor, duration, warper)
         # layer_check_points = (layer_z, duration, warper)
         tran.xpos    = .5 
         tran.ypos    = .5
         tran.subpixel = subpixel
         tran.transform_anchor = True
-        camera_st = st
-        if loop and camera_check_points[-1][4]:
-            camera_st %= camera_check_points[-1][4]
-
-        for i in xrange(1, len(camera_check_points)):
-            checkpoint = camera_check_points[i][4]
-            pre_checkpoint = camera_check_points[i-1][4]
-            if camera_st <= checkpoint:
-                start = camera_check_points[i-1]
-                goal = camera_check_points[i]
-                if checkpoint != pre_checkpoint:
-                    g = renpy.atl.warpers[goal[5]]((camera_st - pre_checkpoint) / float(checkpoint - pre_checkpoint))
-                else:
-                    g = 1.
-
-                z = g*(goal[0]-start[0])+start[0]
-                layer_z = get_at_time(layer_check_points, st, layer_loop)
-                distance = float(layer_z - z)
-                if distance == 0:
-                    distance = .1
-
-                tran.xanchor = g*(goal[2]-start[2]) + start[2]
-                tran.yanchor = g*(goal[3]-start[3]) + start[3]
-                tran.rotate  = g*(goal[1]  -  start[1]) + start[1]
-
-                if distance >= 0:
-                    tran.alpha = 1
-                    tran.zoom = _layer_z / distance
-                else:
-                    tran.alpha = 0
-
-                # get_camera_coordinate(tran, z, layer, layer_z)
-                break
-        else:
-            goal = camera_check_points[-1]
-            layer_z = get_at_time(layer_check_points, st, layer_loop)
-            distance = float(layer_z - goal[0])
-            if distance == 0:
-                distance = .1
-            tran.xanchor = goal[2]
-            tran.yanchor = goal[3]
+        tran.xanchor = get_at_time(camera_check_points['xanchor'], st, x_loop)
+        tran.yanchor = get_at_time(camera_check_points['yanchor'], st, y_loop)
+        z = get_at_time(camera_check_points['z'], st, z_loop)
+        tran.rotate = get_at_time(camera_check_points['rotate'], st, rotate_loop)
+        layer_z = get_at_time(layer_check_points, st, layer_loop)
+        distance = float(layer_z - z)
+        if distance == 0:
+            distance = .1
+        if distance >= 0:
+            tran.alpha = 1
             tran.zoom = _layer_z / distance
-            tran.rotate = goal[1]
-            if distance >= 0:
-                tran.alpha = 1
-            else:
-                tran.alpha = 0
-            # get_camera_coordinate(tran, goal[0], layer, layer_z)
+        else:
+            tran.alpha = 0
         return .005
 
     def get_at_time(check_points, time, loop):
@@ -402,18 +360,22 @@ screen _action_editor(tab="images", layer="master", tag="", time=0):
                 else:
                     hbox:
                         label "x"
+                        textbutton _("loop") action ToggleDict(_viewers.loops, "_camera_x_loop")
                         textbutton "[_camera_x: >5]" action Function(_viewers.camera_viewer.edit_value, _viewers.camera_viewer.x_changed, _viewers.camera_viewer.range_camera_pos, default=_camera_x)
                         bar adjustment ui.adjustment(range=_viewers.camera_viewer.range_camera_pos*2, value=_camera_x+_viewers.camera_viewer.range_camera_pos, page=1, changed=_viewers.camera_viewer.x_changed) xalign 1.
                     hbox:
                         label "y"
+                        textbutton _("loop") action ToggleDict(_viewers.loops, "_camera_y_loop")
                         textbutton "[_camera_y: >5]" action Function(_viewers.camera_viewer.edit_value, _viewers.camera_viewer.y_changed, _viewers.camera_viewer.range_camera_pos, default=_camera_y)
                         bar adjustment ui.adjustment(range=_viewers.camera_viewer.range_camera_pos*2, value=_camera_y+_viewers.camera_viewer.range_camera_pos, page=1, changed=_viewers.camera_viewer.y_changed) xalign 1.
                     hbox:
                         label "z"
+                        textbutton _("loop") action ToggleDict(_viewers.loops, "_camera_z_loop")
                         textbutton "[_camera_z: >5]" action Function(_viewers.camera_viewer.edit_value, _viewers.camera_viewer.z_changed, _viewers.camera_viewer.range_camera_pos, default=_camera_z)
                         bar adjustment ui.adjustment(range=_viewers.camera_viewer.range_camera_pos*2, value=_camera_z+_viewers.camera_viewer.range_camera_pos, page=1, changed=_viewers.camera_viewer.z_changed) xalign 1.
                     hbox:
                         label "rotate"
+                        textbutton _("loop") action ToggleDict(_viewers.loops, "_camera_rotate_loop")
                         textbutton "[_camera_rotate: >5]" action Function(_viewers.camera_viewer.edit_value, _viewers.camera_viewer.r_changed, _viewers.camera_viewer.range_rotate, default=_camera_rotate)
                         bar adjustment ui.adjustment(range=_viewers.camera_viewer.range_rotate*2, value=_camera_rotate+_viewers.camera_viewer.range_rotate, page=1, changed=_viewers.camera_viewer.r_changed) xalign 1.
             elif tab == "3D Layers":
@@ -423,15 +385,14 @@ screen _action_editor(tab="images", layer="master", tag="", time=0):
                     for layer in sorted(_3d_layers.keys()):
                         hbox:
                             label "[layer]"
-                            textbutton "{}".format(_3d_layers[layer]) action Function(_viewers.camera_viewer.edit_value, _viewers.camera_viewer.generate_layer_z_changed(layer), 0, default=_3d_layers[layer])
                             textbutton _("loop") action ToggleDict(_viewers.loops, layer+"_loop")
+                            textbutton "{}".format(_3d_layers[layer]) action Function(_viewers.camera_viewer.edit_value, _viewers.camera_viewer.generate_layer_z_changed(layer), 0, default=_3d_layers[layer])
                             bar adjustment ui.adjustment(range=_viewers.camera_viewer.range_layer_z, value=_3d_layers[layer], page=1, changed=_viewers.camera_viewer.generate_layer_z_changed(layer)) xalign 1.
             hbox:
                 xfill False
                 xalign 1.
                 if tab == "images":
                     if tag:
-                        textbutton _("loop") action ToggleDict(_viewers.loops, layer+"_"+tag+"_loop")
                         textbutton _("clipboard") action Function(_viewers.transform_viewer.put_show_clipboard, tag, layer)
                     # textbutton _("add") action Function(_viewers.transform_viewer.add_image, layer)
                     # textbutton _("remove") action [SensitiveIf(tag), Function(_viewers.transform_viewer.state_org[layer].pop, tag), Function(renpy.hide, tag, layer), Show("_action_editor", tab=tab, layer=layer)]
@@ -444,7 +405,6 @@ screen _action_editor(tab="images", layer="master", tag="", time=0):
                     textbutton _("clipboard") action Function(_viewers.camera_viewer.put_clipboard, False)
                     textbutton _("reset") action [_viewers.camera_viewer.layer_reset, renpy.restart_interaction]
                 elif tab == "3D Camera":
-                    textbutton _("loop") action ToggleDict(_viewers.loops, "camera_loop")
                     textbutton _("clipboard") action Function(_viewers.camera_viewer.put_clipboard, True)
                     textbutton _("reset") action [_viewers.camera_viewer.camera_reset, renpy.restart_interaction]
 
@@ -464,17 +424,16 @@ screen _action_editor(tab="images", layer="master", tag="", time=0):
             hbox:
                 xfill True
                 hbox:
-                    textbutton _("clear anchor") action [Function(_viewers.clear_anchor_points), renpy.restart_interaction]
+                    textbutton _("clear anchor") action [SensitiveIf(_viewers.sorted_anchor_points), Function(_viewers.clear_anchor_points), renpy.restart_interaction]
+                    textbutton _("remove anchor") action [SensitiveIf(_viewers.time in _viewers.sorted_anchor_points), Function(_viewers.remove_anchor_point, _viewers.time), renpy.restart_interaction]
                     if _viewers.sorted_anchor_points:
                         # if _viewers.time in _viewers.sorted_anchor_points:
                         #     textbutton _("remove anchor") action [Function(_viewers.remove_anchor_point, _viewers.time), renpy.restart_interaction]
                         # else:
                         #     textbutton _("add    anchor") action [_viewers.set_anchor_point, renpy.restart_interaction]
-                        textbutton _("remove anchor") action [SensitiveIf(_viewers.time in _viewers.sorted_anchor_points), Function(_viewers.remove_anchor_point, _viewers.time), renpy.restart_interaction]
                         textbutton _("play") action [SensitiveIf(_viewers.sorted_anchor_points), Function(_viewers.camera_viewer.play, play=True), Function(_viewers.transform_viewer.play, play=True), Hide("_action_editor"), Show("_action_editor", tab=tab, layer=layer, tag=tag, time=_viewers.sorted_anchor_points[-1]), renpy.restart_interaction]
                     else:
                         # textbutton _("add    anchor") action [_viewers.set_anchor_point, renpy.restart_interaction]
-                        textbutton _("remove anchor") action [SensitiveIf(_viewers.time in _viewers.sorted_anchor_points), Function(_viewers.remove_anchor_point, _viewers.time), renpy.restart_interaction]
                         textbutton _("play") action [SensitiveIf(_viewers.sorted_anchor_points), Function(_viewers.camera_viewer.play, play=True), Function(_viewers.transform_viewer.play, play=True), Hide("_action_editor"), Show("_action_editor", tab=tab, layer=layer, tag=tag), renpy.restart_interaction]
                     textbutton _("clipboard") action Function(_viewers.put_clipboard)
                 hbox:
@@ -648,7 +607,9 @@ init -1600 python in _viewers:
 
         def set_anchor_point(self, layer, tag, prop, value):
 
-            anchor_points = all_anchor_points.get((tag, layer, prop), [])
+            if (tag, layer) not in all_anchor_points:
+                all_anchor_points[(tag, layer)] = {}
+            anchor_points = all_anchor_points[(tag, layer)].get(prop, [])
             if anchor_points:
                 for i, (t, c) in enumerate(anchor_points):
                     if time < t:
@@ -661,10 +622,10 @@ init -1600 python in _viewers:
                     anchor_points.append((time, (value, time, warper)))
             else:
                 if time == 0:
-                    all_anchor_points[(tag, layer, prop)] = [(time, (value, time, warper))]
+                    all_anchor_points[(tag, layer)][prop] = [(time, (value, time, warper))]
                 else:
                     org = {k: v for dic in [self.state_org[layer], self.state[layer]] for k, v in dic.items()}[tag][prop]
-                    all_anchor_points[(tag, layer, prop)] = [(0, (org, 0, None)), (time, (value, time, warper))]
+                    all_anchor_points[(tag, layer)][prop] = [(0, (org, 0, None)), (time, (value, time, warper))]
             sort_anchor_points()
 
         def play(self, play):
@@ -672,8 +633,8 @@ init -1600 python in _viewers:
                 for tag in {k: v for dic in [self.state_org[layer], self.state[layer]] for k, v in dic.items()}:
                     check_points = {}
                     for prop, d in self.props:
-                        if (tag, layer, prop) in all_anchor_points:
-                            check_points[prop] =  [ c for t, c in all_anchor_points[(tag, layer, prop)] ]
+                        if (tag, layer) in all_anchor_points and prop in all_anchor_points[(tag, layer)]:
+                            check_points[prop] =  [ c for t, c in all_anchor_points[(tag, layer)][prop] ]
                     loop = {prop+"_loop": loops[tag+"_"+layer+"_"+prop+"_loop"] for prop, d in self.props}
                     if play:
                         renpy.show(tag, [renpy.store.Transform(function=renpy.curry(self.transform)(check_points=check_points, loop=loop))], layer=layer)
@@ -881,25 +842,25 @@ init -1600 python in _viewers:
         def x_changed(self, v):
             v=int(v)
             renpy.store.camera_move(v - self.range_camera_pos, renpy.store._camera_y, renpy.store._camera_z, renpy.store._camera_rotate)
-            self.set_camera_anchor_point()
+            self.set_camera_anchor_point("_camera_x", v-self.range_camera_pos)
             renpy.restart_interaction()
 
         def y_changed(self, v):
             v=int(v)
             renpy.store.camera_move(renpy.store._camera_x, v - self.range_camera_pos, renpy.store._camera_z, renpy.store._camera_rotate)
-            self.set_camera_anchor_point()
+            self.set_camera_anchor_point("_camera_y", v-self.range_camera_pos)
             renpy.restart_interaction()
 
         def z_changed(self, v):
             v=int(v)
             renpy.store.camera_move(renpy.store._camera_x, renpy.store._camera_y, v - self.range_camera_pos, renpy.store._camera_rotate)
-            self.set_camera_anchor_point()
+            self.set_camera_anchor_point("_camera_z", v-self.range_camera_pos)
             renpy.restart_interaction()
 
         def r_changed(self, v):
             v=int(v)
             renpy.store.camera_move(renpy.store._camera_x, renpy.store._camera_y, renpy.store._camera_z, v - self.range_rotate)
-            self.set_camera_anchor_point()
+            self.set_camera_anchor_point("_camera_rotate", v-self.range_camera_pos)
             renpy.restart_interaction()
 
         def generate_layer_z_changed(self, l):
@@ -934,23 +895,23 @@ init -1600 python in _viewers:
                 except:
                     renpy.notify(_("Please type value"))
 
-        def set_camera_anchor_point(self):
-            anchor_points = all_anchor_points.get("camera", [])
+        def set_camera_anchor_point(self, coordinate, value):
+            anchor_points = all_anchor_points.get(coordinate, [])
             if anchor_points:
                 for i, (t, c) in enumerate(anchor_points):
                     if time < t:
-                        anchor_points.insert(i, (time, (renpy.store._camera_x, renpy.store._camera_y, renpy.store._camera_z, renpy.store._camera_rotate, time, warper)))
+                        anchor_points.insert(i, (time, (value, time, warper)))
                         break
                     elif time == t:
-                        anchor_points[i] = (time, (renpy.store._camera_x, renpy.store._camera_y, renpy.store._camera_z, renpy.store._camera_rotate, time, warper))
+                        anchor_points[i] = (time, (value, time, warper))
                         break
                 else:
-                    anchor_points.append((time, (renpy.store._camera_x, renpy.store._camera_y, renpy.store._camera_z, renpy.store._camera_rotate, time, warper)))
+                    anchor_points.append((time, (value, time, warper)))
             else:
                 if time == 0:
-                    all_anchor_points["camera"] = [(time, (renpy.store._camera_x, renpy.store._camera_y, renpy.store._camera_z, renpy.store._camera_rotate, time, warper))]
+                    all_anchor_points[coordinate] = [(time, (value, time, warper))]
                 else:
-                    all_anchor_points["camera"] = [(0, (self._camera_x, self._camera_y, self._camera_z, self._camera_rotate, 0, None)), (time, (renpy.store._camera_x, renpy.store._camera_y, renpy.store._camera_z, renpy.store._camera_rotate, time, warper))]
+                    all_anchor_points[coordinate] = [(0, (getattr(self, coordinate), 0, None)), (time, (value, time, warper))]
             sort_anchor_points()
 
         def set_layer_anchor_point(self, layer):
@@ -973,20 +934,21 @@ init -1600 python in _viewers:
             sort_anchor_points()
 
         def play(self, play):
-            if "camera" in all_anchor_points:
-                camera_check_points = [c for t, c in all_anchor_points["camera"]]
-            else:
-                camera_check_points = None
+            camera_check_points = {}
+            for coordinate in ["_camera_x", "_camera_y", "_camera_z", "_camera_rotate"]:
+                if coordinate in all_anchor_points:
+                    camera_check_points[coordinate[8:]] = [c for t, c in all_anchor_points[coordinate]]
 
             layer_check_points = {}
-            layer_loop = {}
+            loop = {}
             for layer in renpy.store._3d_layers:
                 if "layer "+layer in all_anchor_points:
                     layer_check_points[layer]=[c for t, c in all_anchor_points["layer "+layer]]
-                layer_loop[layer+"_loop"] = loops[layer+"_loop"]
-            layer_loop["loop"] = loops["camera_loop"]
+                loop[layer+"_loop"] = loops[layer+"_loop"]
+            for coordinate in ["_camera_x", "_camera_y", "_camera_z", "_camera_rotate"]:
+                loop[coordinate[8:]+"_loop"] = loops[coordinate+"_loop"]
             if camera_check_points or layer_check_points:
-                renpy.store.all_moves(camera_check_points=camera_check_points, layer_check_points=layer_check_points, play=play, **layer_loop)
+                renpy.store.all_moves(camera_check_points=camera_check_points, layer_check_points=layer_check_points, play=play, **loop)
 
     camera_viewer = CameraViewer()
 
@@ -1043,11 +1005,14 @@ init -1600 python in _viewers:
                 if self.x != x or self.y != y:
                     self.cx = int(2*camera_viewer.range_camera_pos*( float(x)/renpy.config.screen_width - 0.5))
                     self.cy = int(2*camera_viewer.range_camera_pos*( float(y)/renpy.config.screen_height - 0.5))
+                    if self.cx != renpy.store._camera_x:
+                        camera_viewer.set_camera_anchor_point("_camera_x", self.cx)
+                    if self.cy != renpy.store._camera_y:
+                        camera_viewer.set_camera_anchor_point("_camera_y", self.cy)
                     renpy.store.camera_move(self.cx, self.cy, renpy.store._camera_z, renpy.store._camera_rotate)
                     self.x, self.y = x, y
                     renpy.restart_interaction()
                     renpy.redraw(self, 0)
-                    camera_viewer.set_camera_anchor_point()
 
             # Pass the event to our child.
             return self.child.event(ev, x, y, st)
@@ -1112,24 +1077,45 @@ init -1600 python in _viewers:
         sorted_anchor_points[:]=[]
 
     def remove_anchor_point(time):
-        if time == 0 and len(sorted_anchor_points) > 1:
-            return
+        remove_list = []
+        for k, v in all_anchor_points.items():
+            if isinstance(k, tuple):
+                for k2, v2 in v.items():
+                    for t, c in v2:
+                        if t == time:
+                            if time != 0 or (time == 0 and len(v2) == 1):
+                                remove_list.append((k, k2, (t, c)))
+        for k, k2, c in remove_list:
+            all_anchor_points[k][k2].remove(c)
+            if not all_anchor_points[k][k2]:
+                del all_anchor_points[k][k2]
 
-        remove_list=[(k, (t, c)) for k, v in all_anchor_points.items() for t, c in v if t == time]
-        for k, a in remove_list:
-            if len(all_anchor_points[k]) == 1:
+        remove_list = []
+        for k, v in all_anchor_points.items():
+            if not isinstance(k, tuple):
+                for t, c in v:
+                    if t == time:
+                        if time != 0 or (time == 0 and len(v) == 1):
+                            remove_list.append((k, (t, c)))
+        for k, c in remove_list:
+            all_anchor_points[k].remove(c)
+            if not all_anchor_points[k]:
                 del all_anchor_points[k]
-            else:
-                all_anchor_points[k].remove(a)
         sort_anchor_points()
 
     def sort_anchor_points():
         global sorted_anchor_points
         sorted_anchor_points[:] = []
         for anchor_points in all_anchor_points.values():
-            for t, c in anchor_points:
-                if t not in sorted_anchor_points:
-                    sorted_anchor_points.append(t)
+            if isinstance(anchor_points, dict):
+                for prop in anchor_points.values():
+                    for t, c in prop:
+                        if t not in sorted_anchor_points:
+                            sorted_anchor_points.append(t)
+            else:
+                for t, c in anchor_points:
+                    if t not in sorted_anchor_points:
+                        sorted_anchor_points.append(t)
         sorted_anchor_points.sort()
 
     def change_time(v):
@@ -1150,12 +1136,12 @@ init -1600 python in _viewers:
 
     def rollback():
         renpy.store.camera_move(renpy.store._camera_x, renpy.store._camera_y, renpy.store._camera_z-100, renpy.store._camera_rotate)
-        camera_viewer.set_camera_anchor_point()
+        camera_viewer.set_camera_anchor_point("_camera_z", renpy.store._camera_z)
         renpy.restart_interaction()
 
     def rollforward():
         renpy.store.camera_move(renpy.store._camera_x, renpy.store._camera_y, renpy.store._camera_z+100, renpy.store._camera_rotate)
-        camera_viewer.set_camera_anchor_point()
+        camera_viewer.set_camera_anchor_point("_camera_z", renpy.store._camera_z)
         renpy.restart_interaction()
 
     def action_editor():
@@ -1172,52 +1158,57 @@ init -1600 python in _viewers:
         camera_viewer.camera_reset()
 
     def put_clipboard():
-        if "camera" in all_anchor_points:
-            camera_check_points = [c for t, c in all_anchor_points["camera"]]
-            if len(camera_check_points) == 1 and camera_check_points[0][0:5] == (camera_viewer._camera_x, camera_viewer._camera_y, camera_viewer._camera_z, camera_viewer._camera_rotate, 0,):
-                camera_check_points=None
-        else:
-            camera_check_points = None
+        camera_check_points = {}
+        for coordinate in ["_camera_x", "_camera_y", "_camera_z", "_camera_rotate"]:
+            if coordinate in all_anchor_points:
+                camera_check_points[coordinate[8:]] = [c for t, c in all_anchor_points[coordinate]]
+                if len(camera_check_points[coordinate[8:]]) == 1 and camera_check_points[coordinate[8:]][0][0] == getattr(renpy.store._viewers, coordinate):
+                    del camera_check_points[coordinate[8:]]
 
         layer_check_points = {}
-        layer_loop = {}
+        loop = {}
         for layer in renpy.store._3d_layers:
             if "layer "+layer in all_anchor_points:
                 layer_check_points[layer]=[c for t, c in all_anchor_points["layer "+layer]]
                 if len(layer_check_points[layer]) == 1 and layer_check_points[layer][0][0] == camera_viewer._3d_layers[layer]:
                     del layer_check_points[layer]
-                layer_loop[layer+"_loop"] = loops[layer+"_loop"]
+                if loops[layer+"_loop"]:
+                    loop[layer+"_loop"] = True
+        for coordinate in ["_camera_x", "_camera_y", "_camera_z", "_camera_rotate"]:
+            if loops[coordinate+"_loop"]:
+                loop[coordinate[8:]+"_loop"] = True
         string = ""
 
         if camera_check_points or layer_check_points:
             string += """
-    $all_moves(camera_check_points={}, layer_check_points={}, loop={}, subpixel=True, **{})""".format(camera_check_points, layer_check_points, loops["camera_loop"], layer_loop)
+    $all_moves(camera_check_points={}, layer_check_points={}, subpixel=True, **{})""".format(camera_check_points, layer_check_points, loop)
+
         for k, v in all_anchor_points.items():
             if isinstance(k, tuple):
+                tag, layer = k
                 string += """
     show {} onlayer {}:
         subpixel True transform_anchor True """.format(*k)
-                kwargs_org = {k2: v2 for dic in [transform_viewer.state_org[k[1]], transform_viewer.state[k[1]]] for k2, v2 in dic.items()}[k[0]]
+                # kwargs_org = {k2: v2 for dic in [transform_viewer.state_org[layer], transform_viewer.state[layer]] for k2, v2 in dic.items()}[tag]
                 for p, d in transform_viewer.props:
-                    if kwargs_org[p] is None and p != "rotate":
-                        kwargs_org[p] = d
+                    if p in all_anchor_points[k]:
+                        check_points = [c for t, c in all_anchor_points[k][p]]
+                        # if kwargs_org[p] is None and p != "rotate":
+                        #     kwargs_org[p] = d
 
-                for prop, value in v[0][1].items():
-                    if value != kwargs_org[prop]:
-                        string += "{} {} ".format(prop, value)
-                for i, t in enumerate(v[1:]):
-                    string += """
-        {} {} """.format(t[2], t[0]-v[i][0])
-                    for prop, value in t[1].items():
-                    # for i, (prop, value) in enumerate(t[1].items()):
-                    #     for t2, k2, w2, in v[:i]:
-                    #         if value = [prop]:
-                        string += "{} {} ".format(prop, value)
-                if string[-46:] == (":\n        subpixel True transform_anchor True "):
-                    string = string[:-46]
-                elif loops[k[1]+"_"+k[0]+"_loop"]:
                         string += """
-        repeat"""
+        parallel:"""
+                        # if check_points[0][0] != kwargs_org[p]:
+                        string += """
+            {} {}""".format(p, check_points[0][0])
+                        for i, check_point in enumerate(check_points[1:]):
+                            string += """
+            {} {} {} {}""".format(check_point[2], check_points[i+1][1]-check_points[i][1], p, check_point[0])
+                        if string[-46:] == (":\n        subpixel True transform_anchor True "):
+                            string = string[:-46]
+                        elif loops[tag+"_"+layer+"_"+p+"_loop"]:
+                                string += """
+            repeat"""
 
         if string:
             try:
