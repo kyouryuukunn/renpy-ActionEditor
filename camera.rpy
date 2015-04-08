@@ -685,7 +685,7 @@ init -1600 python in _viewers:
         def transform(self, tran, st, at, check_points, loop, subpixel=True):
             # check_points = { prop: [ (value, time, warper).. ] }
             tran.subpixel = subpixel
-            tran.anchor_points = True
+            # tran.transform_anchor = True
 
             for p, cs in check_points.items():
                 if loop[p+"_loop"] and cs[-1][1]:
@@ -721,7 +721,7 @@ init -1600 python in _viewers:
                         break
                 else:
                     setattr(tran, p, cs[-1][0])
-            return .02
+            return .005
 
 
         def generate_changed(self, layer, tag, prop):
@@ -1188,7 +1188,7 @@ init -1600 python in _viewers:
                 tag, layer = k
                 string += """
     show {} onlayer {}:
-        subpixel True transform_anchor True """.format(*k)
+        subpixel True """.format(*k)
                 # kwargs_org = {k2: v2 for dic in [transform_viewer.state_org[layer], transform_viewer.state[layer]] for k2, v2 in dic.items()}[tag]
                 for p, d in transform_viewer.props:
                     if p in all_anchor_points[k]:
@@ -1204,9 +1204,7 @@ init -1600 python in _viewers:
                         for i, check_point in enumerate(check_points[1:]):
                             string += """
             {} {} {} {}""".format(check_point[2], check_points[i+1][1]-check_points[i][1], p, check_point[0])
-                        if string[-46:] == (":\n        subpixel True transform_anchor True "):
-                            string = string[:-46]
-                        elif loops[tag+"_"+layer+"_"+p+"_loop"]:
+                        if loops[tag+"_"+layer+"_"+p+"_loop"]:
                                 string += """
             repeat"""
 
