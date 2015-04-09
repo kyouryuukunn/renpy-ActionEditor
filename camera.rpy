@@ -649,6 +649,8 @@ init -1600 python in _viewers:
             ("ypos", 0.), 
             ("xanchor", 0.), 
             ("yanchor", 0.), 
+            ("xoffset", 0.), 
+            ("yoffset", 0.), 
             ("xzoom", 1.), 
             ("yzoom", 1.), 
             ("zoom", 1.), 
