@@ -1132,7 +1132,7 @@ init -1600 python in _viewers:
                 v = renpy.python.py_eval(v)
                 if v < 0:
                     return
-                time = v
+                change_time(v)
             except:
                 renpy.notify(_("Please type value"))
 
