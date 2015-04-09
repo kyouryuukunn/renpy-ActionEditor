@@ -17,7 +17,6 @@ init -1600 python:
     _focal_length = 147.40
     _layer_z = 1848.9
 
-
     def register_3d_layer(*layers):
         """
          :doc: camera
@@ -47,7 +46,7 @@ init -1600 python:
             layer_move(layer, _layer_z)
         camera_move(0, 0, 0)
 
-    def camera_move(x, y, z, rotate=0, duration=0, warper='linear', subpixel=True, loop=False):
+    def camera_move(x, y, z, rotate=0, duration=0, warper='linear', subpixel=True, loop=False, x_express=None, y_express=None, z_express=None, rotate_express=None):
         """
          :doc: camera
 
@@ -71,11 +70,27 @@ init -1600 python:
               using subpixel positioning
          `loop`
               Default False, if True, this motion repeats.
+         'x_express'
+             This should be callable, which is called with the shown timebase
+             and the animation timebase, in seconds and return a number. The
+             result of this is added to the x coordinate of the camera.
+         'y_express'
+             This should be callable, which is called with the shown timebase
+             and the animation timebase, in seconds and return a number. The
+             result of this is added to the y coordinate of the camera.
+         'z_express'
+             This should be callable, which is called with the shown timebase
+             and the animation timebase, in seconds and return a number. The
+             result of this is added to the z coordinate of the camera.
+         'rotate_express'
+             This should be callable, which is called with the shown timebase
+             and the animation timebase, in seconds and return a number. The
+             result of this is added to the rotate coordinate of the camera.
          """
 
-        camera_moves(((x, y, z, rotate, duration, warper), ), subpixel=subpixel, loop=loop)
+        camera_moves(((x, y, z, rotate, duration, warper), ), subpixel=subpixel, loop=loop, x_express=x_express, y_express=y_express, z_express=z_express, rotate_express=rotate_express)
 
-    def layer_move(layer, z, duration=0, warper='linear', subpixel=True, loop=False):
+    def layer_move(layer, z, duration=0, warper='linear', subpixel=True, loop=False, x_express=None, y_express=None, z_express=None, rotate_express=None):
         """
          :doc: camera
 
@@ -95,11 +110,27 @@ init -1600 python:
               using subpixel positioning
          `loop`
               Default False, if True, this motion repeats.
+         'x_express'
+             This should be callable, which is called with the shown timebase
+             and the animation timebase, in seconds and return a number. The
+             result of this is added to the x coordinate of the camera.
+         'y_express'
+             This should be callable, which is called with the shown timebase
+             and the animation timebase, in seconds and return a number. The
+             result of this is added to the y coordinate of the camera.
+         'z_express'
+             This should be callable, which is called with the shown timebase
+             and the animation timebase, in seconds and return a number. The
+             result of this is added to the z coordinate of the camera.
+         'rotate_express'
+             This should be callable, which is called with the shown timebase
+             and the animation timebase, in seconds and return a number. The
+             result of this is added to the rotate coordinate of the camera.
          """
 
-        layer_moves(layer, ((z, duration, warper), ), subpixel=subpixel, loop=loop)
+        layer_moves(layer, ((z, duration, warper), ), subpixel=subpixel, loop=loop, x_express=x_express, y_express=y_express, z_express=z_express, rotate_express=rotate_express)
 
-    def camera_moves(check_points, loop=False, subpixel=True):
+    def camera_moves(check_points, loop=False, subpixel=True, x_express=None, y_express=None, z_express=None, rotate_express=None):
         """
          :doc: camera
 
@@ -113,6 +144,22 @@ init -1600 python:
          `subpixel`
               Default True, if True, causes things to be drawn on the screen
               using subpixel positioning
+         'x_express'
+             This should be callable, which is called with the shown timebase
+             and the animation timebase, in seconds and return a number. The
+             result of this is added to the x coordinate of the camera.
+         'y_express'
+             This should be callable, which is called with the shown timebase
+             and the animation timebase, in seconds and return a number. The
+             result of this is added to the y coordinate of the camera.
+         'z_express'
+             This should be callable, which is called with the shown timebase
+             and the animation timebase, in seconds and return a number. The
+             result of this is added to the z coordinate of the camera.
+         'rotate_express'
+             This should be callable, which is called with the shown timebase
+             and the animation timebase, in seconds and return a number. The
+             result of this is added to the rotate coordinate of the camera.
          """
         camera_check_points = {}
         camera_check_points["x"] = []
@@ -125,9 +172,9 @@ init -1600 python:
             camera_check_points["z"].append((z, duration, warper))
             camera_check_points["rotate"].append((rotate, duration, warper))
         kwargs = {coordinate+"_loop":loop for coordinate in ["x", "y", "z", "rotate"]}
-        all_moves(camera_check_points=camera_check_points, loop=loop, subpixel=subpixel, **kwargs)
+        all_moves(camera_check_points=camera_check_points, loop=loop, subpixel=subpixel, x_express=x_express, y_express=y_express, z_express=z_express, rotate_express=rotate_express, **kwargs)
 
-    def layer_moves(layer, check_points, loop=False, subpixel=True):
+    def layer_moves(layer, check_points, loop=False, subpixel=True, x_express=None, y_express=None, z_express=None, rotate_express=None):
         """
          :doc: camera
 
@@ -142,10 +189,26 @@ init -1600 python:
          `subpixel`
               Default True, if True, causes things to be drawn on the screen
               using subpixel positioning
+         'x_express'
+             This should be callable, which is called with the shown timebase
+             and the animation timebase, in seconds and return a number. The
+             result of this is added to the x coordinate of the camera.
+         'y_express'
+             This should be callable, which is called with the shown timebase
+             and the animation timebase, in seconds and return a number. The
+             result of this is added to the y coordinate of the camera.
+         'z_express'
+             This should be callable, which is called with the shown timebase
+             and the animation timebase, in seconds and return a number. The
+             result of this is added to the z coordinate of the camera.
+         'rotate_express'
+             This should be callable, which is called with the shown timebase
+             and the animation timebase, in seconds and return a number. The
+             result of this is added to the rotate coordinate of the camera.
          """
-        all_moves(layer_check_points={layer:check_points}, subpixel=subpixel, **{layer+"_loop":loop})
+        all_moves(layer_check_points={layer:check_points}, subpixel=subpixel, x_express=x_express, y_express=y_express, z_express=z_express, rotate_express=rotate_express, **{layer+"_loop":loop})
 
-    def all_moves(camera_check_points=None, layer_check_points=None, subpixel=True, play=True, x_loop=False, y_loop=False, z_loop=False, rotate_loop=False, **kwargs):
+    def all_moves(camera_check_points=None, layer_check_points=None, subpixel=True, play=True, x_loop=False, y_loop=False, z_loop=False, rotate_loop=False, x_express=None, y_express=None, z_express=None, rotate_express=None, **kwargs):
         """
          :doc: camera
 
@@ -175,8 +238,27 @@ init -1600 python:
               using subpixel positioning
          '<layer name>_loop'
               Default False, if True, this sequence of motions repeats.
+         'x_express'
+             This should be callable, which is called with the shown timebase
+             and the animation timebase, in seconds and return a number. The
+             result of this is added to the x coordinate of the camera.
+         'y_express'
+             This should be callable, which is called with the shown timebase
+             and the animation timebase, in seconds and return a number. The
+             result of this is added to the y coordinate of the camera.
+         'z_express'
+             This should be callable, which is called with the shown timebase
+             and the animation timebase, in seconds and return a number. The
+             result of this is added to the z coordinate of the camera.
+         'rotate_express'
+             This should be callable, which is called with the shown timebase
+             and the animation timebase, in seconds and return a number. The
+             result of this is added to the rotate coordinate of the camera.
          """
         global _camera_x, _camera_y, _camera_z, _camera_rotate, _3d_layers
+        from math import sin, pi
+        from random import random
+
         if camera_check_points is None:
             camera_check_points = {}
         if layer_check_points is None:
@@ -205,7 +287,7 @@ init -1600 python:
             layer_loop = kwargs.get(layer+"_loop", False)
 
             if play:
-                renpy.game.context().scene_lists.set_layer_at_list(layer, [Transform(function=renpy.curry(_camera_trans)(camera_check_points=camera_check_points2, layer_check_points=layer_check_points2, subpixel=subpixel, layer=layer, layer_loop=layer_loop, x_loop=x_loop, y_loop=y_loop, z_loop=z_loop, rotate_loop=rotate_loop))])
+                renpy.game.context().scene_lists.set_layer_at_list(layer, [Transform(function=renpy.curry(_camera_trans)(camera_check_points=camera_check_points2, layer_check_points=layer_check_points2, subpixel=subpixel, layer=layer, layer_loop=layer_loop, x_loop=x_loop, y_loop=y_loop, z_loop=z_loop, rotate_loop=rotate_loop, x_express=x_express, y_express=y_express, z_express=z_express, rotate_express=rotate_express))])
                 layer_z = layer_check_points2[-1][0]
             else:
                 # This is used when the time bar is changed by Action Editor
@@ -238,9 +320,11 @@ init -1600 python:
             _camera_z         = int(z)
             _camera_rotate    = int(rotate)
 
-    def _camera_trans(tran, st, at, camera_check_points, layer_check_points, layer_loop, x_loop, y_loop, z_loop, rotate_loop, subpixel, layer):
+    def _camera_trans(tran, st, at, camera_check_points, layer_check_points, layer_loop, x_loop, y_loop, z_loop, rotate_loop, subpixel, layer, x_express, y_express, z_express, rotate_express):
         # camera_check_points = (z, r, xanchor, yanchor, duration, warper)
         # layer_check_points = (layer_z, duration, warper)
+        from math import sin, pi
+        from random import random
         tran.xpos    = .5 
         tran.ypos    = .5
         tran.subpixel = subpixel
@@ -250,6 +334,14 @@ init -1600 python:
         z = get_at_time(camera_check_points['z'], st, z_loop)
         tran.rotate = get_at_time(camera_check_points['rotate'], st, rotate_loop)
         layer_z = get_at_time(layer_check_points, st, layer_loop)
+        if x_express:
+            tran.xanchor += _focal_length*x_express(st, at)/(renpy.config.screen_width *_layer_z)
+        if y_express:
+            tran.yanchor += _focal_length*y_express(st, at)/(renpy.config.screen_height *_layer_z)
+        if z_express:
+            z += z_express(st, at)
+        if rotate_express:
+            tran.rotate += rotate_express(st, at)
         distance = float(layer_z - z)
         if distance == 0:
             distance = .1
@@ -309,31 +401,57 @@ screen _action_editor(tab="images", layer="master", tag="", time=0):
     key "rollforward" action _viewers.rollforward
 
     frame:
+        background "#0006"
         if time:
             at _delay_show(time + 1)
-        style_group "action_editor"
         xfill True
         vbox:
 
             hbox:
+                textbutton _("time: [_viewers.time:>.2f] s") action Function(_viewers.edit_time)
+                textbutton _("<") action Function(_viewers.prev_time)
+                textbutton _(">") action Function(_viewers.next_time)
+                bar adjustment ui.adjustment(range=7.0, value=_viewers.time, changed=_viewers.change_time) xalign 1.
+            hbox:
+                xfill True
+                hbox:
+                    textbutton _("clear anchor") action [SensitiveIf(_viewers.sorted_anchor_points), Function(_viewers.clear_anchor_points), renpy.restart_interaction]
+                    textbutton _("remove anchor") action [SensitiveIf(_viewers.time in _viewers.sorted_anchor_points), Function(_viewers.remove_anchor_point, _viewers.time), renpy.restart_interaction]
+                    textbutton _("warper") action _viewers.select_time_warper
+                    textbutton _("ROT") action [SelectedIf(renpy.get_screen("_rot")), If(renpy.get_screen("_rot"), true=Hide("_rot"), false=Show("_rot"))]
+                    if _viewers.sorted_anchor_points:
+                        # if _viewers.time in _viewers.sorted_anchor_points:
+                        #     textbutton _("remove anchor") action [Function(_viewers.remove_anchor_point, _viewers.time), renpy.restart_interaction]
+                        # else:
+                        #     textbutton _("add    anchor") action [_viewers.set_anchor_point, renpy.restart_interaction]
+                        textbutton _("play") action [SensitiveIf(_viewers.sorted_anchor_points), Function(_viewers.camera_viewer.play, play=True), Function(_viewers.transform_viewer.play, play=True), Hide("_action_editor"), Show("_action_editor", tab=tab, layer=layer, tag=tag, time=_viewers.sorted_anchor_points[-1]), renpy.restart_interaction]
+                    else:
+                        # textbutton _("add    anchor") action [_viewers.set_anchor_point, renpy.restart_interaction]
+                        textbutton _("play") action [SensitiveIf(_viewers.sorted_anchor_points), Function(_viewers.camera_viewer.play, play=True), Function(_viewers.transform_viewer.play, play=True), Hide("_action_editor"), Show("_action_editor", tab=tab, layer=layer, tag=tag), renpy.restart_interaction]
+                    textbutton _("clipboard") action Function(_viewers.put_clipboard)
+                hbox:
+                    xalign 1.
+                    textbutton _("close") action Return()
+
+            null height 10
+            hbox:
+                style_group "action_editor"
                 xfill False
                 textbutton _("Images") action [SelectedIf(tab == "images"), Show("_action_editor", tab="images")]
                 textbutton _("2D Camera") action [SensitiveIf(_3d_layers.keys() == ["master"]), SelectedIf(tab == "2D Camera"), Show("_action_editor", tab="2D Camera")]
                 textbutton _("3D Layers") action [SelectedIf(tab == "3D Layers"), Show("_action_editor", tab="3D Layers")]
                 textbutton _("3D Camera") action [SelectedIf(tab == "3D Camera"), Show("_action_editor", tab="3D Camera")]
-                textbutton _("ROT") action [SelectedIf(renpy.get_screen("_rot")), If(renpy.get_screen("_rot"), true=Hide("_rot"), false=Show("_rot"))]
-            null height 10
             if tab == "images":
                 hbox:
+                    style_group "action_editor"
                     xfill False
-                    style_group "action_editor_layers"
                     label _("layers")
                     for l in config.layers:
                         if l not in ["screens", "transient", "overlay"]:
                             textbutton "[l]" action [SelectedIf(l == layer), Show("_action_editor", tab=tab, layer=l)]
                 hbox:
+                    style_group "action_editor"
                     xfill False
-                    style_group "action_editor_images"
                     label _("images")
                     for t in state:
                         textbutton "[t]" action [SelectedIf(t == tag), Show("_action_editor", tab=tab, layer=layer, tag=t)]
@@ -344,12 +462,14 @@ screen _action_editor(tab="images", layer="master", tag="", time=0):
                         $ f = _viewers.transform_viewer.generate_changed(layer, tag, p)
                         if p not in _viewers.transform_viewer.force_float and ((state[tag][p] is None and isinstance(d, int)) or isinstance(state[tag][p], int)):
                             hbox:
+                                style_group "action_editor"
                                 textbutton "[p]" action Function(_viewers.transform_viewer.put_prop_clipboard, p, prop)
                                 textbutton _("loop") action ToggleDict(_viewers.loops, tag+"_"+layer+"_"+p+"_loop")
                                 textbutton "[prop]" action Function(_viewers.transform_viewer.edit_value, f, True, default=prop)
                                 bar adjustment ui.adjustment(range=_viewers.transform_viewer.int_range*2, value=prop+_viewers.transform_viewer.int_range, page=1, changed=f) xalign 1.
                         else:
                             hbox:
+                                style_group "action_editor"
                                 textbutton "[p]" action Function(_viewers.transform_viewer.put_prop_clipboard, p, prop)
                                 textbutton _("loop") action ToggleDict(_viewers.loops, tag+"_"+layer+"_"+p+"_loop")
                                 textbutton "[prop]" action Function(_viewers.transform_viewer.edit_value, f, False, default=prop)
@@ -359,21 +479,25 @@ screen _action_editor(tab="images", layer="master", tag="", time=0):
                     label _("Please regist 3D layers")
                 else:
                     hbox:
+                        style_group "action_editor"
                         label "x"
                         textbutton _("loop") action ToggleDict(_viewers.loops, "_camera_x_loop")
                         textbutton "[_camera_x: >5]" action Function(_viewers.camera_viewer.edit_value, _viewers.camera_viewer.x_changed, _viewers.camera_viewer.range_camera_pos, default=_camera_x)
                         bar adjustment ui.adjustment(range=_viewers.camera_viewer.range_camera_pos*2, value=_camera_x+_viewers.camera_viewer.range_camera_pos, page=1, changed=_viewers.camera_viewer.x_changed) xalign 1.
                     hbox:
+                        style_group "action_editor"
                         label "y"
                         textbutton _("loop") action ToggleDict(_viewers.loops, "_camera_y_loop")
                         textbutton "[_camera_y: >5]" action Function(_viewers.camera_viewer.edit_value, _viewers.camera_viewer.y_changed, _viewers.camera_viewer.range_camera_pos, default=_camera_y)
                         bar adjustment ui.adjustment(range=_viewers.camera_viewer.range_camera_pos*2, value=_camera_y+_viewers.camera_viewer.range_camera_pos, page=1, changed=_viewers.camera_viewer.y_changed) xalign 1.
                     hbox:
+                        style_group "action_editor"
                         label "z"
                         textbutton _("loop") action ToggleDict(_viewers.loops, "_camera_z_loop")
                         textbutton "[_camera_z: >5]" action Function(_viewers.camera_viewer.edit_value, _viewers.camera_viewer.z_changed, _viewers.camera_viewer.range_camera_pos, default=_camera_z)
                         bar adjustment ui.adjustment(range=_viewers.camera_viewer.range_camera_pos*2, value=_camera_z+_viewers.camera_viewer.range_camera_pos, page=1, changed=_viewers.camera_viewer.z_changed) xalign 1.
                     hbox:
+                        style_group "action_editor"
                         label "rotate"
                         textbutton _("loop") action ToggleDict(_viewers.loops, "_camera_rotate_loop")
                         textbutton "[_camera_rotate: >5]" action Function(_viewers.camera_viewer.edit_value, _viewers.camera_viewer.r_changed, _viewers.camera_viewer.range_rotate, default=_camera_rotate)
@@ -384,11 +508,13 @@ screen _action_editor(tab="images", layer="master", tag="", time=0):
                 else:
                     for layer in sorted(_3d_layers.keys()):
                         hbox:
+                            style_group "action_editor"
                             label "[layer]"
                             textbutton _("loop") action ToggleDict(_viewers.loops, layer+"_loop")
                             textbutton "{}".format(_3d_layers[layer]) action Function(_viewers.camera_viewer.edit_value, _viewers.camera_viewer.generate_layer_z_changed(layer), 0, default=_3d_layers[layer])
                             bar adjustment ui.adjustment(range=_viewers.camera_viewer.range_layer_z, value=_3d_layers[layer], page=1, changed=_viewers.camera_viewer.generate_layer_z_changed(layer)) xalign 1.
             hbox:
+                style_group "action_editor"
                 xfill False
                 xalign 1.
                 if tab == "images":
@@ -408,50 +534,16 @@ screen _action_editor(tab="images", layer="master", tag="", time=0):
                     textbutton _("clipboard") action Function(_viewers.camera_viewer.put_clipboard, True)
                     textbutton _("reset") action [_viewers.camera_viewer.camera_reset, renpy.restart_interaction]
 
-    frame:
-        if time:
-            at _delay_show(time + 1)
-        xfill True
-        yalign 1.0
-        vbox:
-
-            hbox:
-                textbutton _("time: [_viewers.time:>.2f] s") action Function(_viewers.edit_time)
-                textbutton _("warper") action _viewers.select_time_warper
-                textbutton _("<") action Function(_viewers.prev_time)
-                textbutton _(">") action Function(_viewers.next_time)
-                bar adjustment ui.adjustment(range=7.0, value=_viewers.time, changed=_viewers.change_time) xalign 1.
-            hbox:
-                xfill True
-                hbox:
-                    textbutton _("clear anchor") action [SensitiveIf(_viewers.sorted_anchor_points), Function(_viewers.clear_anchor_points), renpy.restart_interaction]
-                    textbutton _("remove anchor") action [SensitiveIf(_viewers.time in _viewers.sorted_anchor_points), Function(_viewers.remove_anchor_point, _viewers.time), renpy.restart_interaction]
-                    if _viewers.sorted_anchor_points:
-                        # if _viewers.time in _viewers.sorted_anchor_points:
-                        #     textbutton _("remove anchor") action [Function(_viewers.remove_anchor_point, _viewers.time), renpy.restart_interaction]
-                        # else:
-                        #     textbutton _("add    anchor") action [_viewers.set_anchor_point, renpy.restart_interaction]
-                        textbutton _("play") action [SensitiveIf(_viewers.sorted_anchor_points), Function(_viewers.camera_viewer.play, play=True), Function(_viewers.transform_viewer.play, play=True), Hide("_action_editor"), Show("_action_editor", tab=tab, layer=layer, tag=tag, time=_viewers.sorted_anchor_points[-1]), renpy.restart_interaction]
-                    else:
-                        # textbutton _("add    anchor") action [_viewers.set_anchor_point, renpy.restart_interaction]
-                        textbutton _("play") action [SensitiveIf(_viewers.sorted_anchor_points), Function(_viewers.camera_viewer.play, play=True), Function(_viewers.transform_viewer.play, play=True), Hide("_action_editor"), Show("_action_editor", tab=tab, layer=layer, tag=tag), renpy.restart_interaction]
-                    textbutton _("clipboard") action Function(_viewers.put_clipboard)
-                hbox:
-                    xalign 1.
-                    textbutton _("close") action Return()
-
     if time:
         add _viewers.dragged at _delay_show(time + 1)
     else:
         add _viewers.dragged
 
 init -1600:
-    style action_editor_frame background "#0006"
     style action_editor_button size_group "action_editor"
     style action_editor_images_button size_group "action_editor_images"
     style action_editor_layers_button size_group "action_editor_layers"
     style action_editor_times_button size_group "action_editor_times"
-    style action_editor_times_frame background "#0006"
     style action_editor_button_text xalign .5
     style action_editor_label xminimum 110
     style action_editor_vbox xfill True
@@ -483,7 +575,6 @@ screen _warper_selecter():
     key "game_menu" action Return("")
 
     frame:
-        yalign .98
         style_group "warper_selecter"
 
         has vbox

@@ -134,7 +134,7 @@
              layers don't be saved.
              """
 
-        def camera_move(x, y, z, rotate=0, duration=0, warper='linear', subpixel=True, loop=False):
+        def camera_move(x, y, z, rotate=0, duration=0, warper='linear', subpixel=True, loop=False, x_express=None, y_express=None, z_express=None, rotate_express=None):
             """
              :doc: camera
 
@@ -158,9 +158,25 @@
              `subpixel`
                   Default True, if True, causes things to be drawn on the screen
                   using subpixel positioning
+             'x_express'
+                 This should be callable, which is called with the shown timebase
+                 and the animation timebase, in seconds and return a number. The
+                 result of this is added to the x coordinate of the camera.
+             'y_express'
+                 This should be callable, which is called with the shown timebase
+                 and the animation timebase, in seconds and return a number. The
+                 result of this is added to the y coordinate of the camera.
+             'z_express'
+                 This should be callable, which is called with the shown timebase
+                 and the animation timebase, in seconds and return a number. The
+                 result of this is added to the z coordinate of the camera.
+             'rotate_express'
+                 This should be callable, which is called with the shown timebase
+                 and the animation timebase, in seconds and return a number. The
+                 result of this is added to the rotate coordinate of the camera.
              """
 
-        def layer_move(layer, z, duration=0, warper='linear', subpixel=True, loop=False):
+        def layer_move(layer, z, duration=0, warper='linear', subpixel=True, loop=False, x_express=None, y_express=None, z_express=None, rotate_express=None):
             """
              :doc: camera
 
@@ -180,9 +196,25 @@
              `subpixel`
                   Default True, if True, causes things to be drawn on the screen
                   using subpixel positioning
+             'x_express'
+                 This should be callable, which is called with the shown timebase
+                 and the animation timebase, in seconds and return a number. The
+                 result of this is added to the x coordinate of the camera.
+             'y_express'
+                 This should be callable, which is called with the shown timebase
+                 and the animation timebase, in seconds and return a number. The
+                 result of this is added to the y coordinate of the camera.
+             'z_express'
+                 This should be callable, which is called with the shown timebase
+                 and the animation timebase, in seconds and return a number. The
+                 result of this is added to the z coordinate of the camera.
+             'rotate_express'
+                 This should be callable, which is called with the shown timebase
+                 and the animation timebase, in seconds and return a number. The
+                 result of this is added to the rotate coordinate of the camera.
              """
 
-        def camera_moves(check_points, loop=False, subpixel=True):
+        def camera_moves(check_points, loop=False, subpixel=True, x_express=None, y_express=None, z_express=None, rotate_express=None):
             """
              :doc: camera
 
@@ -195,9 +227,25 @@
              `subpixel`
                   Default True, if True, causes things to be drawn on the screen
                   using subpixel positioning
+             'x_express'
+                 This should be callable, which is called with the shown timebase
+                 and the animation timebase, in seconds and return a number. The
+                 result of this is added to the x coordinate of the camera.
+             'y_express'
+                 This should be callable, which is called with the shown timebase
+                 and the animation timebase, in seconds and return a number. The
+                 result of this is added to the y coordinate of the camera.
+             'z_express'
+                 This should be callable, which is called with the shown timebase
+                 and the animation timebase, in seconds and return a number. The
+                 result of this is added to the z coordinate of the camera.
+             'rotate_express'
+                 This should be callable, which is called with the shown timebase
+                 and the animation timebase, in seconds and return a number. The
+                 result of this is added to the rotate coordinate of the camera.
              """
 
-        def layer_moves(layer, check_points, loop=False, subpixel=True):
+        def layer_moves(layer, check_points, loop=False, subpixel=True, x_express=None, y_express=None, z_express=None, rotate_express=None):
             """
              :doc: camera
 
@@ -212,9 +260,25 @@
              `subpixel`
                   Default True, if True, causes things to be drawn on the screen
                   using subpixel positioning
+             'x_express'
+                 This should be callable, which is called with the shown timebase
+                 and the animation timebase, in seconds and return a number. The
+                 result of this is added to the x coordinate of the camera.
+             'y_express'
+                 This should be callable, which is called with the shown timebase
+                 and the animation timebase, in seconds and return a number. The
+                 result of this is added to the y coordinate of the camera.
+             'z_express'
+                 This should be callable, which is called with the shown timebase
+                 and the animation timebase, in seconds and return a number. The
+                 result of this is added to the z coordinate of the camera.
+             'rotate_express'
+                 This should be callable, which is called with the shown timebase
+                 and the animation timebase, in seconds and return a number. The
+                 result of this is added to the rotate coordinate of the camera.
              """
 
-        def all_moves(camera_check_points=None, layer_check_points=None, subpixel=True, play=True, x_loop=False, y_loop=False, z_loop=False, rotate_loop=False, **kwargs):
+        def all_moves(camera_check_points=None, layer_check_points=None, subpixel=True, play=True, x_loop=False, y_loop=False, z_loop=False, rotate_loop=False, x_express=None, y_express=None, z_express=None, rotate_express=None, **kwargs):
             """
              :doc: camera
 
@@ -246,6 +310,22 @@
              `subpixel`
                   Default True, if True, causes things to be drawn on the screen
                   using subpixel positioning
+             'x_express'
+                 This should be callable, which is called with the shown timebase
+                 and the animation timebase, in seconds and return a number. The
+                 result of this is added to the x coordinate of the camera.
+             'y_express'
+                 This should be callable, which is called with the shown timebase
+                 and the animation timebase, in seconds and return a number. The
+                 result of this is added to the y coordinate of the camera.
+             'z_express'
+                 This should be callable, which is called with the shown timebase
+                 and the animation timebase, in seconds and return a number. The
+                 result of this is added to the z coordinate of the camera.
+             'rotate_express'
+                 This should be callable, which is called with the shown timebase
+                 and the animation timebase, in seconds and return a number. The
+                 result of this is added to the rotate coordinate of the camera.
 
               If keyword arguments 'layer name'_loop is given, the layer motion is repeats.
              """
@@ -367,7 +447,7 @@
               ん。
               """
 
-         def camera_move(x, y, z, rotate=0, duration=0, warper='linear', subpixel=True, loop=False):
+        def camera_move(x, y, z, rotate=0, duration=0, warper='linear', subpixel=True, loop=False, x_express=None, y_express=None, z_express=None, rotate_express=None):
              """
               :doc: camera
 
@@ -391,9 +471,25 @@
               `subpixel`
                    デフォルトは Trueで、 True なら、1 pixel 以下の値を使用して画面
                    に描画します。
+             'x_express'
+                   これは呼出可能なオブジェクトで、出現時間軸とアニメーション時間
+                   軸の秒数を引数に呼び出され、数字を返します。この結果はカメラの
+                   x座標に加えられます。
+             'y_express'
+                   これは呼出可能なオブジェクトで、出現時間軸とアニメーション時間
+                   軸の秒数を引数に呼び出され、数字を返します。この結果はカメラの
+                   y座標に加えられます。
+             'z_express'
+                   これは呼出可能なオブジェクトで、出現時間軸とアニメーション時間
+                   軸の秒数を引数に呼び出され、数字を返します。この結果はカメラの
+                   z座標に加えられます。
+             'rotate_express'
+                   これは呼出可能なオブジェクトで、出現時間軸とアニメーション時間
+                   軸の秒数を引数に呼び出され、数字を返します。この結果はカメラの
+                   rotate座標に加えられます。
               """
 
-         def camera_moves(check_points, loop=False, subpixel=True):
+        def camera_moves(check_points, loop=False, subpixel=True, x_express=None, y_express=None, z_express=None, rotate_express=None):
              """
               :doc: camera
 
@@ -409,9 +505,25 @@
               `subpixel`
                    デフォルトは Trueで、 True なら、1 pixel 以下の値を使用して画面
                    に描画します。
+             'x_express'
+                   これは呼出可能なオブジェクトで、出現時間軸とアニメーション時間
+                   軸の秒数を引数に呼び出され、数字を返します。この結果はカメラの
+                   x座標に加えられます。
+             'y_express'
+                   これは呼出可能なオブジェクトで、出現時間軸とアニメーション時間
+                   軸の秒数を引数に呼び出され、数字を返します。この結果はカメラの
+                   y座標に加えられます。
+             'z_express'
+                   これは呼出可能なオブジェクトで、出現時間軸とアニメーション時間
+                   軸の秒数を引数に呼び出され、数字を返します。この結果はカメラの
+                   z座標に加えられます。
+             'rotate_express'
+                   これは呼出可能なオブジェクトで、出現時間軸とアニメーション時間
+                   軸の秒数を引数に呼び出され、数字を返します。この結果はカメラの
+                   rotate座標に加えられます。
               """
 
-         def layer_move(layer, z, duration=0, warper='linear', subpixel=True, loop=False):
+        def layer_move(layer, z, duration=0, warper='linear', subpixel=True, loop=False, x_express=None, y_express=None, z_express=None, rotate_express=None):
              """
               :doc: camera
 
@@ -431,9 +543,25 @@
               `subpixel`
                    デフォルトは Trueで、 True なら、1 pixel 以下の値を使用して画面
                    に描画します。
+             'x_express'
+                   これは呼出可能なオブジェクトで、出現時間軸とアニメーション時間
+                   軸の秒数を引数に呼び出され、数字を返します。この結果はカメラの
+                   x座標に加えられます。
+             'y_express'
+                   これは呼出可能なオブジェクトで、出現時間軸とアニメーション時間
+                   軸の秒数を引数に呼び出され、数字を返します。この結果はカメラの
+                   y座標に加えられます。
+             'z_express'
+                   これは呼出可能なオブジェクトで、出現時間軸とアニメーション時間
+                   軸の秒数を引数に呼び出され、数字を返します。この結果はカメラの
+                   z座標に加えられます。
+             'rotate_express'
+                   これは呼出可能なオブジェクトで、出現時間軸とアニメーション時間
+                   軸の秒数を引数に呼び出され、数字を返します。この結果はカメラの
+                   rotate座標に加えられます。
              """
 
-         def layer_moves(layer, check_points, loop=False, subpixel=True):
+        def layer_moves(layer, check_points, loop=False, subpixel=True, x_express=None, y_express=None, z_express=None, rotate_express=None):
              """
               :doc: camera
 
@@ -451,9 +579,25 @@
               `subpixel`
                    デフォルトは Trueで、 True なら、1 pixel 以下の値を使用して画面
                    に描画します。
+             'x_express'
+                   これは呼出可能なオブジェクトで、出現時間軸とアニメーション時間
+                   軸の秒数を引数に呼び出され、数字を返します。この結果はカメラの
+                   x座標に加えられます。
+             'y_express'
+                   これは呼出可能なオブジェクトで、出現時間軸とアニメーション時間
+                   軸の秒数を引数に呼び出され、数字を返します。この結果はカメラの
+                   y座標に加えられます。
+             'z_express'
+                   これは呼出可能なオブジェクトで、出現時間軸とアニメーション時間
+                   軸の秒数を引数に呼び出され、数字を返します。この結果はカメラの
+                   z座標に加えられます。
+             'rotate_express'
+                   これは呼出可能なオブジェクトで、出現時間軸とアニメーション時間
+                   軸の秒数を引数に呼び出され、数字を返します。この結果はカメラの
+                   rotate座標に加えられます。
              """
 
-        def all_moves(camera_check_points=None, layer_check_points=None, subpixel=True, play=True, x_loop=False, y_loop=False, z_loop=False, rotate_loop=False, **kwargs):
+        def all_moves(camera_check_points=None, layer_check_points=None, subpixel=True, x_loop=False, y_loop=False, z_loop=False, rotate_loop=False, x_express=None, y_express=None, z_express=None, rotate_express=None, **kwargs):
             """
              :doc: camera
 
@@ -487,6 +631,22 @@
               `subpixel`
                    デフォルトは Trueで、 True なら、1 pixel 以下の値を使用して画面
                    に描画します。
+             'x_express'
+                   これは呼出可能なオブジェクトで、出現時間軸とアニメーション時間
+                   軸の秒数を引数に呼び出され、数字を返します。この結果はカメラの
+                   x座標に加えられます。
+             'y_express'
+                   これは呼出可能なオブジェクトで、出現時間軸とアニメーション時間
+                   軸の秒数を引数に呼び出され、数字を返します。この結果はカメラの
+                   y座標に加えられます。
+             'z_express'
+                   これは呼出可能なオブジェクトで、出現時間軸とアニメーション時間
+                   軸の秒数を引数に呼び出され、数字を返します。この結果はカメラの
+                   z座標に加えられます。
+             'rotate_express'
+                   これは呼出可能なオブジェクトで、出現時間軸とアニメーション時間
+                   軸の秒数を引数に呼び出され、数字を返します。この結果はカメラの
+                   rotate座標に加えられます。
 
               キーワード引数として <レイヤー名>_loop をとります。デフォルトは Falseで、True ならそのレイヤーのモーションが繰り替えされます。
              """
