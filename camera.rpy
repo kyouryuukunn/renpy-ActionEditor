@@ -1281,6 +1281,10 @@ init -1600 python in _viewers:
         subpixel True """.format(*k)
                 # kwargs_org = {k2: v2 for dic in [transform_viewer.state_org[layer], transform_viewer.state[layer]] for k2, v2 in dic.items()}[tag]
                 for p, d in transform_viewer.props:
+                    value = transform_viewer.get_property(layer, tag, p)
+                    if value != d:
+                        string += "{} {} ".format(p, value)
+                for p, d in transform_viewer.props:
                     if p in all_anchor_points[k]:
                         check_points = [c for t, c in all_anchor_points[k][p]]
                         # if kwargs_org[p] is None and p != "rotate":
