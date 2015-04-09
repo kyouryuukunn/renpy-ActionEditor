@@ -408,7 +408,11 @@ screen _action_editor(tab="images", layer="master", tag="", time=0):
         vbox:
 
             hbox:
-                textbutton _("time: [_viewers.time:>.2f] s") action Function(_viewers.edit_time)
+                label _("time (s)")
+                button:
+                    id "prop_input"
+                    action renpy.restart_interaction
+                    add Input(default="{:>.2f}".format(_viewers.time), changed=_viewers.edit_time, button=renpy.get_widget("_action_editor","prop_input")) xalign .5
                 textbutton _("<") action Function(_viewers.prev_time)
                 textbutton _(">") action Function(_viewers.next_time)
                 bar adjustment ui.adjustment(range=7.0, value=_viewers.time, changed=_viewers.change_time) xalign 1.
@@ -459,21 +463,27 @@ screen _action_editor(tab="images", layer="master", tag="", time=0):
                 if tag in state:
                     for p, d in _viewers.transform_viewer.props:
                         $prop = _viewers.transform_viewer.get_property(layer, tag, p)
-                        $ f = _viewers.transform_viewer.generate_changed(layer, tag, p)
+                        $ f = _viewers.transform_viewer.generate_changed(layer, tag, p, False)
                         if p not in _viewers.transform_viewer.force_float and ((state[tag][p] is None and isinstance(d, int)) or isinstance(state[tag][p], int)):
                             hbox:
                                 style_group "action_editor"
                                 textbutton "[p]" action Function(_viewers.transform_viewer.put_prop_clipboard, p, prop)
                                 textbutton _("loop") action ToggleDict(_viewers.loops, tag+"_"+layer+"_"+p+"_loop")
-                                textbutton "[prop]" action Function(_viewers.transform_viewer.edit_value, f, True, default=prop)
-                                bar adjustment ui.adjustment(range=_viewers.transform_viewer.int_range*2, value=prop+_viewers.transform_viewer.int_range, page=1, changed=f) xalign 1.
+                                button:
+                                    id "prop_input"
+                                    action renpy.restart_interaction
+                                    add Input(default="{:>3}".format(prop), changed=renpy.curry(_viewers.transform_viewer.edit_value)(function=f, int=True), button=renpy.get_widget("_action_editor","prop_input")) xalign .5
+                                bar adjustment ui.adjustment(range=_viewers.transform_viewer.int_range*2, value=prop+_viewers.transform_viewer.int_range, page=1, changed=_viewers.transform_viewer.generate_changed(layer, tag, p)) xalign 1.
                         else:
                             hbox:
                                 style_group "action_editor"
                                 textbutton "[p]" action Function(_viewers.transform_viewer.put_prop_clipboard, p, prop)
                                 textbutton _("loop") action ToggleDict(_viewers.loops, tag+"_"+layer+"_"+p+"_loop")
-                                textbutton "[prop]" action Function(_viewers.transform_viewer.edit_value, f, False, default=prop)
-                                bar adjustment ui.adjustment(range=_viewers.transform_viewer.float_range*2, value=prop+_viewers.transform_viewer.float_range, page=.05, changed=f) xalign 1.
+                                button:
+                                    id "prop_input"
+                                    action renpy.restart_interaction
+                                    add Input(default="{:>.2f}".format(prop), changed=renpy.curry(_viewers.transform_viewer.edit_value)(function=f, int=False), button=renpy.get_widget("_action_editor","prop_input")) xalign .5
+                                bar adjustment ui.adjustment(range=_viewers.transform_viewer.float_range*2, value=prop+_viewers.transform_viewer.float_range, page=.05, changed=_viewers.transform_viewer.generate_changed(layer, tag, p)) xalign 1.
             elif tab == "3D Camera" or tab == "2D Camera":
                 if _3d_layers.keys() == ["master"] and tab == "3D Camera":
                     label _("Please regist 3D layers")
@@ -482,26 +492,38 @@ screen _action_editor(tab="images", layer="master", tag="", time=0):
                         style_group "action_editor"
                         label "x"
                         textbutton _("loop") action ToggleDict(_viewers.loops, "_camera_x_loop")
-                        textbutton "[_camera_x: >5]" action Function(_viewers.camera_viewer.edit_value, _viewers.camera_viewer.x_changed, _viewers.camera_viewer.range_camera_pos, default=_camera_x)
-                        bar adjustment ui.adjustment(range=_viewers.camera_viewer.range_camera_pos*2, value=_camera_x+_viewers.camera_viewer.range_camera_pos, page=1, changed=_viewers.camera_viewer.x_changed) xalign 1.
+                        button:
+                            id "input"
+                            action renpy.restart_interaction
+                            add Input(default="{:>5}".format(_camera_x), changed=renpy.curry(_viewers.camera_viewer.edit_value)(function=_viewers.camera_viewer.x_changed, range=_viewers.camera_viewer.range_camera_pos), button=renpy.get_widget("_action_editor","input")) xalign .5
+                        bar adjustment ui.adjustment(range=_viewers.camera_viewer.range_camera_pos*2, value=_camera_x+_viewers.camera_viewer.range_camera_pos, page=1, changed=renpy.curry(_viewers.camera_viewer.x_changed)(interact=True)) xalign 1.
                     hbox:
                         style_group "action_editor"
                         label "y"
                         textbutton _("loop") action ToggleDict(_viewers.loops, "_camera_y_loop")
-                        textbutton "[_camera_y: >5]" action Function(_viewers.camera_viewer.edit_value, _viewers.camera_viewer.y_changed, _viewers.camera_viewer.range_camera_pos, default=_camera_y)
-                        bar adjustment ui.adjustment(range=_viewers.camera_viewer.range_camera_pos*2, value=_camera_y+_viewers.camera_viewer.range_camera_pos, page=1, changed=_viewers.camera_viewer.y_changed) xalign 1.
+                        button:
+                            id "input"
+                            action renpy.restart_interaction
+                            add Input(default="{:>5}".format(_camera_y), changed=renpy.curry(_viewers.camera_viewer.edit_value)(function=_viewers.camera_viewer.y_changed, range=_viewers.camera_viewer.range_camera_pos), button=renpy.get_widget("_action_editor","input")) xalign .5
+                        bar adjustment ui.adjustment(range=_viewers.camera_viewer.range_camera_pos*2, value=_camera_y+_viewers.camera_viewer.range_camera_pos, page=1, changed=renpy.curry(_viewers.camera_viewer.y_changed)(interact=True)) xalign 1.
                     hbox:
                         style_group "action_editor"
                         label "z"
                         textbutton _("loop") action ToggleDict(_viewers.loops, "_camera_z_loop")
-                        textbutton "[_camera_z: >5]" action Function(_viewers.camera_viewer.edit_value, _viewers.camera_viewer.z_changed, _viewers.camera_viewer.range_camera_pos, default=_camera_z)
-                        bar adjustment ui.adjustment(range=_viewers.camera_viewer.range_camera_pos*2, value=_camera_z+_viewers.camera_viewer.range_camera_pos, page=1, changed=_viewers.camera_viewer.z_changed) xalign 1.
+                        button:
+                            id "input"
+                            action renpy.restart_interaction
+                            add Input(default="{:>5}".format(_camera_z), changed=renpy.curry(_viewers.camera_viewer.edit_value)(function=_viewers.camera_viewer.z_changed, range=_viewers.camera_viewer.range_camera_pos), button=renpy.get_widget("_action_editor","input")) xalign .5
+                        bar adjustment ui.adjustment(range=_viewers.camera_viewer.range_camera_pos*2, value=_camera_z+_viewers.camera_viewer.range_camera_pos, page=1, changed=renpy.curry(_viewers.camera_viewer.z_changed)(interact=True)) xalign 1.
                     hbox:
                         style_group "action_editor"
                         label "rotate"
                         textbutton _("loop") action ToggleDict(_viewers.loops, "_camera_rotate_loop")
-                        textbutton "[_camera_rotate: >5]" action Function(_viewers.camera_viewer.edit_value, _viewers.camera_viewer.r_changed, _viewers.camera_viewer.range_rotate, default=_camera_rotate)
-                        bar adjustment ui.adjustment(range=_viewers.camera_viewer.range_rotate*2, value=_camera_rotate+_viewers.camera_viewer.range_rotate, page=1, changed=_viewers.camera_viewer.r_changed) xalign 1.
+                        button:
+                            id "input"
+                            action renpy.restart_interaction
+                            add Input(default="{:>5}".format(_camera_rotate), changed=_viewers.camera_viewer.r_changed, range=_viewers.camera_viewer.range_rotate, button=renpy.get_widget("_action_editor","input")) xalign .5
+                        bar adjustment ui.adjustment(range=_viewers.camera_viewer.range_rotate*2, value=_camera_rotate+_viewers.camera_viewer.range_rotate, page=1, changed=renpy.curry(_viewers.camera_viewer.r_changed)(interact=True)) xalign 1.
             elif tab == "3D Layers":
                 if _3d_layers.keys() == ["master"]:
                     label _("Please regist 3D layers")
@@ -511,8 +533,11 @@ screen _action_editor(tab="images", layer="master", tag="", time=0):
                             style_group "action_editor"
                             label "[layer]"
                             textbutton _("loop") action ToggleDict(_viewers.loops, layer+"_loop")
-                            textbutton "{}".format(_3d_layers[layer]) action Function(_viewers.camera_viewer.edit_value, _viewers.camera_viewer.generate_layer_z_changed(layer), 0, default=_3d_layers[layer])
-                            bar adjustment ui.adjustment(range=_viewers.camera_viewer.range_layer_z, value=_3d_layers[layer], page=1, changed=_viewers.camera_viewer.generate_layer_z_changed(layer)) xalign 1.
+                            button:
+                                id "input"
+                                action renpy.restart_interaction
+                                add Input(default="{}".format(_3d_layers[layer]), changed=_viewers.camera_viewer.generate_layer_z_changed(layer), range=_viewers.camera_viewer.range_layer_z, button=renpy.get_widget("_action_editor","input")) xalign .5
+                            bar adjustment ui.adjustment(range=_viewers.camera_viewer.range_layer_z, value=_3d_layers[layer], page=1, changed=_viewers.camera_viewer.generate_layer_z_changed(layer=layer, interact=True)) xalign 1.
             hbox:
                 style_group "action_editor"
                 xfill False
@@ -548,26 +573,26 @@ init -1600:
     style action_editor_label xminimum 110
     style action_editor_vbox xfill True
 
-screen _input_screen(message="type value", default=""):
-    modal True
-    zorder 100
-    key "game_menu" action Return("")
-
-    frame:
-        style_group "input_screen"
-
-        has vbox
-
-        label message
-
-        hbox:
-            input default default
-
-init -1600:
-    style input_screen_frame xfill True ypos .1 xmargin .05 ymargin .05
-    style input_screen_vbox xfill True spacing 30
-    style input_screen_label xalign .5
-    style input_screen_hbox  xalign .5
+# screen _input_screen(message="type value", default=""):
+#     modal True
+#     zorder 100
+#     key "game_menu" action Return("")
+#
+#     frame:
+#         style_group "input_screen"
+#
+#         has vbox
+#
+#         label message
+#
+#         hbox:
+#             input default default
+#
+# init -1600:
+#     style input_screen_frame xfill True ypos .1 xmargin .05 ymargin .05
+#     style input_screen_vbox xfill True spacing 30
+#     style input_screen_label xalign .5
+#     style input_screen_hbox  xalign .5
 
 screen _warper_selecter():
     modal True
@@ -815,7 +840,7 @@ init -1600 python in _viewers:
             return .005
 
 
-        def generate_changed(self, layer, tag, prop):
+        def generate_changed(self, layer, tag, prop, interact=True):
             state={k: v for dic in [self.state_org[layer], self.state[layer]] for k, v in dic.items()}[tag][prop]
             def changed(v):
                 kwargs = {}
@@ -830,7 +855,8 @@ init -1600 python in _viewers:
 
                 self.set_anchor_point(layer, tag, prop, kwargs[prop])
                 renpy.show(tag, [renpy.store.Transform(**kwargs)], layer=layer)
-                renpy.restart_interaction()
+                if interact:
+                    renpy.restart_interaction()
             return changed
 
         def get_property(self, layer, tag, prop, default=True):
@@ -877,30 +903,29 @@ init -1600 python in _viewers:
             else:
                 renpy.notify(__('Putted "%s" on clipboard') % string)
 
-        def edit_value(self, function, int=False, default=""):
-            v = renpy.invoke_in_new_context(renpy.call_screen, "_input_screen", default=default)
-            if v:
+        def edit_value(self, input, function, int=False):
+            if input and input != ".":
                 try:
                     if int:
-                        v = renpy.python.py_eval(v) + self.int_range
+                        input = renpy.python.py_eval(input) + self.int_range
                     else:
-                        v = renpy.python.py_eval(v) + self.float_range
-                    function(v)
+                        input = renpy.python.py_eval(input) + self.float_range
+                    function(input)
                 except:
                     renpy.notify(_("Please type value"))
 
-        def add_image(self, layer):
-            name = renpy.invoke_in_new_context(renpy.call_screen, "_input_screen", message=_("Type a image name"))
-            if name:
-                try:
-                    tag = name.split()[0]
-                    self.state[layer][tag] = {}
-                    renpy.show(name, layer=layer)
-                    for p, d in self.props:
-                        self.state[layer][tag][p] = self.get_property(layer, tag, p)
-                    renpy.show_screen("_action_editor", tab="images", layer=layer, tag=tag)
-                except:
-                    renpy.notify(_("Please type value"))
+        # def add_image(self, layer):
+        #     name = renpy.invoke_in_new_context(renpy.call_screen, "_input_screen", message=_("Type a image name"))
+        #     if name:
+        #         try:
+        #             tag = name.split()[0]
+        #             self.state[layer][tag] = {}
+        #             renpy.show(name, layer=layer)
+        #             for p, d in self.props:
+        #                 self.state[layer][tag][p] = self.get_property(layer, tag, p)
+        #             renpy.show_screen("_action_editor", tab="images", layer=layer, tag=tag)
+        #         except:
+        #             renpy.notify(_("Please type value"))
     transform_viewer = TransformViewer()
 
     ##########################################################################
@@ -930,35 +955,40 @@ init -1600 python in _viewers:
                 renpy.store.layer_move(layer, self._3d_layers[layer])
             renpy.restart_interaction()
 
-        def x_changed(self, v):
+        def x_changed(self, v, interact=False):
             v=int(v)
             renpy.store.camera_move(v - self.range_camera_pos, renpy.store._camera_y, renpy.store._camera_z, renpy.store._camera_rotate)
             self.set_camera_anchor_point("_camera_x", v-self.range_camera_pos)
-            renpy.restart_interaction()
+            if interact:
+                renpy.restart_interaction()
 
-        def y_changed(self, v):
+        def y_changed(self, v, interact=False):
             v=int(v)
             renpy.store.camera_move(renpy.store._camera_x, v - self.range_camera_pos, renpy.store._camera_z, renpy.store._camera_rotate)
             self.set_camera_anchor_point("_camera_y", v-self.range_camera_pos)
-            renpy.restart_interaction()
+            if interact:
+                renpy.restart_interaction()
 
-        def z_changed(self, v):
+        def z_changed(self, v, interact=False):
             v=int(v)
             renpy.store.camera_move(renpy.store._camera_x, renpy.store._camera_y, v - self.range_camera_pos, renpy.store._camera_rotate)
             self.set_camera_anchor_point("_camera_z", v-self.range_camera_pos)
-            renpy.restart_interaction()
+            if interact:
+                renpy.restart_interaction()
 
-        def r_changed(self, v):
+        def r_changed(self, v, interact=False):
             v=int(v)
             renpy.store.camera_move(renpy.store._camera_x, renpy.store._camera_y, renpy.store._camera_z, v - self.range_rotate)
             self.set_camera_anchor_point("_camera_rotate", v-self.range_camera_pos)
-            renpy.restart_interaction()
-
-        def generate_layer_z_changed(self, l):
-            def layer_z_changed(v):
-                renpy.store.layer_move(l, int(v))
-                self.set_layer_anchor_point(l)
+            if interact:
                 renpy.restart_interaction()
+
+        def generate_layer_z_changed(self, layer, interact=False):
+            def layer_z_changed(v):
+                renpy.store.layer_move(layer, int(v))
+                self.set_layer_anchor_point(layer)
+                if interact:
+                    renpy.restart_interaction()
             return layer_z_changed
 
         def put_clipboard(self, camera_tab):
@@ -978,11 +1008,10 @@ init -1600 python in _viewers:
             else:
                 renpy.notify(__("Putted '%s' on clipboard") % string)
 
-        def edit_value(self, function, range, default=""):
-            v = renpy.invoke_in_new_context(renpy.call_screen, "_input_screen", default=default)
-            if v:
+        def edit_value(self, input, function, range):
+            if input and input != ".":
                 try:
-                    function(renpy.python.py_eval(v) + range)
+                    function(renpy.python.py_eval(input) + range)
                 except:
                     renpy.notify(_("Please type value"))
 
@@ -1124,15 +1153,14 @@ init -1600 python in _viewers:
     sorted_anchor_points = []
     warper = "linear"
 
-    def edit_time():
+    def edit_time(input):
         global time
-        v = renpy.invoke_in_new_context(renpy.call_screen, "_input_screen", default=time)
-        if v:
+        if input and input != ".":
             try:
-                v = renpy.python.py_eval(v)
-                if v < 0:
+                input = renpy.python.py_eval(input)
+                if input < 0:
                     return
-                time = v
+                change_time(input, False)
             except:
                 renpy.notify(_("Please type value"))
 
@@ -1209,12 +1237,15 @@ init -1600 python in _viewers:
                         sorted_anchor_points.append(t)
         sorted_anchor_points.sort()
 
-    def change_time(v):
+    def change_time(v, interact=True):
+        if isinstance(v, str):
+            v = str(v)
         global time
         time = round(v, 2)
         transform_viewer.play(False)
         camera_viewer.play(False)
-        renpy.restart_interaction()
+        if interact:
+            renpy.restart_interaction()
 
     # def set_anchor_point():
     #     camera_viewer.set_camera_anchor_point()
