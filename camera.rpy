@@ -391,7 +391,7 @@ transform _delay_show(time):
     pause time
     alpha 1
 
-screen _action_editor(tab="images", layer="master", tag="", time=0):
+screen _action_editor(tab="images", layer="master", name="", time=0):
     if time:
         timer time+1 action Function(_viewers.change_time, _viewers.time)
     $state={k: v for dic in [_viewers.transform_viewer.state_org[layer], _viewers.transform_viewer.state[layer]] for k, v in dic.items()}
@@ -424,10 +424,10 @@ screen _action_editor(tab="images", layer="master", tag="", time=0):
                         #     textbutton _("remove anchor") action [Function(_viewers.remove_anchor_point, _viewers.time), renpy.restart_interaction]
                         # else:
                         #     textbutton _("add    anchor") action [_viewers.set_anchor_point, renpy.restart_interaction]
-                        textbutton _("play") action [SensitiveIf(_viewers.sorted_anchor_points), Function(_viewers.camera_viewer.play, play=True), Function(_viewers.transform_viewer.play, play=True), Hide("_action_editor"), Show("_action_editor", tab=tab, layer=layer, tag=tag, time=_viewers.sorted_anchor_points[-1]), renpy.restart_interaction]
+                        textbutton _("play") action [SensitiveIf(_viewers.sorted_anchor_points), Function(_viewers.camera_viewer.play, play=True), Function(_viewers.transform_viewer.play, play=True), Hide("_action_editor"), Show("_action_editor", tab=tab, layer=layer, name=name, time=_viewers.sorted_anchor_points[-1]), renpy.restart_interaction]
                     else:
                         # textbutton _("add    anchor") action [_viewers.set_anchor_point, renpy.restart_interaction]
-                        textbutton _("play") action [SensitiveIf(_viewers.sorted_anchor_points), Function(_viewers.camera_viewer.play, play=True), Function(_viewers.transform_viewer.play, play=True), Hide("_action_editor"), Show("_action_editor", tab=tab, layer=layer, tag=tag), renpy.restart_interaction]
+                        textbutton _("play") action [SensitiveIf(_viewers.sorted_anchor_points), Function(_viewers.camera_viewer.play, play=True), Function(_viewers.transform_viewer.play, play=True), Hide("_action_editor"), Show("_action_editor", tab=tab, layer=layer, name=name), renpy.restart_interaction]
                     textbutton _("clipboard") action Function(_viewers.put_clipboard)
                 hbox:
                     xalign 1.
@@ -453,25 +453,26 @@ screen _action_editor(tab="images", layer="master", tag="", time=0):
                     style_group "action_editor"
                     xfill False
                     label _("images")
-                    for t in state:
-                        textbutton "[t]" action [SelectedIf(t == tag), Show("_action_editor", tab=tab, layer=layer, tag=t)]
+                    for n in state:
+                        if renpy.showing(n, layer):
+                            textbutton "{}".format(n.split()[0]) action [SelectedIf(n == name), Show("_action_editor", tab=tab, layer=layer, name=n)]
 
-                if tag in state:
+                if name in state:
                     for p, d in _viewers.transform_viewer.props:
-                        $prop = _viewers.transform_viewer.get_property(layer, tag, p)
-                        $ f = _viewers.transform_viewer.generate_changed(layer, tag, p)
-                        if p not in _viewers.transform_viewer.force_float and ((state[tag][p] is None and isinstance(d, int)) or isinstance(state[tag][p], int)):
+                        $prop = _viewers.transform_viewer.get_property(layer, name.split()[0], p)
+                        $ f = _viewers.transform_viewer.generate_changed(layer, name, p)
+                        if p not in _viewers.transform_viewer.force_float and ((state[name][p] is None and isinstance(d, int)) or isinstance(state[name][p], int)):
                             hbox:
                                 style_group "action_editor"
                                 textbutton "[p]" action Function(_viewers.transform_viewer.put_prop_clipboard, p, prop)
-                                textbutton _("loop") action ToggleDict(_viewers.loops, tag+"_"+layer+"_"+p+"_loop")
+                                textbutton _("loop") action ToggleDict(_viewers.loops, name+"_"+layer+"_"+p+"_loop")
                                 textbutton "[prop]" action Function(_viewers.transform_viewer.edit_value, f, True, default=prop)
                                 bar adjustment ui.adjustment(range=_viewers.transform_viewer.int_range*2, value=prop+_viewers.transform_viewer.int_range, page=1, changed=f) xalign 1.
                         else:
                             hbox:
                                 style_group "action_editor"
                                 textbutton "[p]" action Function(_viewers.transform_viewer.put_prop_clipboard, p, prop)
-                                textbutton _("loop") action ToggleDict(_viewers.loops, tag+"_"+layer+"_"+p+"_loop")
+                                textbutton _("loop") action ToggleDict(_viewers.loops, name+"_"+layer+"_"+p+"_loop")
                                 textbutton "[prop:>.2f]" action Function(_viewers.transform_viewer.edit_value, f, False, default=prop)
                                 bar adjustment ui.adjustment(range=_viewers.transform_viewer.float_range*2, value=prop+_viewers.transform_viewer.float_range, page=.05, changed=f) xalign 1.
             elif tab == "3D Camera" or tab == "2D Camera":
@@ -518,10 +519,10 @@ screen _action_editor(tab="images", layer="master", tag="", time=0):
                 xfill False
                 xalign 1.
                 if tab == "images":
-                    if tag:
-                        textbutton _("clipboard") action Function(_viewers.transform_viewer.put_show_clipboard, tag, layer)
-                    # textbutton _("add") action Function(_viewers.transform_viewer.add_image, layer)
-                    # textbutton _("remove") action [SensitiveIf(tag), Function(_viewers.transform_viewer.state_org[layer].pop, tag), Function(renpy.hide, tag, layer), Show("_action_editor", tab=tab, layer=layer)]
+                    textbutton _("add") action Function(_viewers.transform_viewer.add_image, layer)
+                    if name:
+                        textbutton _("remove") action [SensitiveIf(name), Show("_action_editor", tab=tab, layer=layer), Function(renpy.hide, name, layer)]
+                        textbutton _("clipboard") action Function(_viewers.transform_viewer.put_show_clipboard, name, layer)
                     textbutton _("reset") action [_viewers.transform_viewer.reset, renpy.restart_interaction]
                 elif tab == "2D Camera":
                     textbutton _("clipboard") action Function(_viewers.camera_viewer.put_clipboard, True)
@@ -674,32 +675,37 @@ init -1600 python in _viewers:
                     pos = renpy.get_placement(d)
                     state = getattr(d, "state", None)
 
-                    self.state_org[layer][tag[0]] = {}
+
+                    string = ""
+                    for e in tag.name:
+                        string += str(e) + " "
+                    name = string[:-1]
+                    self.state_org[layer][name] = {}
                     for p in ["xpos", "ypos", "xanchor", "yanchor"]:
-                        self.state_org[layer][tag[0]][p] = getattr(pos, p, None)
+                        self.state_org[layer][name][p] = getattr(pos, p, None)
                     for p, d in self.props:
-                        if p not in self.state_org[layer][tag[0]]:
-                            self.state_org[layer][tag[0]][p] = getattr(state, p, None)
+                        if p not in self.state_org[layer][name]:
+                            self.state_org[layer][name][p] = getattr(state, p, None)
 
         def reset(self):
             for layer in renpy.config.layers:
-                for tag, props in self.state_org[layer].iteritems():
-                    if tag and props:
+                for name, props in self.state_org[layer].iteritems():
+                    if name and props:
                         kwargs = props.copy()
                         for p, d in self.props:
                             if kwargs[p] is None and p != "rotate":
                                 kwargs[p] = d
-                        renpy.show(tag, [renpy.store.Transform(**kwargs)], layer=layer)
-                for tag in self.state[layer]:
-                    renpy.hide(tag, layer=layer)
+                        renpy.show(name, [renpy.store.Transform(**kwargs)], layer=layer)
+                for name in self.state[layer]:
+                    renpy.hide(name, layer=layer)
                 self.state[layer] = {}
             renpy.restart_interaction()
 
-        def set_anchor_point(self, layer, tag, prop, value):
+        def set_anchor_point(self, layer, name, prop, value):
 
-            if (tag, layer) not in all_anchor_points:
-                all_anchor_points[(tag, layer)] = {}
-            anchor_points = all_anchor_points[(tag, layer)].get(prop, [])
+            if (name, layer) not in all_anchor_points:
+                all_anchor_points[(name, layer)] = {}
+            anchor_points = all_anchor_points[(name, layer)].get(prop, [])
             if anchor_points:
                 for i, (t, c) in enumerate(anchor_points):
                     if time < t:
@@ -712,22 +718,22 @@ init -1600 python in _viewers:
                     anchor_points.append((time, (value, time, warper)))
             else:
                 if time == 0:
-                    all_anchor_points[(tag, layer)][prop] = [(time, (value, time, warper))]
+                    all_anchor_points[(name, layer)][prop] = [(time, (value, time, warper))]
                 else:
-                    org = {k: v for dic in [self.state_org[layer], self.state[layer]] for k, v in dic.items()}[tag][prop]
-                    all_anchor_points[(tag, layer)][prop] = [(0, (org, 0, None)), (time, (value, time, warper))]
+                    org = {k: v for dic in [self.state_org[layer], self.state[layer]] for k, v in dic.items()}[name][prop]
+                    all_anchor_points[(name, layer)][prop] = [(0, (org, 0, None)), (time, (value, time, warper))]
             sort_anchor_points()
 
         def play(self, play):
             for layer in renpy.config.layers:
-                for tag in {k: v for dic in [self.state_org[layer], self.state[layer]] for k, v in dic.items()}:
+                for name in {k: v for dic in [self.state_org[layer], self.state[layer]] for k, v in dic.items()}:
                     check_points = {}
                     for prop, d in self.props:
-                        if (tag, layer) in all_anchor_points and prop in all_anchor_points[(tag, layer)]:
-                            check_points[prop] =  [ c for t, c in all_anchor_points[(tag, layer)][prop] ]
-                    loop = {prop+"_loop": loops[tag+"_"+layer+"_"+prop+"_loop"] for prop, d in self.props}
+                        if (name, layer) in all_anchor_points and prop in all_anchor_points[(name, layer)]:
+                            check_points[prop] =  [ c for t, c in all_anchor_points[(name, layer)][prop] ]
+                    loop = {prop+"_loop": loops[name+"_"+layer+"_"+prop+"_loop"] for prop, d in self.props}
                     if play:
-                        renpy.show(tag, [renpy.store.Transform(function=renpy.curry(self.transform)(check_points=check_points, loop=loop))], layer=layer)
+                        renpy.show(name, [renpy.store.Transform(function=renpy.curry(self.transform)(check_points=check_points, loop=loop))], layer=layer)
                     else:
                         # check_points = { prop: ( (value, time, warper).. ) }
                         kwargs = {}
@@ -770,7 +776,7 @@ init -1600 python in _viewers:
                             else:
                                 kwargs[p] = cs[-1][0]
 
-                        renpy.show(tag, [renpy.store.Transform(**kwargs)], layer=layer)
+                        renpy.show(name, [renpy.store.Transform(**kwargs)], layer=layer)
 
         def transform(self, tran, st, at, check_points, loop, subpixel=True):
             # check_points = { prop: [ (value, time, warper).. ] }
@@ -814,12 +820,12 @@ init -1600 python in _viewers:
             return .005
 
 
-        def generate_changed(self, layer, tag, prop):
-            state={k: v for dic in [self.state_org[layer], self.state[layer]] for k, v in dic.items()}[tag][prop]
+        def generate_changed(self, layer, name, prop):
+            state={k: v for dic in [self.state_org[layer], self.state[layer]] for k, v in dic.items()}[name][prop]
             def changed(v):
                 kwargs = {}
                 for p, d in self.props:
-                    kwargs[p] = self.get_property(layer, tag, p, False)
+                    kwargs[p] = self.get_property(layer, name.split()[0], p, False)
                     if p == prop:
                         default = d
                 if prop not in self.force_float and ( (state is None and isinstance(default, int)) or isinstance(state, int) ):
@@ -827,8 +833,8 @@ init -1600 python in _viewers:
                 else:
                     kwargs[prop] = round(v -self.float_range, 2)
 
-                self.set_anchor_point(layer, tag, prop, kwargs[prop])
-                renpy.show(tag, [renpy.store.Transform(**kwargs)], layer=layer)
+                self.set_anchor_point(layer, name, prop, kwargs[prop])
+                renpy.show(name, [renpy.store.Transform(**kwargs)], layer=layer)
                 renpy.restart_interaction()
             return changed
 
@@ -859,11 +865,11 @@ init -1600 python in _viewers:
             else:
                 renpy.notify(__('Putted "%s %s" on clipboard') % (prop, value))
 
-        def put_show_clipboard(self, tag, layer):
+        def put_show_clipboard(self, name, layer):
             string = """
-    show %s onlayer %s""" % (tag, layer)
+    show %s onlayer %s""" % (name, layer)
             for p, d in self.props:
-                value = self.get_property(layer, tag, p)
+                value = self.get_property(layer, name.split()[0], p)
                 if value != d:
                     if string.find(":") < 0:
                         string += ":\n        "
@@ -892,12 +898,11 @@ init -1600 python in _viewers:
             name = renpy.invoke_in_new_context(renpy.call_screen, "_input_screen", message=_("Type a image name"))
             if name:
                 try:
-                    tag = name.split()[0]
-                    self.state[layer][tag] = {}
+                    self.state[layer][name] = {}
                     renpy.show(name, layer=layer)
                     for p, d in self.props:
-                        self.state[layer][tag][p] = self.get_property(layer, tag, p)
-                    renpy.show_screen("_action_editor", tab="images", layer=layer, tag=tag)
+                        self.state[layer][name][p] = self.get_property(layer, name.split()[0], p)
+                    renpy.show_screen("_action_editor", tab="images", layer=layer, name=name)
                 except:
                     renpy.notify(_("Please type value"))
     transform_viewer = TransformViewer()
@@ -1275,13 +1280,13 @@ init -1600 python in _viewers:
 
         for k, v in all_anchor_points.items():
             if isinstance(k, tuple):
-                tag, layer = k
+                name, layer = k
                 string += """
     show {} onlayer {}:
         subpixel True """.format(*k)
                 # kwargs_org = {k2: v2 for dic in [transform_viewer.state_org[layer], transform_viewer.state[layer]] for k2, v2 in dic.items()}[tag]
                 for p, d in transform_viewer.props:
-                    value = transform_viewer.get_property(layer, tag, p)
+                    value = transform_viewer.get_property(layer, name.split()[0], p)
                     if value != d:
                         string += "{} {} ".format(p, value)
                 for p, d in transform_viewer.props:
@@ -1298,7 +1303,7 @@ init -1600 python in _viewers:
                         for i, check_point in enumerate(check_points[1:]):
                             string += """
             {} {} {} {}""".format(check_point[2], check_points[i+1][1]-check_points[i][1], p, check_point[0])
-                        if loops[tag+"_"+layer+"_"+p+"_loop"]:
+                        if loops[name+"_"+layer+"_"+p+"_loop"]:
                                 string += """
             repeat"""
 
