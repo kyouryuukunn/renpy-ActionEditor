@@ -472,7 +472,7 @@ screen _action_editor(tab="images", layer="master", tag="", time=0):
                                 style_group "action_editor"
                                 textbutton "[p]" action Function(_viewers.transform_viewer.put_prop_clipboard, p, prop)
                                 textbutton _("loop") action ToggleDict(_viewers.loops, tag+"_"+layer+"_"+p+"_loop")
-                                textbutton "[prop]" action Function(_viewers.transform_viewer.edit_value, f, False, default=prop)
+                                textbutton "[prop:>.2f]" action Function(_viewers.transform_viewer.edit_value, f, False, default=prop)
                                 bar adjustment ui.adjustment(range=_viewers.transform_viewer.float_range*2, value=prop+_viewers.transform_viewer.float_range, page=.05, changed=f) xalign 1.
             elif tab == "3D Camera" or tab == "2D Camera":
                 if _3d_layers.keys() == ["master"] and tab == "3D Camera":
@@ -524,7 +524,6 @@ screen _action_editor(tab="images", layer="master", tag="", time=0):
                     # textbutton _("remove") action [SensitiveIf(tag), Function(_viewers.transform_viewer.state_org[layer].pop, tag), Function(renpy.hide, tag, layer), Show("_action_editor", tab=tab, layer=layer)]
                     textbutton _("reset") action [_viewers.transform_viewer.reset, renpy.restart_interaction]
                 elif tab == "2D Camera":
-                    textbutton _("loop") action ToggleDict(_viewers.loops, "camera_loop")
                     textbutton _("clipboard") action Function(_viewers.camera_viewer.put_clipboard, True)
                     textbutton _("reset") action [_viewers.camera_viewer.camera_reset, renpy.restart_interaction]
                 elif tab == "3D Layers":
