@@ -396,7 +396,6 @@ screen _action_editor(tab="images", layer="master", name="", time=0):
         timer time+1 action Function(_viewers.change_time, _viewers.time)
     $state={k: v for dic in [_viewers.transform_viewer.state_org[layer], _viewers.transform_viewer.state[layer]] for k, v in dic.items()}
     key "game_menu" action Return()
-    zorder 10
     key "rollback"    action _viewers.rollback
     key "rollforward" action _viewers.rollforward
     key "j" action Function(_viewers.camera_viewer.y_changed, _camera_y+100+_viewers.camera_viewer.range_camera_pos)
@@ -421,25 +420,22 @@ screen _action_editor(tab="images", layer="master", name="", time=0):
                 textbutton _(">") action Function(_viewers.next_time)
                 bar adjustment ui.adjustment(range=7.0, value=_viewers.time, changed=_viewers.change_time) xalign 1.
             hbox:
-                xfill True
-                hbox:
-                    textbutton _("clear anchor") action [SensitiveIf(_viewers.sorted_anchor_points), Function(_viewers.clear_anchor_points), renpy.restart_interaction]
-                    textbutton _("remove anchor") action [SensitiveIf(_viewers.time in _viewers.sorted_anchor_points), Function(_viewers.remove_anchor_point, _viewers.time), renpy.restart_interaction]
-                    textbutton _("warper") action _viewers.select_time_warper
-                    textbutton _("ROT") action [SelectedIf(renpy.get_screen("_rot")), If(renpy.get_screen("_rot"), true=Hide("_rot"), false=Show("_rot"))]
-                    if _viewers.sorted_anchor_points:
-                        # if _viewers.time in _viewers.sorted_anchor_points:
-                        #     textbutton _("remove anchor") action [Function(_viewers.remove_anchor_point, _viewers.time), renpy.restart_interaction]
-                        # else:
-                        #     textbutton _("add    anchor") action [_viewers.set_anchor_point, renpy.restart_interaction]
-                        textbutton _("play") action [SensitiveIf(_viewers.sorted_anchor_points), Function(_viewers.camera_viewer.play, play=True), Function(_viewers.transform_viewer.play, play=True), Hide("_action_editor"), Show("_action_editor", tab=tab, layer=layer, name=name, time=_viewers.sorted_anchor_points[-1]), renpy.restart_interaction]
-                    else:
-                        # textbutton _("add    anchor") action [_viewers.set_anchor_point, renpy.restart_interaction]
-                        textbutton _("play") action [SensitiveIf(_viewers.sorted_anchor_points), Function(_viewers.camera_viewer.play, play=True), Function(_viewers.transform_viewer.play, play=True), Hide("_action_editor"), Show("_action_editor", tab=tab, layer=layer, name=name), renpy.restart_interaction]
-                    textbutton _("clipboard") action Function(_viewers.put_clipboard)
-                hbox:
-                    xalign 1.
-                    textbutton _("close") action Return()
+                textbutton _("warper") action _viewers.select_time_warper
+                textbutton _("ROT") action [SelectedIf(renpy.get_screen("_rot")), If(renpy.get_screen("_rot"), true=Hide("_rot"), false=Show("_rot"))]
+                if _viewers.sorted_anchor_points:
+                    # if _viewers.time in _viewers.sorted_anchor_points:
+                    #     textbutton _("remove anchor") action [Function(_viewers.remove_anchor_point, _viewers.time), renpy.restart_interaction]
+                    # else:
+                    #     textbutton _("add    anchor") action [_viewers.set_anchor_point, renpy.restart_interaction]
+                    textbutton _("play") action [SensitiveIf(_viewers.sorted_anchor_points), Function(_viewers.camera_viewer.play, play=True), Function(_viewers.transform_viewer.play, play=True), Hide("_action_editor"), Show("_action_editor", tab=tab, layer=layer, name=name, time=_viewers.sorted_anchor_points[-1]), renpy.restart_interaction]
+                else:
+                    # textbutton _("add    anchor") action [_viewers.set_anchor_point, renpy.restart_interaction]
+                    textbutton _("play") action [SensitiveIf(_viewers.sorted_anchor_points), Function(_viewers.camera_viewer.play, play=True), Function(_viewers.transform_viewer.play, play=True), Hide("_action_editor"), Show("_action_editor", tab=tab, layer=layer, name=name), renpy.restart_interaction]
+                textbutton _("clipboard") action Function(_viewers.put_clipboard)
+            hbox:
+                textbutton _("clear anchor") action [SensitiveIf(_viewers.sorted_anchor_points), Function(_viewers.clear_anchor_points), renpy.restart_interaction]
+                textbutton _("remove anchor") action [SensitiveIf(_viewers.time in _viewers.sorted_anchor_points), Function(_viewers.remove_anchor_point, _viewers.time), renpy.restart_interaction]
+                textbutton _("move anchor") action [SensitiveIf(_viewers.time in _viewers.sorted_anchor_points), SetField(_viewers, "moved_time", _viewers.time), Show("_move_anchor_points")]
 
             null height 10
             hbox:
@@ -542,6 +538,7 @@ screen _action_editor(tab="images", layer="master", name="", time=0):
                 elif tab == "3D Camera":
                     textbutton _("clipboard") action Function(_viewers.camera_viewer.put_clipboard, True)
                     textbutton _("reset") action [_viewers.camera_viewer.camera_reset, renpy.restart_interaction]
+                textbutton _("close") action Return()
 
     if time:
         add _viewers.dragged at _delay_show(time + 1)
@@ -559,7 +556,6 @@ init -1600:
 
 screen _input_screen(message="type value", default=""):
     modal True
-    zorder 100
     key "game_menu" action Return("")
 
     frame:
@@ -580,7 +576,6 @@ init -1600:
 
 screen _warper_selecter():
     modal True
-    zorder 100
     key "game_menu" action Return("")
 
     frame:
@@ -600,17 +595,16 @@ screen _warper_selecter():
 
 screen _warper_graph(warper="linear", t=120, length=300):
     # add Solid("#000", xsize=3, ysize=1.236*length, xpos=100+length/2, ypos=length/2+100, rotate=45, anchor=(.5, .5)) 
-    add Solid("#CCC", xsize=length, ysize=length, xpos=100, ypos=100 ) 
-    add Solid("#000", xsize=length, ysize=3, xpos=100, ypos=length+100 ) 
-    add Solid("#000", xsize=length, ysize=3, xpos=100, ypos=100 ) 
-    add Solid("#000", xsize=3, ysize=length, xpos=100+length, ypos=100)
-    add Solid("#000", xsize=3, ysize=length, xpos=100, ypos=100)
+    add Solid("#CCC", xsize=length, ysize=length, xpos=100, ypos=200 ) 
+    add Solid("#000", xsize=length, ysize=3, xpos=100, ypos=length+200 ) 
+    add Solid("#000", xsize=length, ysize=3, xpos=100, ypos=200 ) 
+    add Solid("#000", xsize=3, ysize=length, xpos=100+length, ypos=200)
+    add Solid("#000", xsize=3, ysize=length, xpos=100, ypos=200)
     for i in range(1, t):
-        add Solid("#000", xsize=length/t, ysize=int(length*renpy.atl.warpers[warper](i/float(t))), xpos=100+i*length/t, ypos=length+100, yanchor=1.) 
+        add Solid("#000", xsize=length/t, ysize=int(length*renpy.atl.warpers[warper](i/float(t))), xpos=100+i*length/t, ypos=length+200, yanchor=1.) 
 
 screen _image_selecter(default):
     modal True
-    zorder 100
     key "game_menu" action Return("")
     $default_set = set(default)
 
@@ -649,9 +643,17 @@ screen _image_selecter(default):
                         for tag in s[x:]:
                             textbutton tag action Return(default + (tag, )) hovered _viewers.ShowImage(default, tag) unhovered Hide("_selected_image")
 
-
 screen _selected_image(string):
-    add string at truecenter
+    add string
+
+screen _move_anchor_points:
+    modal True
+    key "game_menu" action Hide("_move_anchor_points")
+    frame:
+        has vbox
+        textbutton _("time: [_viewers.moved_time:>.2f] s") action Function(_viewers.edit_moved_time)
+        bar value FieldValue(_viewers, "moved_time", range=7.0) 
+        textbutton _("close") action [Hide("_move_anchor_points"), _viewers.move_anchor_points] xalign .98
 
 init -1098 python:
     # overwrite keymap
@@ -1225,8 +1227,21 @@ init -1600 python in _viewers:
     loops = defaultdict(lambda:False)
     all_anchor_points = {}
     time = 0
+    moved_time = 0
     sorted_anchor_points = []
     warper = "linear"
+
+    def edit_moved_time():
+        global moved_time
+        v = renpy.invoke_in_new_context(renpy.call_screen, "_input_screen", default=time)
+        if v:
+            try:
+                v = renpy.python.py_eval(v)
+                if v < 0:
+                    return
+                moved_time = v
+            except:
+                renpy.notify(_("Please type value"))
 
     def edit_time():
         global time
@@ -1248,9 +1263,8 @@ init -1600 python in _viewers:
             for i, t in enumerate(sorted_anchor_points):
                 if time < t:
                     change_time(sorted_anchor_points[i])
-                    break
-            else:
-                change_time(sorted_anchor_points[0])
+                    return
+            change_time(sorted_anchor_points[0])
 
     def prev_time():
         if not sorted_anchor_points:
@@ -1327,6 +1341,43 @@ init -1600 python in _viewers:
                     if t not in sorted_anchor_points:
                         sorted_anchor_points.append(t)
         sorted_anchor_points.sort()
+
+    def move_anchor_points():
+        global moved_time
+        moved_time = round(moved_time, 2)
+        for k, v in all_anchor_points.items():
+            if isinstance(v, dict):
+                for k2, v2 in v.items():
+                    for i, c in enumerate(v2):
+                        if c[0] == time:
+                            t, (value, t, w) = v2.pop(i)
+                            for n, (t, c) in enumerate(v2):
+                                if moved_time < t:
+                                    v2.insert(n, (moved_time, (value, moved_time, w)))
+                                    break
+                                elif moved_time == t:
+                                    v2[n] = (moved_time, (value, moved_time, w))
+                                    break
+                            else:
+                                v2.append((moved_time, (value, moved_time, w)))
+                            if time == 0 and moved_time != 0:
+                                v2.insert(0, (0, (value, 0, w)))
+            else:
+                for i, c in enumerate(v):
+                    if c[0] == time:
+                        t, (value, t, w) = v.pop(i)
+                        for n, (t, c) in enumerate(v):
+                            if moved_time < t:
+                                v.insert(n, (moved_time, (value, moved_time, w)))
+                                break
+                            elif moved_time == t:
+                                v[n] = (moved_time, (value, moved_time, w))
+                                break
+                        else:
+                            v.append((moved_time, (value, moved_time, w)))
+                        if time == 0 and moved_time != 0:
+                            v.insert(0, (0, (value, 0, w)))
+        sort_anchor_points()
 
     def change_time(v):
         global time
