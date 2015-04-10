@@ -520,7 +520,7 @@ screen _action_editor(tab="images", layer="master", name="", time=0):
                 xalign 1.
                 if tab == "images":
                     if name:
-                        textbutton _("remove") action [SensitiveIf(name), Show("_action_editor", tab=tab, layer=layer), Function(renpy.hide, name, layer)]
+                        textbutton _("remove") action [SensitiveIf(name), Show("_action_editor", tab=tab, layer=layer), Function(renpy.hide, name, layer), If(name in _viewers.transform_viewer.state[layer], true=[Function(_viewers.transform_viewer.state[layer].pop, name, layer), Function(_viewers.all_anchor_points.pop, (name, layer))])]
                         textbutton _("clipboard") action Function(_viewers.transform_viewer.put_show_clipboard, name, layer)
                     else:
                         textbutton _("add") action Function(_viewers.transform_viewer.add_image, layer)
@@ -586,7 +586,6 @@ screen _warper_selecter():
             for warper in renpy.atl.warpers:
                 textbutton warper action [SetField(_viewers, "warper", warper), Return()] hovered Show("_warper_graph", warper=warper) unhovered Hide("_warper")
 
-
 screen _warper_graph(warper="linear", t=120, length=300):
     # add Solid("#000", xsize=3, ysize=1.236*length, xpos=100+length/2, ypos=length/2+100, rotate=45, anchor=(.5, .5)) 
     add Solid("#CCC", xsize=length, ysize=length, xpos=100, ypos=100 ) 
@@ -597,6 +596,50 @@ screen _warper_graph(warper="linear", t=120, length=300):
     for i in range(1, t):
         add Solid("#000", xsize=length/t, ysize=int(length*renpy.atl.warpers[warper](i/float(t))), xpos=100+i*length/t, ypos=length+100, yanchor=1.) 
 
+screen _image_selecter(default):
+    modal True
+    zorder 100
+    key "game_menu" action Return("")
+    $default_set = set(default)
+
+    frame:
+        xalign 1.
+        has vbox
+
+        label _("Type a image name")
+        $string=""
+        for e in default:
+            $string += e + " "
+        add Input(default=string)
+
+        if default:
+            $s = set()
+            for name in renpy.display.image.images:
+                $name_set = set(name)
+                if default_set < name_set:
+                    $s.update(name_set-default_set)
+        else:
+            $s = {name[0] for name in renpy.display.image.images}
+        viewport:
+            xmaximum 400
+            ymaximum 300
+            edgescroll (100, 100)
+            scrollbars "both"
+            has vbox
+            $s=tuple(s)
+            for x in range(0, len(s), 4):
+                if x+5 < len(s):
+                    hbox:
+                        for tag in s[x:x+4]:
+                            textbutton tag action Return(default + (tag, )) hovered _viewers.ShowImage(default, tag) unhovered Hide("_selected_image")
+                else:
+                    hbox:
+                        for tag in s[x:]:
+                            textbutton tag action Return(default + (tag, )) hovered _viewers.ShowImage(default, tag) unhovered Hide("_selected_image")
+
+
+screen _selected_image(string):
+    add string
 
 init -1098 python:
     # overwrite keymap
@@ -701,6 +744,7 @@ init -1600 python in _viewers:
                         renpy.show(name, [renpy.store.Transform(**kwargs)], layer=layer)
                 for name in self.state[layer]:
                     renpy.hide(name, layer=layer)
+                    del all_anchor_points[(name, layer)]
                 self.state[layer] = {}
             renpy.restart_interaction()
 
@@ -902,16 +946,38 @@ init -1600 python in _viewers:
                     renpy.notify(_("Please type value"))
 
         def add_image(self, layer):
-            name = renpy.invoke_in_new_context(renpy.call_screen, "_input_screen", message=_("Type a image name"))
-            if name:
+            default = ()
+            while True:
                 try:
-                    self.state[layer][name] = {}
-                    renpy.show(name, layer=layer)
-                    for p, d in self.props:
-                        self.state[layer][name][p] = self.get_property(layer, name.split()[0], p, False)
-                    renpy.show_screen("_action_editor", tab="images", layer=layer, name=name)
+                    name = renpy.invoke_in_new_context(renpy.call_screen, "_image_selecter", default=default)
                 except:
-                    renpy.notify(_("Please type value"))
+                    return
+                if isinstance(name, tuple):
+                    for n in renpy.display.image.images:
+                        if set(n) == set(name):
+                            string=""
+                            for e in n:
+                                string += e + " "
+                            self.state[layer][string] = {}
+                            renpy.show(string, layer=layer)
+                            for p, d in self.props:
+                                self.state[layer][string][p] = self.get_property(layer, string.split()[0], p, False)
+                            self.set_anchor_point(layer, string, "xpos", self.state[layer][string]["xpos"])
+                            renpy.show_screen("_action_editor", tab="images", layer=layer, name=string)
+                            return
+                    else:
+                        default = name
+                else:
+                    for n in renpy.display.image.images:
+                        if set(n) == set(name):
+                            self.state[layer][name] = {}
+                            renpy.show(name, layer=layer)
+                            for p, d in self.props:
+                                self.state[layer][name][p] = self.get_property(layer, name.split()[0], p, False)
+                            renpy.show_screen("_action_editor", tab="images", layer=layer, name=name)
+                            return
+                    renpy.notify(_("Please type image name"))
+                    return
     transform_viewer = TransformViewer()
 
     ##########################################################################
@@ -1173,6 +1239,21 @@ init -1600 python in _viewers:
 
     def select_time_warper():
         renpy.invoke_in_new_context(renpy.call_screen, "_warper_selecter")
+
+    class ShowImage(renpy.store.Action):
+        def __init__(self, default, tag):
+            self.default=default
+            self.tag=tag
+            self.string=""
+            for e in default:
+                self.string += e + " "
+            self.string += tag
+        def __call__(self):
+            for n in renpy.display.image.images:
+                if set(n) == set(self.default+(self.tag, )):
+                    renpy.show_screen("_selected_image", self.string)
+                    renpy.restart_interaction()
+                    break
 
     def clear_anchor_points():
         all_anchor_points.clear()
