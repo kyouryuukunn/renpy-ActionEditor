@@ -651,7 +651,7 @@ screen _image_selecter(default):
 
 
 screen _selected_image(string):
-    add string
+    add string at truecenter
 
 init -1098 python:
     # overwrite keymap
