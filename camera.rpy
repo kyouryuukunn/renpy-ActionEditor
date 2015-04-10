@@ -519,10 +519,11 @@ screen _action_editor(tab="images", layer="master", name="", time=0):
                 xfill False
                 xalign 1.
                 if tab == "images":
-                    textbutton _("add") action Function(_viewers.transform_viewer.add_image, layer)
                     if name:
                         textbutton _("remove") action [SensitiveIf(name), Show("_action_editor", tab=tab, layer=layer), Function(renpy.hide, name, layer)]
                         textbutton _("clipboard") action Function(_viewers.transform_viewer.put_show_clipboard, name, layer)
+                    else:
+                        textbutton _("add") action Function(_viewers.transform_viewer.add_image, layer)
                     textbutton _("reset") action [_viewers.transform_viewer.reset, renpy.restart_interaction]
                 elif tab == "2D Camera":
                     textbutton _("clipboard") action Function(_viewers.camera_viewer.put_clipboard, True)
@@ -827,7 +828,11 @@ init -1600 python in _viewers:
             def changed(v):
                 kwargs = {}
                 for p, d in self.props:
-                    kwargs[p] = self.get_property(layer, name.split()[0], p, False)
+                    value = self.get_property(layer, name.split()[0], p, False)
+                    if value is not None:
+                        kwargs[p] = value
+                    elif p != "rotate":
+                        kwargs[p] = d
                     if p == prop:
                         default = d
                 if prop not in self.force_float and ( (state is None and isinstance(default, int)) or isinstance(state, int) ):
@@ -842,9 +847,9 @@ init -1600 python in _viewers:
 
         def get_property(self, layer, tag, prop, default=True):
             sle = renpy.game.context().scene_lists
-            if tag in self.state[layer]:
-                #TODO
-                default = True
+            # if tag in self.state[layer]:
+            #     #TODO
+            #     default = True
             if tag:
                 d = sle.get_displayable_by_tag(layer, tag)
                 pos = renpy.get_placement(d)
@@ -903,7 +908,7 @@ init -1600 python in _viewers:
                     self.state[layer][name] = {}
                     renpy.show(name, layer=layer)
                     for p, d in self.props:
-                        self.state[layer][name][p] = self.get_property(layer, name.split()[0], p)
+                        self.state[layer][name][p] = self.get_property(layer, name.split()[0], p, False)
                     renpy.show_screen("_action_editor", tab="images", layer=layer, name=name)
                 except:
                     renpy.notify(_("Please type value"))
