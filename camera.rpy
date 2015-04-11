@@ -663,7 +663,7 @@ screen _move_anchor_point(k, k2=None, int=False, loop):
         for t, c in check_points:
             if t != 0:
                 hbox:
-                    textbutton _("remove") action [Function(_viewers.remove_anchor_point, time=t, k=k, k2=None), renpy.restart_interaction]
+                    textbutton _("remove") action [Function(_viewers.remove_anchor_point, time=t, k=k, k2=k2), renpy.restart_interaction]
                     textbutton _("{}".format(c[0])) action Function(_viewers.edit_the_value, check_points=check_points, old=t, value_org=c[0], int=int)
                     textbutton _("{}".format(c[2])) action Function(_viewers.edit_the_warper, check_points=check_points, old=t, value_org=c[2])
                     textbutton _("[t:>.2f] s") action Function(_viewers.edit_moved_time, check_points=check_points, old=t)
