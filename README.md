@@ -94,6 +94,7 @@
  * By default, the scene, hide statements use master or the given layer
    only. If you use 3D layers preferentially, write code like below.::
 
+
 	init -1 python hide:
 	    def hide(name, layer='master'):
 		for l in _3d_layers:
