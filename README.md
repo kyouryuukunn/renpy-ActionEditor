@@ -86,32 +86,32 @@
 
  * z coordinates of 3D layers don't affect the stacking order of 3d layers.
 
- * By default, the scene, hide statements use master or the given layer
-   only. If you use 3D layers preferentially, write code like below.::
-
  * camera_move, camera_moves, layer_move, layer_moves, all_moves can't play
    within the same interaction. The last one only follows a instruction and
    others works momentarily if they are called from within the same
    interaction.
 
-         init -1 python hide:
-             def hide(name, layer='master'):
-                 for l in _3d_layers:
-                     if renpy.showing(name, l):
-                         renpy.hide(name, l)
-                         break
-                 else:
-                     renpy.hide(name, layer)
+ * By default, the scene, hide statements use master or the given layer
+   only. If you use 3D layers preferentially, write code like below.::
 
-             config.hide = hide
+	init -1 python hide:
+	    def hide(name, layer='master'):
+		for l in _3d_layers:
+		    if renpy.showing(name, l):
+		renpy.hide(name, l)
+		break
+		else:
+		    renpy.hide(name, layer)
 
-             def scene(layer='master'):
+	    config.hide = hide
 
-                 renpy.scene(layer)
-                 for l in _3d_layers:
-                     renpy.scene(l)
+	    def scene(layer='master'):
 
-             config.scene = scene
+		renpy.scene(layer)
+		for l in _3d_layers:
+		    renpy.scene(l)
+
+	    config.scene = scene
 
  Camera Functions
  ----------------
