@@ -88,7 +88,11 @@
 
  * By default, the scene, hide statements use master or the given layer
    only. If you use 3D layers preferentially, write code like below.::
- * camera_move, camera_moves, layer_move, layer_moves, all_moves はそれぞれ排他的です。ひとつのインタラクション中に複数回呼び出されると、最後に呼び出されたもののみが正常に動作し、それ以外は瞬間移動になります。
+
+ * camera_move, camera_moves, layer_move, layer_moves, all_moves can't play
+   within the same interaction. The last one only follows a instruction and
+   others works momentarily if they are called from within the same
+   interaction.
 
          init -1 python hide:
              def hide(name, layer='master'):
