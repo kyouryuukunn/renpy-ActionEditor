@@ -551,6 +551,7 @@ screen _input_screen(message="type value", default=""):
     key "game_menu" action Return("")
 
     frame:
+        background "#0006"
         style_group "input_screen"
 
         has vbox
@@ -571,6 +572,7 @@ screen _warper_selecter(default=""):
     key "game_menu" action Return("")
 
     frame:
+        background "#0006"
         style_group "warper_selecter"
 
         has vbox
@@ -602,6 +604,7 @@ screen _image_selecter(default):
     $default_set = set(default)
 
     frame:
+        background "#0006"
         xalign 1.
         has vbox
 
@@ -637,12 +640,13 @@ screen _image_selecter(default):
                             textbutton tag action Return(default + (tag, )) hovered _viewers.ShowImage(default, tag) unhovered Hide("_selected_image")
 
 screen _selected_image(string):
-    add string
+    add string at truecenter
 
 screen _move_anchor_points:
     modal True
     key "game_menu" action Hide("_move_anchor_points")
     frame:
+        background "#0006"
         has vbox
         textbutton _("time: [_viewers.moved_time:>.2f] s") action Function(_viewers.edit_moved_time)
         bar adjustment ui.adjustment(range=7.0, value=_viewers.moved_time, changed=renpy.curry(_viewers.move_anchor_points)(old=_viewers.moved_time)) xalign 1. yalign .5
@@ -658,6 +662,7 @@ screen _move_anchor_point(k, k2=None, int=False, loop):
     modal True
     key "game_menu" action Hide("_move_anchor_point")
     frame:
+        background "#0009"
         style_group "action_editor"
         has vbox
         for t, c in check_points:
@@ -1250,12 +1255,12 @@ init -1600 python in _viewers:
 
     def edit_the_value(check_points, old, value_org, int=False):
         value = renpy.invoke_in_new_context(renpy.call_screen, "_input_screen", default=value_org)
-        if int:
-            value = int(value)
-        else:
-            value = float(value)
         try:
             value = renpy.python.py_eval(value)
+            if int:
+                value = int(value)
+            else:
+                value = float(value)
             for i, (t, (v, t, w)) in enumerate(check_points):
                 if t == old:
                     check_points[i] = (t, (value, t, w))
