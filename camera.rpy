@@ -1,7 +1,3 @@
-init 1600 python:
-    if not _3d_layers:
-        register_3d_layer('master')
-
 init -1600 python:
 
     ##########################################################################
@@ -372,7 +368,6 @@ init -1600 python:
         else:
             return check_points[-1][0]
 
-
     # def get_camera_coordinate(tran, z, layer, layer_z): #_3d_layers can't rollback?
     #     global _camera_x, _camera_y, _camera_z, _camera_rotate
     #     _camera_x         = int(((tran.xanchor-.5)*renpy.config.screen_width*_layer_z)/_focal_length)
@@ -381,15 +376,9 @@ init -1600 python:
     #     _camera_rotate    = int(tran.rotate)
     #     _3d_layers[layer] = int(layer_z)
 
-screen _rot(): #show rule of thirds
-    for i in range(1, 3):
-        add Solid("#F00", xsize=config.screen_width, ysize=1, ypos=config.screen_height*i/3) 
-        add Solid("#F00", xsize=1, ysize=config.screen_height, xpos=config.screen_width*i/3)
-
-transform _delay_show(time):
-    alpha 0
-    pause time
-    alpha 1
+init 1600 python:
+    if not _3d_layers:
+        register_3d_layer('master')
 
 screen _action_editor(tab="images", layer="master", name="", time=0):
     if time:
@@ -422,14 +411,10 @@ screen _action_editor(tab="images", layer="master", name="", time=0):
             hbox:
                 textbutton _("warper") action _viewers.select_time_warper
                 textbutton _("ROT") action [SelectedIf(renpy.get_screen("_rot")), If(renpy.get_screen("_rot"), true=Hide("_rot"), false=Show("_rot"))]
+                textbutton _("Hide") action HideInterface()
                 if _viewers.sorted_anchor_points:
-                    # if _viewers.time in _viewers.sorted_anchor_points:
-                    #     textbutton _("remove anchor") action [Function(_viewers.remove_anchor_points, _viewers.time), renpy.restart_interaction]
-                    # else:
-                    #     textbutton _("add    anchor") action [_viewers.set_anchor_point, renpy.restart_interaction]
                     textbutton _("play") action [SensitiveIf(_viewers.sorted_anchor_points), Function(_viewers.camera_viewer.play, play=True), Function(_viewers.transform_viewer.play, play=True), Hide("_action_editor"), Show("_action_editor", tab=tab, layer=layer, name=name, time=_viewers.sorted_anchor_points[-1]), renpy.restart_interaction]
                 else:
-                    # textbutton _("add    anchor") action [_viewers.set_anchor_point, renpy.restart_interaction]
                     textbutton _("play") action [SensitiveIf(_viewers.sorted_anchor_points), Function(_viewers.camera_viewer.play, play=True), Function(_viewers.transform_viewer.play, play=True), Hide("_action_editor"), Show("_action_editor", tab=tab, layer=layer, name=name), renpy.restart_interaction]
                 textbutton _("clipboard") action Function(_viewers.put_clipboard)
             hbox:
@@ -448,15 +433,11 @@ screen _action_editor(tab="images", layer="master", name="", time=0):
             if tab == "images":
                 hbox:
                     style_group "action_editor"
-                    xfill False
-                    label _("layers")
                     for l in config.layers:
                         if l not in ["screens", "transient", "overlay"]:
                             textbutton "[l]" action [SelectedIf(l == layer), Show("_action_editor", tab=tab, layer=l)]
                 hbox:
                     style_group "action_editor"
-                    xfill False
-                    label _("images")
                     for n in state:
                         if renpy.showing(n, layer):
                             textbutton "{}".format(n.split()[0]) action [SelectedIf(n == name), Show("_action_editor", tab=tab, layer=layer, name=n)]
@@ -567,6 +548,16 @@ init -1600:
     style input_screen_label xalign .5
     style input_screen_hbox  xalign .5
 
+transform _delay_show(time):
+    alpha 0
+    pause time
+    alpha 1
+
+screen _rot(): #show rule of thirds
+    for i in range(1, 3):
+        add Solid("#F00", xsize=config.screen_width, ysize=1, ypos=config.screen_height*i/3) 
+        add Solid("#F00", xsize=1, ysize=config.screen_height, xpos=config.screen_width*i/3)
+
 screen _warper_selecter(default=""):
     modal True
     key "game_menu" action Return("")
@@ -654,7 +645,7 @@ screen _move_anchor_points:
 
 # _move_anchor_point((name, layer), "xpos")
 # _move_anchor_point(_camera_x)
-screen _move_anchor_point(k, k2=None, int=False, loop):
+screen _move_anchor_point(k, k2=None, int=False, loop=None):
     if isinstance(k, tuple) and k in _viewers.all_anchor_points and k2 in _viewers.all_anchor_points[k]:
         $check_points = _viewers.all_anchor_points[k][k2]
     elif k in _viewers.all_anchor_points:
@@ -665,12 +656,12 @@ screen _move_anchor_point(k, k2=None, int=False, loop):
         background "#0009"
         style_group "action_editor"
         has vbox
-        for t, c in check_points:
+        for v, t, w in check_points:
             if t != 0:
                 hbox:
                     textbutton _("remove") action [Function(_viewers.remove_anchor_point, time=t, k=k, k2=k2), renpy.restart_interaction]
-                    textbutton _("{}".format(c[0])) action Function(_viewers.edit_the_value, check_points=check_points, old=t, value_org=c[0], int=int)
-                    textbutton _("{}".format(c[2])) action Function(_viewers.edit_the_warper, check_points=check_points, old=t, value_org=c[2])
+                    textbutton _("{}".format(v)) action Function(_viewers.edit_the_value, check_points=check_points, old=t, value_org=v, int=int)
+                    textbutton _("{}".format(w)) action Function(_viewers.edit_the_warper, check_points=check_points, old=t, value_org=w)
                     textbutton _("[t:>.2f] s") action Function(_viewers.edit_moved_time, check_points=check_points, old=t)
                     bar adjustment ui.adjustment(range=7.0, value=t, changed=renpy.curry(_viewers.move_anchor_point)(old=t, check_points=check_points)) xalign 1. yalign .5
         hbox:
@@ -790,21 +781,21 @@ init -1600 python in _viewers:
                 all_anchor_points[(name, layer)] = {}
             anchor_points = all_anchor_points[(name, layer)].get(prop, [])
             if anchor_points:
-                for i, (t, c) in enumerate(anchor_points):
+                for i, (v, t, w) in enumerate(anchor_points):
                     if time < t:
-                        anchor_points.insert(i, (time, (value, time, warper)))
+                        anchor_points.insert(i, (value, time, warper))
                         break
                     elif time == t:
-                        anchor_points[i] = (time, (value, time, warper))
+                        anchor_points[i] = ( value, time, warper)
                         break
                 else:
-                    anchor_points.append((time, (value, time, warper)))
+                    anchor_points.append((value, time, warper))
             else:
                 if time == 0:
-                    all_anchor_points[(name, layer)][prop] = [(time, (value, time, warper))]
+                    all_anchor_points[(name, layer)][prop] = [(value, time, warper)]
                 else:
                     org = {k: v for dic in [self.state_org[layer], self.state[layer]] for k, v in dic.items()}[name][prop]
-                    all_anchor_points[(name, layer)][prop] = [(0, (org, 0, None)), (time, (value, time, warper))]
+                    all_anchor_points[(name, layer)][prop] = [(org, 0, None), (value, time, warper)]
             sort_anchor_points()
 
         def play(self, play):
@@ -813,7 +804,7 @@ init -1600 python in _viewers:
                     check_points = {}
                     for prop, d in self.props:
                         if (name, layer) in all_anchor_points and prop in all_anchor_points[(name, layer)]:
-                            check_points[prop] =  [ c for t, c in all_anchor_points[(name, layer)][prop] ]
+                            check_points[prop] = all_anchor_points[(name, layer)][prop] 
                     loop = {prop+"_loop": loops[name+"_"+layer+"_"+prop+"_loop"] for prop, d in self.props}
                     if play:
                         renpy.show(name, [renpy.store.Transform(function=renpy.curry(self.transform)(check_points=check_points, loop=loop))], layer=layer)
@@ -998,7 +989,7 @@ init -1600 python in _viewers:
                             renpy.show(string, layer=layer)
                             for p, d in self.props:
                                 self.state[layer][string][p] = self.get_property(layer, string.split()[0], p, False)
-                            all_anchor_points[(string, layer)] = {"xpos":[(0, (self.state[layer][string]["xpos"], 0, None))]}
+                            all_anchor_points[(string, layer)] = {"xpos":[(self.state[layer][string]["xpos"], 0, None)]}
                             remove_list = [n_org for n_org in self.state_org[layer] if n_org.split()[0] == n[0]]
                             for n_org in remove_list:
                                 del self.state_org[layer][n_org]
@@ -1016,7 +1007,7 @@ init -1600 python in _viewers:
                             renpy.show(name, layer=layer)
                             for p, d in self.props:
                                 self.state[layer][name][p] = self.get_property(layer, name.split()[0], p, False)
-                            all_anchor_points[(name, layer)] = {"xpos":[(0, (self.state[layer][name]["xpos"], 0, None))]}
+                            all_anchor_points[(name, layer)] = {"xpos":[(self.state[layer][name]["xpos"], 0, None)]}
                             remove_list = [n_org for n_org in self.state_org[layer] if n_org.split()[0] == n[0]]
                             for n_org in remove_list:
                                 del self.state_org[layer][n_org]
@@ -1117,52 +1108,52 @@ init -1600 python in _viewers:
         def set_camera_anchor_point(self, coordinate, value):
             anchor_points = all_anchor_points.get(coordinate, [])
             if anchor_points:
-                for i, (t, c) in enumerate(anchor_points):
+                for i, (v, t, w) in enumerate(anchor_points):
                     if time < t:
-                        anchor_points.insert(i, (time, (value, time, warper)))
+                        anchor_points.insert(i, (value, time, warper))
                         break
                     elif time == t:
-                        anchor_points[i] = (time, (value, time, warper))
+                        anchor_points[i] = (value, time, warper)
                         break
                 else:
-                    anchor_points.append((time, (value, time, warper)))
+                    anchor_points.append((value, time, warper))
             else:
                 if time == 0:
-                    all_anchor_points[coordinate] = [(time, (value, time, warper))]
+                    all_anchor_points[coordinate] = [(value, time, warper)]
                 else:
-                    all_anchor_points[coordinate] = [(0, (getattr(self, coordinate), 0, None)), (time, (value, time, warper))]
+                    all_anchor_points[coordinate] = [(getattr(self, coordinate), 0, None), (value, time, warper)]
             sort_anchor_points()
 
         def set_layer_anchor_point(self, layer):
             anchor_points = all_anchor_points.get("layer "+layer, [])
             if anchor_points:
-                for i, (t, c) in enumerate(anchor_points):
+                for i, (v, t, w)  in enumerate(anchor_points):
                     if time < t:
-                        anchor_points.insert(i, (time, (renpy.store._3d_layers[layer], time, warper)))
+                        anchor_points.insert(i, (renpy.store._3d_layers[layer], time, warper))
                         break
                     elif time == t:
-                        anchor_points[i] = (time, (renpy.store._3d_layers[layer], time, warper))
+                        anchor_points[i] = (renpy.store._3d_layers[layer], time, warper)
                         break
                 else:
-                    anchor_points.append((time, (renpy.store._3d_layers[layer], time, warper)))
+                    anchor_points.append((renpy.store._3d_layers[layer], time, warper))
             else:
                 if time == 0:
-                    all_anchor_points["layer "+layer] = [(time, (renpy.store._3d_layers[layer], time, warper))]
+                    all_anchor_points["layer "+layer] = [(renpy.store._3d_layers[layer], time, warper)]
                 else:
-                    all_anchor_points["layer "+layer] = [(0, (self._3d_layers[layer], 0, None)), (time, (renpy.store._3d_layers[layer], time, warper))]
+                    all_anchor_points["layer "+layer] = [(self._3d_layers[layer], 0, None), (renpy.store._3d_layers[layer], time, warper)]
             sort_anchor_points()
 
         def play(self, play):
             camera_check_points = {}
             for coordinate in ["_camera_x", "_camera_y", "_camera_z", "_camera_rotate"]:
                 if coordinate in all_anchor_points:
-                    camera_check_points[coordinate[8:]] = [c for t, c in all_anchor_points[coordinate]]
+                    camera_check_points[coordinate[8:]] = all_anchor_points[coordinate]
 
             layer_check_points = {}
             loop = {}
             for layer in renpy.store._3d_layers:
                 if "layer "+layer in all_anchor_points:
-                    layer_check_points[layer]=[c for t, c in all_anchor_points["layer "+layer]]
+                    layer_check_points[layer] = all_anchor_points["layer "+layer]
                 loop[layer+"_loop"] = loops[layer+"_loop"]
             for coordinate in ["_camera_x", "_camera_y", "_camera_z", "_camera_rotate"]:
                 loop[coordinate[8:]+"_loop"] = loops[coordinate+"_loop"]
@@ -1261,9 +1252,9 @@ init -1600 python in _viewers:
                 value = int(value)
             else:
                 value = float(value)
-            for i, (t, (v, t, w)) in enumerate(check_points):
+            for i, (v, t, w) in enumerate(check_points):
                 if t == old:
-                    check_points[i] = (t, (value, t, w))
+                    check_points[i] = (value, t, w)
                     break
         except:
             renpy.notify(_("Please type value"))
@@ -1272,9 +1263,9 @@ init -1600 python in _viewers:
     def edit_the_warper(check_points, old, value_org):
         warper = renpy.invoke_in_new_context(renpy.call_screen, "_warper_selecter", default=value_org)
         if warper:
-            for i, (t, (v, t, w)) in enumerate(check_points):
+            for i, (v, t, w) in enumerate(check_points):
                 if t == old:
-                    check_points[i] = (t, (v, t, warper))
+                    check_points[i] = (v, t, warper)
                     break
         renpy.restart_interaction()
 
@@ -1352,19 +1343,19 @@ init -1600 python in _viewers:
     def remove_anchor_point(time, k, k2=None):
         remove_list = []
         if isinstance(k, tuple):
-            for t, c in all_anchor_points[k][k2]:
+            for (v, t, w) in all_anchor_points[k][k2]:
                 if t == time:
                     if time != 0 or (time == 0 and len(all_anchor_points[k][k2]) == 1):
-                        remove_list.append((t, c))
+                        remove_list.append((v, t, w))
             for c in remove_list:
                 all_anchor_points[k][k2].remove(c)
                 if not all_anchor_points[k][k2]:
                     del all_anchor_points[k][k2]
         else:
-            for t, c in all_anchor_points[k]:
+            for (v, t, w) in all_anchor_points[k]:
                 if t == time:
                     if time != 0 or (time == 0 and len(all_anchor_points[k]) == 1):
-                        remove_list.append((t, c))
+                        remove_list.append((v, t, w))
             for c in remove_list:
                 all_anchor_points[k].remove(c)
                 if not all_anchor_points[k]:
@@ -1385,11 +1376,11 @@ init -1600 python in _viewers:
         for anchor_points in all_anchor_points.values():
             if isinstance(anchor_points, dict):
                 for prop in anchor_points.values():
-                    for t, c in prop:
+                    for (v, t, w) in prop:
                         if t not in sorted_anchor_points:
                             sorted_anchor_points.append(t)
             else:
-                for t, c in anchor_points:
+                for (v, t, w) in anchor_points:
                     if t not in sorted_anchor_points:
                         sorted_anchor_points.append(t)
         sorted_anchor_points.sort()
@@ -1408,20 +1399,20 @@ init -1600 python in _viewers:
     def move_anchor_point(new, old, check_points):
         new = round(new, 2)
         for i, c in enumerate(check_points):
-            if c[0] == old:
-                t, (value, t, w) = check_points.pop(i)
-                for n, (t, c) in enumerate(check_points):
+            if c[1] == old:
+                (value, time, warper) = check_points.pop(i)
+                for n, (v, t, w) in enumerate(check_points):
                     if new < t:
-                        check_points.insert(n, (new, (value, new, w)))
+                        check_points.insert(n, (value, new, warper))
                         break
                     elif new == t:
                         # check_points[n] = (new, (value, new, w))
-                        check_points.insert(n, (new, (value, new, w)))
+                        check_points.insert(n, (value, new, warper))
                         break
                 else:
-                    check_points.append((new, (value, new, w)))
+                    check_points.append((value, new, warper))
                 if old == 0 and new != 0:
-                    check_points.insert(0, (0, (value, 0, w)))
+                    check_points.insert(0, (value, 0, w))
         sort_anchor_points()
         renpy.restart_interaction()
 
@@ -1437,7 +1428,7 @@ init -1600 python in _viewers:
                 return False
             check_points = all_anchor_points[k]
         for c in check_points:
-            if c[0] == time:
+            if c[1] == time:
                 return True
         return False
 
@@ -1484,7 +1475,7 @@ init -1600 python in _viewers:
         camera_check_points = {}
         for coordinate in ["_camera_x", "_camera_y", "_camera_z", "_camera_rotate"]:
             if coordinate in all_anchor_points:
-                camera_check_points[coordinate[8:]] = [c for t, c in all_anchor_points[coordinate]]
+                camera_check_points[coordinate[8:]] = all_anchor_points[coordinate]
                 if len(camera_check_points[coordinate[8:]]) == 1 and camera_check_points[coordinate[8:]][0][0] == getattr(renpy.store._viewers, coordinate):
                     del camera_check_points[coordinate[8:]]
 
@@ -1492,7 +1483,7 @@ init -1600 python in _viewers:
         loop = {}
         for layer in renpy.store._3d_layers:
             if "layer "+layer in all_anchor_points:
-                layer_check_points[layer]=[c for t, c in all_anchor_points["layer "+layer]]
+                layer_check_points[layer] = all_anchor_points["layer "+layer]
                 if len(layer_check_points[layer]) == 1 and layer_check_points[layer][0][0] == camera_viewer._3d_layers[layer]:
                     del layer_check_points[layer]
                 if loops[layer+"_loop"]:
@@ -1519,7 +1510,7 @@ init -1600 python in _viewers:
                         string += "{} {} ".format(p, value)
                 for p, d in transform_viewer.props:
                     if p in all_anchor_points[k]:
-                        check_points = [c for t, c in all_anchor_points[k][p]]
+                        check_points = all_anchor_points[k][p]
                         # if kwargs_org[p] is None and p != "rotate":
                         #     kwargs_org[p] = d
                         if len(check_points) > 1:
