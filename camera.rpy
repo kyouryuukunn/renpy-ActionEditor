@@ -929,15 +929,6 @@ init -1600 python in _viewers:
                 return state
             return None
 
-        # def put_prop_clipboard(self, prop, value):
-        #     try:
-        #         from pygame import scrap, locals
-        #         scrap.put(locals.SCRAP_TEXT, "%s %s" % (prop, value))
-        #     except:
-        #         renpy.notify(_("Can't open clipboard"))
-        #     else:
-        #         renpy.notify(__('Putted "%s %s" on clipboard') % (prop, value))
-
         def put_show_clipboard(self, name, layer):
             string = """
     show %s onlayer %s""" % (name, layer)
@@ -953,7 +944,7 @@ init -1600 python in _viewers:
             except:
                 renpy.notify(_("Can't open clipboard"))
             else:
-                renpy.notify(__('Putted "%s" on clipboard') % string)
+                renpy.notify(__('Putted \n"%s"\n on clipboard') % string)
 
         def edit_value(self, function, int=False, default=""):
             v = renpy.invoke_in_new_context(renpy.call_screen, "_input_screen", default=default)
@@ -1093,7 +1084,7 @@ init -1600 python in _viewers:
             except:
                 renpy.notify(_("Can't open clipboard"))
             else:
-                renpy.notify(__("Putted '%s' on clipboard") % string)
+                renpy.notify(__("Putted \n'%s'\n on clipboard") % string)
 
         def edit_value(self, function, range, default=""):
             v = renpy.invoke_in_new_context(renpy.call_screen, "_input_screen", default=default)
@@ -1233,7 +1224,6 @@ init -1600 python in _viewers:
     dragged = Dragged("camera.png")
 
     ##########################################################################
-    #{(tag, layer):[(time, check_point, warper)...]}
     from collections import defaultdict
     loops = defaultdict(lambda:False)
     all_anchor_points = {}
@@ -1407,15 +1397,6 @@ init -1600 python in _viewers:
         camera_viewer.play(False)
         renpy.restart_interaction()
 
-    # def set_anchor_point():
-    #     camera_viewer.set_camera_anchor_point()
-    #     for layer in renpy.store._3d_layers:
-    #         camera_viewer.set_layer_anchor_point(layer)
-    #     for layer in transform_viewer.state_org:
-    #         for tag in {k: v for dic in [transform_viewer.state_org[layer], transform_viewer.state[layer]] for k, v in dic.items()}:
-    #             kwargs = {p:transform_viewer.get_property(layer, tag, p, False) for p, d in transform_viewer.props} 
-    #             transform_viewer.set_anchor_point(layer, tag, kwargs)
-
     def rollback():
         renpy.store.camera_move(renpy.store._camera_x, renpy.store._camera_y, renpy.store._camera_z-100, renpy.store._camera_rotate)
         camera_viewer.set_camera_anchor_point("_camera_z", renpy.store._camera_z)
@@ -1472,25 +1453,15 @@ init -1600 python in _viewers:
                     string += """
     show {} onlayer {}:
         subpixel True """.format(name, layer)
-                    # kwargs_org = {k2: v2 for dic in [transform_viewer.state_org[layer], transform_viewer.state[layer]] for k2, v2 in dic.items()}[tag]
-                    # if name in transform_viewer.state[layer]:
-                    #     for p, d in transform_viewer.props:
-                    #         value = transform_viewer.state[layer][name][p]
-                    #         if value != d:
-                                # string += "{} {} ".format(p, value)
-                    # if name in transform_viewer.state[layer]:
                     for p, d in transform_viewer.props:
                         if p in kwargs and len(kwargs[p]) == 1:
                             string += "{} {} ".format(p, kwargs[p][0][0])
                         elif d != {k2: v2 for dic in [transform_viewer.state_org[layer], transform_viewer.state[layer]] for k2, v2 in dic.items()}[name][p]:
                             string += "{} {} ".format(p, {k2: v2 for dic in [transform_viewer.state_org[layer], transform_viewer.state[layer]] for k2, v2 in dic.items()}[name][p])
                     for p, check_points in kwargs.items():
-                            # if kwargs_org[p] is None and p != "rotate":
-                            #     kwargs_org[p] = d
                         if len(check_points) > 1:
                             string += """
         parallel:"""
-                            # if check_points[0][0] != kwargs_org[p]:
                             string += """
             {} {}""".format(p, check_points[0][0])
                             for i, check_point in enumerate(check_points[1:]):
