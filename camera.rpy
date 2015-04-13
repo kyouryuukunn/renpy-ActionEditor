@@ -450,14 +450,14 @@ screen _action_editor(tab="images", layer="master", name="", time=0):
                             hbox:
                                 style_group "action_editor"
                                 # textbutton "[p]" action Function(_viewers.transform_viewer.put_prop_clipboard, p, prop)
-                                textbutton "[p]" action [SensitiveIf((name, layer) in _viewers.all_anchor_points and p in _viewers.all_anchor_points[(name, layer)]), SelectedIf(_viewers.anchor_points_exist((name, layer), p)), Show("_move_anchor_point", k=(name, layer), k2=p, int=True, loop=name+"_"+layer+"_"+p+"_loop")]
+                                textbutton "[p]" action [SensitiveIf((name, layer, p) in _viewers.all_anchor_points), SelectedIf(_viewers.anchor_points_exist((name, layer, p))), Show("_move_anchor_point", k=(name, layer, p), int=True, loop=name+"_"+layer+"_"+p+"_loop")]
                                 textbutton "[prop]" action Function(_viewers.transform_viewer.edit_value, f, True, default=prop)
                                 bar adjustment ui.adjustment(range=_viewers.transform_viewer.int_range*2, value=prop+_viewers.transform_viewer.int_range, page=1, changed=f) xalign 1. yalign .5
                         else:
                             hbox:
                                 style_group "action_editor"
                                 # textbutton "[p]" action Function(_viewers.transform_viewer.put_prop_clipboard, p, prop)
-                                textbutton "[p]" action [SensitiveIf((name, layer) in _viewers.all_anchor_points and p in _viewers.all_anchor_points[(name, layer)]), SelectedIf(_viewers.anchor_points_exist((name, layer), p)), Show("_move_anchor_point", k=(name, layer), k2=p, loop=name+"_"+layer+"_"+p+"_loop")]
+                                textbutton "[p]" action [SensitiveIf((name, layer, p) in _viewers.all_anchor_points), SelectedIf(_viewers.anchor_points_exist((name, layer, p))), Show("_move_anchor_point", k=(name, layer, p), loop=name+"_"+layer+"_"+p+"_loop")]
                                 textbutton "[prop:>.2f]" action Function(_viewers.transform_viewer.edit_value, f, False, default=prop)
                                 bar adjustment ui.adjustment(range=_viewers.transform_viewer.float_range*2, value=prop+_viewers.transform_viewer.float_range, page=.05, changed=f) xalign 1. yalign .5
             elif tab == "3D Camera" or tab == "2D Camera":
@@ -500,7 +500,7 @@ screen _action_editor(tab="images", layer="master", name="", time=0):
                 xalign 1.
                 if tab == "images":
                     if name:
-                        textbutton _("remove") action [SensitiveIf(name in _viewers.transform_viewer.state[layer]), Show("_action_editor", tab=tab, layer=layer), Function(renpy.hide, name, layer), Function(_viewers.transform_viewer.state[layer].pop, name, layer), If((name, layer) in _viewers.all_anchor_points, true=Function(_viewers.all_anchor_points.pop, (name, layer))), _viewers.sort_anchor_points]
+                        textbutton _("remove") action [SensitiveIf(name in _viewers.transform_viewer.state[layer]), Show("_action_editor", tab=tab, layer=layer), Function(renpy.hide, name, layer), Function(_viewers.transform_viewer.state[layer].pop, name, layer), Function(_viewers.transform_viewer.remove_anchor_points, name=name, layer=layer), _viewers.sort_anchor_points]
                         textbutton _("clipboard") action Function(_viewers.transform_viewer.put_show_clipboard, name, layer)
                     else:
                         textbutton _("add") action Function(_viewers.transform_viewer.add_image, layer)
@@ -645,11 +645,8 @@ screen _move_anchor_points:
 
 # _move_anchor_point((name, layer), "xpos")
 # _move_anchor_point(_camera_x)
-screen _move_anchor_point(k, k2=None, int=False, loop=None):
-    if isinstance(k, tuple) and k in _viewers.all_anchor_points and k2 in _viewers.all_anchor_points[k]:
-        $check_points = _viewers.all_anchor_points[k][k2]
-    elif k in _viewers.all_anchor_points:
-        $check_points = _viewers.all_anchor_points[k]
+screen _move_anchor_point(k, int=False, loop=None):
+    $check_points = _viewers.all_anchor_points[k]
     modal True
     key "game_menu" action Hide("_move_anchor_point")
     frame:
@@ -659,7 +656,7 @@ screen _move_anchor_point(k, k2=None, int=False, loop=None):
         for v, t, w in check_points:
             if t != 0:
                 hbox:
-                    textbutton _("remove") action [Function(_viewers.remove_anchor_point, time=t, k=k, k2=k2), renpy.restart_interaction]
+                    textbutton _("remove") action [Function(_viewers.remove_anchor_point, time=t, k=k), renpy.restart_interaction]
                     textbutton _("{}".format(v)) action Function(_viewers.edit_the_value, check_points=check_points, old=t, value_org=v, int=int)
                     textbutton _("{}".format(w)) action Function(_viewers.edit_the_warper, check_points=check_points, old=t, value_org=w)
                     textbutton _("[t:>.2f] s") action Function(_viewers.edit_moved_time, check_points=check_points, old=t)
@@ -777,9 +774,7 @@ init -1600 python in _viewers:
 
         def set_anchor_point(self, layer, name, prop, value):
 
-            if (name, layer) not in all_anchor_points:
-                all_anchor_points[(name, layer)] = {}
-            anchor_points = all_anchor_points[(name, layer)].get(prop, [])
+            anchor_points = all_anchor_points.get((name, layer, prop), [])
             if anchor_points:
                 for i, (v, t, w) in enumerate(anchor_points):
                     if time < t:
@@ -792,10 +787,10 @@ init -1600 python in _viewers:
                     anchor_points.append((value, time, warper))
             else:
                 if time == 0:
-                    all_anchor_points[(name, layer)][prop] = [(value, time, warper)]
+                    all_anchor_points[(name, layer, prop)] = [(value, time, warper)]
                 else:
                     org = {k: v for dic in [self.state_org[layer], self.state[layer]] for k, v in dic.items()}[name][prop]
-                    all_anchor_points[(name, layer)][prop] = [(org, 0, None), (value, time, warper)]
+                    all_anchor_points[(name, layer, prop)] = [(org, 0, None), (value, time, warper)]
             sort_anchor_points()
 
         def play(self, play):
@@ -803,8 +798,8 @@ init -1600 python in _viewers:
                 for name in {k: v for dic in [self.state_org[layer], self.state[layer]] for k, v in dic.items()}:
                     check_points = {}
                     for prop, d in self.props:
-                        if (name, layer) in all_anchor_points and prop in all_anchor_points[(name, layer)]:
-                            check_points[prop] = all_anchor_points[(name, layer)][prop] 
+                        if (name, layer, prop) in all_anchor_points:
+                            check_points[prop] = all_anchor_points[(name, layer, prop)]
                     loop = {prop+"_loop": loops[name+"_"+layer+"_"+prop+"_loop"] for prop, d in self.props}
                     if play:
                         renpy.show(name, [renpy.store.Transform(function=renpy.curry(self.transform)(check_points=check_points, loop=loop))], layer=layer)
@@ -934,14 +929,14 @@ init -1600 python in _viewers:
                 return state
             return None
 
-        def put_prop_clipboard(self, prop, value):
-            try:
-                from pygame import scrap, locals
-                scrap.put(locals.SCRAP_TEXT, "%s %s" % (prop, value))
-            except:
-                renpy.notify(_("Can't open clipboard"))
-            else:
-                renpy.notify(__('Putted "%s %s" on clipboard') % (prop, value))
+        # def put_prop_clipboard(self, prop, value):
+        #     try:
+        #         from pygame import scrap, locals
+        #         scrap.put(locals.SCRAP_TEXT, "%s %s" % (prop, value))
+        #     except:
+        #         renpy.notify(_("Can't open clipboard"))
+        #     else:
+        #         renpy.notify(__('Putted "%s %s" on clipboard') % (prop, value))
 
         def put_show_clipboard(self, name, layer):
             string = """
@@ -989,12 +984,12 @@ init -1600 python in _viewers:
                             renpy.show(string, layer=layer)
                             for p, d in self.props:
                                 self.state[layer][string][p] = self.get_property(layer, string.split()[0], p, False)
-                            all_anchor_points[(string, layer)] = {"xpos":[(self.state[layer][string]["xpos"], 0, None)]}
+                            all_anchor_points[(string, layer, "xpos")] = [(self.state[layer][string]["xpos"], 0, None)]
                             remove_list = [n_org for n_org in self.state_org[layer] if n_org.split()[0] == n[0]]
                             for n_org in remove_list:
                                 del self.state_org[layer][n_org]
-                                if (n_org, layer) in all_anchor_points:
-                                    del all_anchor_points[(n_org, layer)]
+                                for k in [k for k in all_anchor_points if isinstance(k, tuple) and k[0] == n_org and k[1] == layer]:
+                                    del all_anchor_points[k]
                             sort_anchor_points()
                             renpy.show_screen("_action_editor", tab="images", layer=layer, name=string)
                             return
@@ -1011,8 +1006,7 @@ init -1600 python in _viewers:
                             remove_list = [n_org for n_org in self.state_org[layer] if n_org.split()[0] == n[0]]
                             for n_org in remove_list:
                                 del self.state_org[layer][n_org]
-                                if (n_org, layer) in all_anchor_points:
-                                    del all_anchor_points[(n_org, layer)]
+                                transform_viewer.remove_anchor_points(n_org, layer)
                             sort_anchor_points()
                             renpy.show_screen("_action_editor", tab="images", layer=layer, name=name)
                             return
@@ -1020,6 +1014,10 @@ init -1600 python in _viewers:
                 else:
                     renpy.notify(_("Please type image name"))
                     return
+
+        def remove_anchor_points(self, name, layer):
+            for k in [k for k in all_anchor_points if isinstance(k, tuple) and k[0] == name and k[1] == layer]:
+                del all_anchor_points[k]
     transform_viewer = TransformViewer()
 
     ##########################################################################
@@ -1340,60 +1338,37 @@ init -1600 python in _viewers:
         all_anchor_points.clear()
         sorted_anchor_points[:]=[]
 
-    def remove_anchor_point(time, k, k2=None):
+    def remove_anchor_point(time, k):
         remove_list = []
-        if isinstance(k, tuple):
-            for (v, t, w) in all_anchor_points[k][k2]:
-                if t == time:
-                    if time != 0 or (time == 0 and len(all_anchor_points[k][k2]) == 1):
-                        remove_list.append((v, t, w))
-            for c in remove_list:
-                all_anchor_points[k][k2].remove(c)
-                if not all_anchor_points[k][k2]:
-                    del all_anchor_points[k][k2]
-        else:
-            for (v, t, w) in all_anchor_points[k]:
-                if t == time:
-                    if time != 0 or (time == 0 and len(all_anchor_points[k]) == 1):
-                        remove_list.append((v, t, w))
-            for c in remove_list:
-                all_anchor_points[k].remove(c)
-                if not all_anchor_points[k]:
-                    del all_anchor_points[k]
+        for (v, t, w) in all_anchor_points[k]:
+            if t == time:
+                if time != 0 or (time == 0 and len(all_anchor_points[k]) == 1):
+                    remove_list.append((v, t, w))
+        for c in remove_list:
+            all_anchor_points[k].remove(c)
+            if not all_anchor_points[k]:
+                del all_anchor_points[k]
         sort_anchor_points()
 
     def remove_anchor_points(time):
-        keylist = [k for k in all_anchor_points if not isinstance(k, tuple)]
+        keylist = [k for k in all_anchor_points]
         for k in keylist:
             remove_anchor_point(time, k)
-        keylist = [(k, k2) for k in all_anchor_points for k2 in all_anchor_points[k] if isinstance(k, tuple)]
-        for k, k2 in keylist:
-            remove_anchor_point(time, k, k2)
 
     def sort_anchor_points():
         global sorted_anchor_points
         sorted_anchor_points[:] = []
         for anchor_points in all_anchor_points.values():
-            if isinstance(anchor_points, dict):
-                for prop in anchor_points.values():
-                    for (v, t, w) in prop:
-                        if t not in sorted_anchor_points:
-                            sorted_anchor_points.append(t)
-            else:
-                for (v, t, w) in anchor_points:
-                    if t not in sorted_anchor_points:
-                        sorted_anchor_points.append(t)
+            for (v, t, w) in anchor_points:
+                if t not in sorted_anchor_points:
+                    sorted_anchor_points.append(t)
         sorted_anchor_points.sort()
 
     def move_anchor_points(new, old):
         global moved_time
         moved_time = round(new, 2)
         for k, v in all_anchor_points.items():
-            if isinstance(v, dict):
-                for k2, v2 in v.items():
-                    move_anchor_point(new, old, v2)
-            else:
-                move_anchor_point(new, old, v)
+            move_anchor_point(new, old, v)
         renpy.restart_interaction()
 
     def move_anchor_point(new, old, check_points):
@@ -1416,17 +1391,10 @@ init -1600 python in _viewers:
         sort_anchor_points()
         renpy.restart_interaction()
 
-    def anchor_points_exist(k, k2=None):
-        if isinstance(k, tuple):
-            if k not in all_anchor_points:
-                return False
-            if k2 not in all_anchor_points[k]:
-                return False
-            check_points = all_anchor_points[k][k2]
-        else:
-            if k not in all_anchor_points:
-                return False
-            check_points = all_anchor_points[k]
+    def anchor_points_exist(k):
+        if k not in all_anchor_points:
+            return False
+        check_points = all_anchor_points[k]
         for c in check_points:
             if c[1] == time:
                 return True
@@ -1476,7 +1444,7 @@ init -1600 python in _viewers:
         for coordinate in ["_camera_x", "_camera_y", "_camera_z", "_camera_rotate"]:
             if coordinate in all_anchor_points:
                 camera_check_points[coordinate[8:]] = all_anchor_points[coordinate]
-                if len(camera_check_points[coordinate[8:]]) == 1 and camera_check_points[coordinate[8:]][0][0] == getattr(renpy.store._viewers, coordinate):
+                if len(camera_check_points[coordinate[8:]]) == 1 and camera_check_points[coordinate[8:]][0][0] == getattr(renpy.store._viewers.camera_viewer, coordinate):
                     del camera_check_points[coordinate[8:]]
 
         layer_check_points = {}
@@ -1497,24 +1465,29 @@ init -1600 python in _viewers:
             string += """
     $all_moves(camera_check_points={}, layer_check_points={}, subpixel=True, **{})""".format(camera_check_points, layer_check_points, loop)
 
-        for k, v in all_anchor_points.items():
-            if isinstance(k, tuple):
-                name, layer = k
-                string += """
+        for layer in transform_viewer.state_org:
+            for name, kwargs_org in {k: v for dic in [transform_viewer.state_org[layer], transform_viewer.state[layer]] for k, v in dic.items()}.items():
+                kwargs = {k[2]:v for k, v in all_anchor_points.items() if isinstance(k, tuple) and k[0] == name and k[1] == layer}
+                if kwargs:
+                    string += """
     show {} onlayer {}:
-        subpixel True """.format(*k)
-                # kwargs_org = {k2: v2 for dic in [transform_viewer.state_org[layer], transform_viewer.state[layer]] for k2, v2 in dic.items()}[tag]
-                for p, d in transform_viewer.props:
-                    value = transform_viewer.get_property(layer, name.split()[0], p)
-                    if value != d:
-                        string += "{} {} ".format(p, value)
-                for p, d in transform_viewer.props:
-                    if p in all_anchor_points[k]:
-                        check_points = all_anchor_points[k][p]
-                        # if kwargs_org[p] is None and p != "rotate":
-                        #     kwargs_org[p] = d
+        subpixel True """.format(name, layer)
+                    # kwargs_org = {k2: v2 for dic in [transform_viewer.state_org[layer], transform_viewer.state[layer]] for k2, v2 in dic.items()}[tag]
+                    # if name in transform_viewer.state[layer]:
+                    #     for p, d in transform_viewer.props:
+                    #         value = transform_viewer.state[layer][name][p]
+                    #         if value != d:
+                                # string += "{} {} ".format(p, value)
+                    # if name in transform_viewer.state[layer]:
+                    for p, d in transform_viewer.props:
+                        if p in kwargs and len(kwargs[p]) == 1:
+                            string += "{} {} ".format(p, kwargs[p][0][0])
+                        elif d != {k2: v2 for dic in [transform_viewer.state_org[layer], transform_viewer.state[layer]] for k2, v2 in dic.items()}[name][p]:
+                            string += "{} {} ".format(p, {k2: v2 for dic in [transform_viewer.state_org[layer], transform_viewer.state[layer]] for k2, v2 in dic.items()}[name][p])
+                    for p, check_points in kwargs.items():
+                            # if kwargs_org[p] is None and p != "rotate":
+                            #     kwargs_org[p] = d
                         if len(check_points) > 1:
-
                             string += """
         parallel:"""
                             # if check_points[0][0] != kwargs_org[p]:
@@ -1524,7 +1497,7 @@ init -1600 python in _viewers:
                                 string += """
             {} {} {} {}""".format(check_point[2], check_points[i+1][1]-check_points[i][1], p, check_point[0])
                             if loops[name+"_"+layer+"_"+p+"_loop"]:
-                                    string += """
+                                string += """
             repeat"""
 
         if string:
