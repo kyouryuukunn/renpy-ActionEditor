@@ -84,7 +84,7 @@ init -1600 python:
              result of this is added to the rotate coordinate of the camera.
          """
 
-        camera_moves(((x, y, z, rotate, duration, warper), ), subpixel=subpixel, loop=loop, x_express=x_express, y_express=y_express, z_express=z_express, rotate_express=rotate_express)
+        camera_moves([(x, y, z, rotate, duration, warper, ),], subpixel=subpixel, loop=loop, x_express=x_express, y_express=y_express, z_express=z_express, rotate_express=rotate_express)
 
     def layer_move(layer, z, duration=0, warper='linear', subpixel=True, loop=False, x_express=None, y_express=None, z_express=None, rotate_express=None):
         """
@@ -124,7 +124,7 @@ init -1600 python:
              result of this is added to the rotate coordinate of the camera.
          """
 
-        layer_moves(layer, ((z, duration, warper), ), subpixel=subpixel, loop=loop, x_express=x_express, y_express=y_express, z_express=z_express, rotate_express=rotate_express)
+        layer_moves(layer, [(z, duration, warper, ),], subpixel=subpixel, loop=loop, x_express=x_express, y_express=y_express, z_express=z_express, rotate_express=rotate_express)
 
     def camera_moves(check_points, loop=False, subpixel=True, x_express=None, y_express=None, z_express=None, rotate_express=None):
         """
@@ -134,7 +134,7 @@ init -1600 python:
          layers.
 
          `check_points`
-              A tuple of (x, y, z, rotate, duration, warper)
+              A list of (x, y, z, rotate, duration, warper)
          `loop`
               Default False, if True, this sequence of motions repeats.
          `subpixel`
@@ -179,7 +179,7 @@ init -1600 python:
          `layer`
               the string of a layer name to be moved
          `check_points`
-              A tuple of (z, duration, warper)
+              A list of (z, duration, warper)
          `loop`
               Default False, if True, this sequence of motions repeats.
          `subpixel`
@@ -441,6 +441,7 @@ screen _action_editor(tab="images", layer="master", name="", time=0):
                     for n in state:
                         if renpy.showing(n, layer):
                             textbutton "{}".format(n.split()[0]) action [SelectedIf(n == name), Show("_action_editor", tab=tab, layer=layer, name=n)]
+                    textbutton _("+") action Function(_viewers.transform_viewer.add_image, layer)
 
                 if name in state:
                     for p, d in _viewers.transform_viewer.props:
@@ -449,16 +450,14 @@ screen _action_editor(tab="images", layer="master", name="", time=0):
                         if p not in _viewers.transform_viewer.force_float and ((state[name][p] is None and isinstance(d, int)) or isinstance(state[name][p], int)):
                             hbox:
                                 style_group "action_editor"
-                                # textbutton "[p]" action Function(_viewers.transform_viewer.put_prop_clipboard, p, prop)
                                 textbutton "[p]" action [SensitiveIf((name, layer, p) in _viewers.all_anchor_points), SelectedIf(_viewers.anchor_points_exist((name, layer, p))), Show("_move_anchor_point", k=(name, layer, p), int=True, loop=name+"_"+layer+"_"+p+"_loop")]
-                                textbutton "[prop]" action Function(_viewers.transform_viewer.edit_value, f, True, default=prop)
+                                textbutton "[prop]" action Function(_viewers.transform_viewer.edit_value, f, True, default=prop) alternate Function(_viewers.transform_viewer.reset, name, layer, p)
                                 bar adjustment ui.adjustment(range=_viewers.transform_viewer.int_range*2, value=prop+_viewers.transform_viewer.int_range, page=1, changed=f) xalign 1. yalign .5
                         else:
                             hbox:
                                 style_group "action_editor"
-                                # textbutton "[p]" action Function(_viewers.transform_viewer.put_prop_clipboard, p, prop)
                                 textbutton "[p]" action [SensitiveIf((name, layer, p) in _viewers.all_anchor_points), SelectedIf(_viewers.anchor_points_exist((name, layer, p))), Show("_move_anchor_point", k=(name, layer, p), loop=name+"_"+layer+"_"+p+"_loop")]
-                                textbutton "[prop:>.2f]" action Function(_viewers.transform_viewer.edit_value, f, False, default=prop)
+                                textbutton "[prop:>.2f]" action Function(_viewers.transform_viewer.edit_value, f, False, default=prop) alternate Function(_viewers.transform_viewer.reset, name, layer, p)
                                 bar adjustment ui.adjustment(range=_viewers.transform_viewer.float_range*2, value=prop+_viewers.transform_viewer.float_range, page=.05, changed=f) xalign 1. yalign .5
             elif tab == "3D Camera" or tab == "2D Camera":
                 if _3d_layers.keys() == ["master"] and tab == "3D Camera":
@@ -467,22 +466,22 @@ screen _action_editor(tab="images", layer="master", name="", time=0):
                     hbox:
                         style_group "action_editor"
                         textbutton "x" action [SensitiveIf("_camera_x" in _viewers.all_anchor_points), SelectedIf(_viewers.anchor_points_exist("_camera_x")), Show("_move_anchor_point", k="_camera_x", loop="_camera_x_loop")]
-                        textbutton "[_camera_x: >5]" action Function(_viewers.camera_viewer.edit_value, _viewers.camera_viewer.x_changed, _viewers.camera_viewer.range_camera_pos, default=_camera_x)
+                        textbutton "[_camera_x: >5]" action Function(_viewers.camera_viewer.edit_value, _viewers.camera_viewer.x_changed, _viewers.camera_viewer.range_camera_pos, default=_camera_x) alternate [Function(camera_move, _viewers.camera_viewer._camera_x, _camera_y, _camera_z, _camera_rotate), renpy.restart_interaction]
                         bar adjustment ui.adjustment(range=_viewers.camera_viewer.range_camera_pos*2, value=_camera_x+_viewers.camera_viewer.range_camera_pos, page=1, changed=_viewers.camera_viewer.x_changed) xalign 1. yalign .5
                     hbox:
                         style_group "action_editor"
                         textbutton "y" action [SensitiveIf("_camera_y" in _viewers.all_anchor_points), SelectedIf(_viewers.anchor_points_exist("_camera_y")), Show("_move_anchor_point", k="_camera_y", loop="_camera_y_loop")]
-                        textbutton "[_camera_y: >5]" action Function(_viewers.camera_viewer.edit_value, _viewers.camera_viewer.y_changed, _viewers.camera_viewer.range_camera_pos, default=_camera_y)
+                        textbutton "[_camera_y: >5]" action Function(_viewers.camera_viewer.edit_value, _viewers.camera_viewer.y_changed, _viewers.camera_viewer.range_camera_pos, default=_camera_y) alternate [Function(camera_move, _camera_x, _viewers.camera_viewer._camera_y, _camera_z, _camera_rotate), renpy.restart_interaction]
                         bar adjustment ui.adjustment(range=_viewers.camera_viewer.range_camera_pos*2, value=_camera_y+_viewers.camera_viewer.range_camera_pos, page=1, changed=_viewers.camera_viewer.y_changed) xalign 1. yalign .5
                     hbox:
                         style_group "action_editor"
                         textbutton "z" action [SensitiveIf("_camera_z" in _viewers.all_anchor_points), SelectedIf(_viewers.anchor_points_exist("_camera_z")), Show("_move_anchor_point", k="_camera_z", loop="_camera_z_loop")]
-                        textbutton "[_camera_z: >5]" action Function(_viewers.camera_viewer.edit_value, _viewers.camera_viewer.z_changed, _viewers.camera_viewer.range_camera_pos, default=_camera_z)
+                        textbutton "[_camera_z: >5]" action Function(_viewers.camera_viewer.edit_value, _viewers.camera_viewer.z_changed, _viewers.camera_viewer.range_camera_pos, default=_camera_z) alternate [Function(camera_move, _camera_x, _camera_y, _viewers.camera_viewer._camera_z, _camera_rotate), renpy.restart_interaction]
                         bar adjustment ui.adjustment(range=_viewers.camera_viewer.range_camera_pos*2, value=_camera_z+_viewers.camera_viewer.range_camera_pos, page=1, changed=_viewers.camera_viewer.z_changed) xalign 1. yalign .5
                     hbox:
                         style_group "action_editor"
                         textbutton "rotate" action [SensitiveIf("_camera_rotate" in _viewers.all_anchor_points), SelectedIf(_viewers.anchor_points_exist("_camera_rotate")), Show("_move_anchor_point", k="_camera_rotate", loop="_camera_rotate_loop")]
-                        textbutton "[_camera_rotate: >5]" action Function(_viewers.camera_viewer.edit_value, _viewers.camera_viewer.r_changed, _viewers.camera_viewer.range_rotate, default=_camera_rotate)
+                        textbutton "[_camera_rotate: >5]" action Function(_viewers.camera_viewer.edit_value, _viewers.camera_viewer.r_changed, _viewers.camera_viewer.range_rotate, default=_camera_rotate) alternate [Function(camera_move, _camera_x, _camera_y, _camera_z, _viewers.camera_viewer._camera_rotate), renpy.restart_interaction]
                         bar adjustment ui.adjustment(range=_viewers.camera_viewer.range_rotate*2, value=_camera_rotate+_viewers.camera_viewer.range_rotate, page=1, changed=_viewers.camera_viewer.r_changed) xalign 1. yalign .5
             elif tab == "3D Layers":
                 if _3d_layers.keys() == ["master"]:
@@ -492,29 +491,8 @@ screen _action_editor(tab="images", layer="master", name="", time=0):
                         hbox:
                             style_group "action_editor"
                             textbutton "[layer]" action [SensitiveIf("layer "+layer in _viewers.all_anchor_points), SelectedIf(_viewers.anchor_points_exist("layer "+layer)), SetField(_viewers, "moved_time", _viewers.time), Show("_move_anchor_point", k="layer "+layer, loop=layer+"_loop")]
-                            textbutton "{}".format(_3d_layers[layer]) action Function(_viewers.camera_viewer.edit_value, _viewers.camera_viewer.generate_layer_z_changed(layer), 0, default=_3d_layers[layer])
+                            textbutton "{}".format(_3d_layers[layer]) action Function(_viewers.camera_viewer.edit_value, _viewers.camera_viewer.generate_layer_z_changed(layer), 0, default=_3d_layers[layer]) alternate [Function(layer_move, layer, _viewers.camera_viewer._3d_layers[layer]), renpy.restart_interaction]
                             bar adjustment ui.adjustment(range=_viewers.camera_viewer.range_layer_z, value=_3d_layers[layer], page=1, changed=_viewers.camera_viewer.generate_layer_z_changed(layer)) xalign 1. yalign .5
-            hbox:
-                style_group "action_editor"
-                xfill False
-                xalign 1.
-                if tab == "images":
-                    if name:
-                        textbutton _("remove") action [SensitiveIf(name in _viewers.transform_viewer.state[layer]), Show("_action_editor", tab=tab, layer=layer), Function(renpy.hide, name, layer), Function(_viewers.transform_viewer.state[layer].pop, name, layer), Function(_viewers.transform_viewer.remove_anchor_points, name=name, layer=layer), _viewers.sort_anchor_points]
-                        textbutton _("clipboard") action Function(_viewers.transform_viewer.put_show_clipboard, name, layer)
-                    else:
-                        textbutton _("add") action Function(_viewers.transform_viewer.add_image, layer)
-                    textbutton _("reset") action [_viewers.transform_viewer.reset, renpy.restart_interaction]
-                elif tab == "2D Camera":
-                    textbutton _("clipboard") action Function(_viewers.camera_viewer.put_clipboard, True)
-                    textbutton _("reset") action [_viewers.camera_viewer.camera_reset, renpy.restart_interaction]
-                elif tab == "3D Layers":
-                    textbutton _("clipboard") action Function(_viewers.camera_viewer.put_clipboard, False)
-                    textbutton _("reset") action [_viewers.camera_viewer.layer_reset, renpy.restart_interaction]
-                elif tab == "3D Camera":
-                    textbutton _("clipboard") action Function(_viewers.camera_viewer.put_clipboard, True)
-                    textbutton _("reset") action [_viewers.camera_viewer.camera_reset, renpy.restart_interaction]
-                textbutton _("close") action Return()
 
     if time:
         add _viewers.dragged at _delay_show(time + 1)
@@ -757,20 +735,33 @@ init -1600 python in _viewers:
                         if p not in self.state_org[layer][name]:
                             self.state_org[layer][name][p] = getattr(state, p, None)
 
-        def reset(self):
-            for layer in renpy.config.layers:
-                for name, props in {k: v for dic in [self.state_org[layer], self.state[layer]] for k, v in dic.items()}.iteritems():
-                    if name and props:
-                        kwargs = props.copy()
-                        for p, d in self.props:
-                            if kwargs[p] is None and p != "rotate":
-                                kwargs[p] = d
-                        renpy.show(name, [renpy.store.Transform(**kwargs)], layer=layer)
-                # for name in self.state[layer]:
-                #     renpy.hide(name, layer=layer)
-                #     del all_anchor_points[(name, layer)]
-                # self.state[layer] = {}
+        def reset(self, name, layer, prop):
+            state={k: v for dic in [self.state_org[layer], self.state[layer]] for k, v in dic.items()}[name][prop]
+            kwargs = {}
+            for p, d in self.props:
+                value = self.get_property(layer, name.split()[0], p, False)
+                if value is not None:
+                    kwargs[p] = value
+                elif p != "rotate":
+                    kwargs[p] = d
+            kwargs[prop] = state
+            renpy.show(name, [renpy.store.Transform(**kwargs)], layer=layer)
             renpy.restart_interaction()
+
+        # def reset(self):
+        #     for layer in renpy.config.layers:
+        #         for name, props in {k: v for dic in [self.state_org[layer], self.state[layer]] for k, v in dic.items()}.iteritems():
+        #             if name and props:
+        #                 kwargs = props.copy()
+        #                 for p, d in self.props:
+        #                     if kwargs[p] is None and p != "rotate":
+        #                         kwargs[p] = d
+        #                 renpy.show(name, [renpy.store.Transform(**kwargs)], layer=layer)
+        #         # for name in self.state[layer]:
+        #         #     renpy.hide(name, layer=layer)
+        #         #     del all_anchor_points[(name, layer)]
+        #         # self.state[layer] = {}
+        #     renpy.restart_interaction()
 
         def set_anchor_point(self, layer, name, prop, value):
 
@@ -1377,7 +1368,7 @@ init -1600 python in _viewers:
                 else:
                     check_points.append((value, new, warper))
                 if old == 0 and new != 0:
-                    check_points.insert(0, (value, 0, w))
+                    check_points.insert(0, (value, 0, None))
         sort_anchor_points()
         renpy.restart_interaction()
 
