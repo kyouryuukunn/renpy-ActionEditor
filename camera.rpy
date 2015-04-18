@@ -409,18 +409,23 @@ screen _action_editor(tab="images", layer="master", name="", time=0):
                 textbutton _(">") action Function(_viewers.next_time)
                 bar adjustment ui.adjustment(range=7.0, value=_viewers.time, changed=_viewers.change_time) xalign 1. yalign .5
             hbox:
-                textbutton _("warper") action _viewers.select_time_warper
-                textbutton _("ROT") action [SelectedIf(renpy.get_screen("_rot")), If(renpy.get_screen("_rot"), true=Hide("_rot"), false=Show("_rot"))]
-                textbutton _("Hide") action HideInterface()
-                if _viewers.sorted_anchor_points:
-                    textbutton _("play") action [SensitiveIf(_viewers.sorted_anchor_points), Function(_viewers.camera_viewer.play, play=True), Function(_viewers.transform_viewer.play, play=True), Hide("_action_editor"), Show("_action_editor", tab=tab, layer=layer, name=name, time=_viewers.sorted_anchor_points[-1]), renpy.restart_interaction]
-                else:
-                    textbutton _("play") action [SensitiveIf(_viewers.sorted_anchor_points), Function(_viewers.camera_viewer.play, play=True), Function(_viewers.transform_viewer.play, play=True), Hide("_action_editor"), Show("_action_editor", tab=tab, layer=layer, name=name), renpy.restart_interaction]
-                textbutton _("clipboard") action Function(_viewers.put_clipboard)
+                xfill True
+                hbox:
+                    textbutton _("warper") action _viewers.select_time_warper
+                    textbutton _("ROT") action [SelectedIf(renpy.get_screen("_rot")), If(renpy.get_screen("_rot"), true=Hide("_rot"), false=Show("_rot"))]
+                    textbutton _("Hide") action HideInterface()
+                    if _viewers.sorted_keyframes:
+                        textbutton _("play") action [SensitiveIf(_viewers.sorted_keyframes), Function(_viewers.camera_viewer.play, play=True), Function(_viewers.transform_viewer.play, play=True), Hide("_action_editor"), Show("_action_editor", tab=tab, layer=layer, name=name, time=_viewers.sorted_keyframes[-1]), renpy.restart_interaction]
+                    else:
+                        textbutton _("play") action [SensitiveIf(_viewers.sorted_keyframes), Function(_viewers.camera_viewer.play, play=True), Function(_viewers.transform_viewer.play, play=True), Hide("_action_editor"), Show("_action_editor", tab=tab, layer=layer, name=name), renpy.restart_interaction]
+                    textbutton _("clipboard") action Function(_viewers.put_clipboard)
+                hbox:
+                    xalign 1.
+                    textbutton _("close") action Return()
             hbox:
-                textbutton _("clear anchors") action [SensitiveIf(_viewers.sorted_anchor_points), Function(_viewers.clear_anchor_points), renpy.restart_interaction]
-                textbutton _("remove anchors") action [SensitiveIf(_viewers.time in _viewers.sorted_anchor_points), Function(_viewers.remove_anchor_points, _viewers.time), renpy.restart_interaction]
-                textbutton _("move anchors") action [SensitiveIf(_viewers.time in _viewers.sorted_anchor_points), SetField(_viewers, "moved_time", _viewers.time), Show("_move_anchor_points")]
+                textbutton _("clear keyframes") action [SensitiveIf(_viewers.sorted_keyframes), Function(_viewers.clear_keyframes), renpy.restart_interaction]
+                textbutton _("remove keyframes") action [SensitiveIf(_viewers.time in _viewers.sorted_keyframes), Function(_viewers.remove_keyframes, _viewers.time), renpy.restart_interaction]
+                textbutton _("move keyframes") action [SensitiveIf(_viewers.time in _viewers.sorted_keyframes), SetField(_viewers, "moved_time", _viewers.time), Show("_move_keyframes")]
 
             null height 10
             hbox:
@@ -439,8 +444,7 @@ screen _action_editor(tab="images", layer="master", name="", time=0):
                 hbox:
                     style_group "action_editor"
                     for n in state:
-                        if renpy.showing(n, layer):
-                            textbutton "{}".format(n.split()[0]) action [SelectedIf(n == name), Show("_action_editor", tab=tab, layer=layer, name=n)]
+                        textbutton "{}".format(n.split()[0]) action [SelectedIf(n == name), Show("_action_editor", tab=tab, layer=layer, name=n)]
                     textbutton _("+") action Function(_viewers.transform_viewer.add_image, layer)
 
                 if name in state:
@@ -450,13 +454,13 @@ screen _action_editor(tab="images", layer="master", name="", time=0):
                         if p not in _viewers.transform_viewer.force_float and ((state[name][p] is None and isinstance(d, int)) or isinstance(state[name][p], int)):
                             hbox:
                                 style_group "action_editor"
-                                textbutton "[p]" action [SensitiveIf((name, layer, p) in _viewers.all_anchor_points), SelectedIf(_viewers.anchor_points_exist((name, layer, p))), Show("_move_anchor_point", k=(name, layer, p), int=True, loop=name+"_"+layer+"_"+p+"_loop")]
+                                textbutton "[p]" action [SensitiveIf((name, layer, p) in _viewers.all_keyframes), SelectedIf(_viewers.keyframes_exist((name, layer, p))), Show("_move_keyframe", k=(name, layer, p), int=True, loop=name+"_"+layer+"_"+p+"_loop")]
                                 textbutton "[prop]" action Function(_viewers.transform_viewer.edit_value, f, True, default=prop) alternate Function(_viewers.transform_viewer.reset, name, layer, p)
                                 bar adjustment ui.adjustment(range=_viewers.transform_viewer.int_range*2, value=prop+_viewers.transform_viewer.int_range, page=1, changed=f) xalign 1. yalign .5
                         else:
                             hbox:
                                 style_group "action_editor"
-                                textbutton "[p]" action [SensitiveIf((name, layer, p) in _viewers.all_anchor_points), SelectedIf(_viewers.anchor_points_exist((name, layer, p))), Show("_move_anchor_point", k=(name, layer, p), loop=name+"_"+layer+"_"+p+"_loop")]
+                                textbutton "[p]" action [SensitiveIf((name, layer, p) in _viewers.all_keyframes), SelectedIf(_viewers.keyframes_exist((name, layer, p))), Show("_move_keyframe", k=(name, layer, p), loop=name+"_"+layer+"_"+p+"_loop")]
                                 textbutton "[prop:>.2f]" action Function(_viewers.transform_viewer.edit_value, f, False, default=prop) alternate Function(_viewers.transform_viewer.reset, name, layer, p)
                                 bar adjustment ui.adjustment(range=_viewers.transform_viewer.float_range*2, value=prop+_viewers.transform_viewer.float_range, page=.05, changed=f) xalign 1. yalign .5
             elif tab == "3D Camera" or tab == "2D Camera":
@@ -465,22 +469,22 @@ screen _action_editor(tab="images", layer="master", name="", time=0):
                 else:
                     hbox:
                         style_group "action_editor"
-                        textbutton "x" action [SensitiveIf("_camera_x" in _viewers.all_anchor_points), SelectedIf(_viewers.anchor_points_exist("_camera_x")), Show("_move_anchor_point", k="_camera_x", loop="_camera_x_loop")]
+                        textbutton "x" action [SensitiveIf("_camera_x" in _viewers.all_keyframes), SelectedIf(_viewers.keyframes_exist("_camera_x")), Show("_move_keyframe", k="_camera_x", loop="_camera_x_loop")]
                         textbutton "[_camera_x: >5]" action Function(_viewers.camera_viewer.edit_value, _viewers.camera_viewer.x_changed, _viewers.camera_viewer.range_camera_pos, default=_camera_x) alternate [Function(camera_move, _viewers.camera_viewer._camera_x, _camera_y, _camera_z, _camera_rotate), renpy.restart_interaction]
                         bar adjustment ui.adjustment(range=_viewers.camera_viewer.range_camera_pos*2, value=_camera_x+_viewers.camera_viewer.range_camera_pos, page=1, changed=_viewers.camera_viewer.x_changed) xalign 1. yalign .5
                     hbox:
                         style_group "action_editor"
-                        textbutton "y" action [SensitiveIf("_camera_y" in _viewers.all_anchor_points), SelectedIf(_viewers.anchor_points_exist("_camera_y")), Show("_move_anchor_point", k="_camera_y", loop="_camera_y_loop")]
+                        textbutton "y" action [SensitiveIf("_camera_y" in _viewers.all_keyframes), SelectedIf(_viewers.keyframes_exist("_camera_y")), Show("_move_keyframe", k="_camera_y", loop="_camera_y_loop")]
                         textbutton "[_camera_y: >5]" action Function(_viewers.camera_viewer.edit_value, _viewers.camera_viewer.y_changed, _viewers.camera_viewer.range_camera_pos, default=_camera_y) alternate [Function(camera_move, _camera_x, _viewers.camera_viewer._camera_y, _camera_z, _camera_rotate), renpy.restart_interaction]
                         bar adjustment ui.adjustment(range=_viewers.camera_viewer.range_camera_pos*2, value=_camera_y+_viewers.camera_viewer.range_camera_pos, page=1, changed=_viewers.camera_viewer.y_changed) xalign 1. yalign .5
                     hbox:
                         style_group "action_editor"
-                        textbutton "z" action [SensitiveIf("_camera_z" in _viewers.all_anchor_points), SelectedIf(_viewers.anchor_points_exist("_camera_z")), Show("_move_anchor_point", k="_camera_z", loop="_camera_z_loop")]
+                        textbutton "z" action [SensitiveIf("_camera_z" in _viewers.all_keyframes), SelectedIf(_viewers.keyframes_exist("_camera_z")), Show("_move_keyframe", k="_camera_z", loop="_camera_z_loop")]
                         textbutton "[_camera_z: >5]" action Function(_viewers.camera_viewer.edit_value, _viewers.camera_viewer.z_changed, _viewers.camera_viewer.range_camera_pos, default=_camera_z) alternate [Function(camera_move, _camera_x, _camera_y, _viewers.camera_viewer._camera_z, _camera_rotate), renpy.restart_interaction]
                         bar adjustment ui.adjustment(range=_viewers.camera_viewer.range_camera_pos*2, value=_camera_z+_viewers.camera_viewer.range_camera_pos, page=1, changed=_viewers.camera_viewer.z_changed) xalign 1. yalign .5
                     hbox:
                         style_group "action_editor"
-                        textbutton "rotate" action [SensitiveIf("_camera_rotate" in _viewers.all_anchor_points), SelectedIf(_viewers.anchor_points_exist("_camera_rotate")), Show("_move_anchor_point", k="_camera_rotate", loop="_camera_rotate_loop")]
+                        textbutton "rotate" action [SensitiveIf("_camera_rotate" in _viewers.all_keyframes), SelectedIf(_viewers.keyframes_exist("_camera_rotate")), Show("_move_keyframe", k="_camera_rotate", loop="_camera_rotate_loop")]
                         textbutton "[_camera_rotate: >5]" action Function(_viewers.camera_viewer.edit_value, _viewers.camera_viewer.r_changed, _viewers.camera_viewer.range_rotate, default=_camera_rotate) alternate [Function(camera_move, _camera_x, _camera_y, _camera_z, _viewers.camera_viewer._camera_rotate), renpy.restart_interaction]
                         bar adjustment ui.adjustment(range=_viewers.camera_viewer.range_rotate*2, value=_camera_rotate+_viewers.camera_viewer.range_rotate, page=1, changed=_viewers.camera_viewer.r_changed) xalign 1. yalign .5
             elif tab == "3D Layers":
@@ -490,9 +494,27 @@ screen _action_editor(tab="images", layer="master", name="", time=0):
                     for layer in sorted(_3d_layers.keys()):
                         hbox:
                             style_group "action_editor"
-                            textbutton "[layer]" action [SensitiveIf("layer "+layer in _viewers.all_anchor_points), SelectedIf(_viewers.anchor_points_exist("layer "+layer)), SetField(_viewers, "moved_time", _viewers.time), Show("_move_anchor_point", k="layer "+layer, loop=layer+"_loop")]
+                            textbutton "[layer]" action [SensitiveIf("layer "+layer in _viewers.all_keyframes), SelectedIf(_viewers.keyframes_exist("layer "+layer)), SetField(_viewers, "moved_time", _viewers.time), Show("_move_keyframe", k="layer "+layer, loop=layer+"_loop")]
                             textbutton "{}".format(_3d_layers[layer]) action Function(_viewers.camera_viewer.edit_value, _viewers.camera_viewer.generate_layer_z_changed(layer), 0, default=_3d_layers[layer]) alternate [Function(layer_move, layer, _viewers.camera_viewer._3d_layers[layer]), renpy.restart_interaction]
                             bar adjustment ui.adjustment(range=_viewers.camera_viewer.range_layer_z, value=_3d_layers[layer], page=1, changed=_viewers.camera_viewer.generate_layer_z_changed(layer)) xalign 1. yalign .5
+            hbox:
+                style_group "action_editor"
+                xfill False
+                xalign 1.
+                if tab == "images":
+                    if name:
+                        textbutton _("remove") action [SensitiveIf(name in _viewers.transform_viewer.state[layer]), Show("_action_editor", tab=tab, layer=layer), Function(renpy.hide, name, layer), Function(_viewers.transform_viewer.state[layer].pop, name, layer), Function(_viewers.transform_viewer.remove_keyframes, name=name, layer=layer), _viewers.sort_keyframes]
+                        textbutton _("clipboard") action Function(_viewers.transform_viewer.put_show_clipboard, name, layer)
+                    textbutton _("reset") action [_viewers.transform_viewer.image_reset, renpy.restart_interaction]
+                elif tab == "2D Camera":
+                    textbutton _("clipboard") action Function(_viewers.camera_viewer.put_clipboard, True)
+                    textbutton _("reset") action [_viewers.camera_viewer.camera_reset, renpy.restart_interaction]
+                elif tab == "3D Layers":
+                    textbutton _("clipboard") action Function(_viewers.camera_viewer.put_clipboard, False)
+                    textbutton _("reset") action [_viewers.camera_viewer.layer_reset, renpy.restart_interaction]
+                elif tab == "3D Camera":
+                    textbutton _("clipboard") action Function(_viewers.camera_viewer.put_clipboard, True)
+                    textbutton _("reset") action [_viewers.camera_viewer.camera_reset, renpy.restart_interaction]
 
     if time:
         add _viewers.dragged at _delay_show(time + 1)
@@ -611,37 +633,38 @@ screen _image_selecter(default):
 screen _selected_image(string):
     add string at truecenter
 
-screen _move_anchor_points:
+screen _move_keyframes:
     modal True
-    key "game_menu" action Hide("_move_anchor_points")
+    key "game_menu" action Hide("_move_keyframes")
     frame:
         background "#0006"
         has vbox
         textbutton _("time: [_viewers.moved_time:>.2f] s") action Function(_viewers.edit_moved_time)
-        bar adjustment ui.adjustment(range=7.0, value=_viewers.moved_time, changed=renpy.curry(_viewers.move_anchor_points)(old=_viewers.moved_time)) xalign 1. yalign .5
-        textbutton _("close") action Hide("_move_anchor_points") xalign .98
+        bar adjustment ui.adjustment(range=7.0, value=_viewers.moved_time, changed=renpy.curry(_viewers.move_keyframes)(old=_viewers.moved_time)) xalign 1. yalign .5
+        textbutton _("close") action Hide("_move_keyframes") xalign .98
 
-# _move_anchor_point((name, layer), "xpos")
-# _move_anchor_point(_camera_x)
-screen _move_anchor_point(k, int=False, loop=None):
-    $check_points = _viewers.all_anchor_points[k]
+# _move_keyframe((name, layer), "xpos")
+# _move_keyframe(_camera_x)
+screen _move_keyframe(k, int=False, loop=None):
+    $check_points = _viewers.all_keyframes[k]
     modal True
-    key "game_menu" action Hide("_move_anchor_point")
+    key "game_menu" action Hide("_move_keyframe")
     frame:
         background "#0009"
         style_group "action_editor"
         has vbox
+        label _("KeyFrames") xalign .5
         for v, t, w in check_points:
             if t != 0:
                 hbox:
-                    textbutton _("remove") action [Function(_viewers.remove_anchor_point, time=t, k=k), renpy.restart_interaction]
+                    textbutton _("remove") action [Function(_viewers.remove_keyframe, remove_time=t, k=k), renpy.restart_interaction]
                     textbutton _("{}".format(v)) action Function(_viewers.edit_the_value, check_points=check_points, old=t, value_org=v, int=int)
                     textbutton _("{}".format(w)) action Function(_viewers.edit_the_warper, check_points=check_points, old=t, value_org=w)
                     textbutton _("[t:>.2f] s") action Function(_viewers.edit_moved_time, check_points=check_points, old=t)
-                    bar adjustment ui.adjustment(range=7.0, value=t, changed=renpy.curry(_viewers.move_anchor_point)(old=t, check_points=check_points)) xalign 1. yalign .5
+                    bar adjustment ui.adjustment(range=7.0, value=t, changed=renpy.curry(_viewers.move_keyframe)(old=t, check_points=check_points)) xalign 1. yalign .5
         hbox:
             textbutton _("loop") action ToggleDict(_viewers.loops, loop)
-            textbutton _("close") action Hide("_move_anchor_point") xalign .98
+            textbutton _("close") action Hide("_move_keyframe") xalign .98
 
 init -1098 python:
     # overwrite keymap
@@ -748,49 +771,49 @@ init -1600 python in _viewers:
             renpy.show(name, [renpy.store.Transform(**kwargs)], layer=layer)
             renpy.restart_interaction()
 
-        # def reset(self):
-        #     for layer in renpy.config.layers:
-        #         for name, props in {k: v for dic in [self.state_org[layer], self.state[layer]] for k, v in dic.items()}.iteritems():
-        #             if name and props:
-        #                 kwargs = props.copy()
-        #                 for p, d in self.props:
-        #                     if kwargs[p] is None and p != "rotate":
-        #                         kwargs[p] = d
-        #                 renpy.show(name, [renpy.store.Transform(**kwargs)], layer=layer)
-        #         # for name in self.state[layer]:
-        #         #     renpy.hide(name, layer=layer)
-        #         #     del all_anchor_points[(name, layer)]
-        #         # self.state[layer] = {}
-        #     renpy.restart_interaction()
+        def image_reset(self):
+            for layer in renpy.config.layers:
+                for name, props in {k: v for dic in [self.state_org[layer], self.state[layer]] for k, v in dic.items()}.iteritems():
+                    if name and props:
+                        kwargs = props.copy()
+                        for p, d in self.props:
+                            if kwargs[p] is None and p != "rotate":
+                                kwargs[p] = d
+                        renpy.show(name, [renpy.store.Transform(**kwargs)], layer=layer)
+                # for name in self.state[layer]:
+                #     renpy.hide(name, layer=layer)
+                #     del all_keyframes[(name, layer)]
+                # self.state[layer] = {}
+            renpy.restart_interaction()
 
-        def set_anchor_point(self, layer, name, prop, value):
+        def set_keyframe(self, layer, name, prop, value):
 
-            anchor_points = all_anchor_points.get((name, layer, prop), [])
-            if anchor_points:
-                for i, (v, t, w) in enumerate(anchor_points):
+            keyframes = all_keyframes.get((name, layer, prop), [])
+            if keyframes:
+                for i, (v, t, w) in enumerate(keyframes):
                     if time < t:
-                        anchor_points.insert(i, (value, time, warper))
+                        keyframes.insert(i, (value, time, warper))
                         break
                     elif time == t:
-                        anchor_points[i] = ( value, time, warper)
+                        keyframes[i] = ( value, time, warper)
                         break
                 else:
-                    anchor_points.append((value, time, warper))
+                    keyframes.append((value, time, warper))
             else:
                 if time == 0:
-                    all_anchor_points[(name, layer, prop)] = [(value, time, warper)]
+                    all_keyframes[(name, layer, prop)] = [(value, time, warper)]
                 else:
                     org = {k: v for dic in [self.state_org[layer], self.state[layer]] for k, v in dic.items()}[name][prop]
-                    all_anchor_points[(name, layer, prop)] = [(org, 0, None), (value, time, warper)]
-            sort_anchor_points()
+                    all_keyframes[(name, layer, prop)] = [(org, 0, None), (value, time, warper)]
+            sort_keyframes()
 
         def play(self, play):
             for layer in renpy.config.layers:
                 for name in {k: v for dic in [self.state_org[layer], self.state[layer]] for k, v in dic.items()}:
                     check_points = {}
                     for prop, d in self.props:
-                        if (name, layer, prop) in all_anchor_points:
-                            check_points[prop] = all_anchor_points[(name, layer, prop)]
+                        if (name, layer, prop) in all_keyframes:
+                            check_points[prop] = all_keyframes[(name, layer, prop)]
                     loop = {prop+"_loop": loops[name+"_"+layer+"_"+prop+"_loop"] for prop, d in self.props}
                     if play:
                         renpy.show(name, [renpy.store.Transform(function=renpy.curry(self.transform)(check_points=check_points, loop=loop))], layer=layer)
@@ -897,7 +920,7 @@ init -1600 python in _viewers:
                 else:
                     kwargs[prop] = round(v -self.float_range, 2)
 
-                self.set_anchor_point(layer, name, prop, kwargs[prop])
+                self.set_keyframe(layer, name, prop, kwargs[prop])
                 renpy.show(name, [renpy.store.Transform(**kwargs)], layer=layer)
                 renpy.restart_interaction()
             return changed
@@ -966,13 +989,13 @@ init -1600 python in _viewers:
                             renpy.show(string, layer=layer)
                             for p, d in self.props:
                                 self.state[layer][string][p] = self.get_property(layer, string.split()[0], p, False)
-                            all_anchor_points[(string, layer, "xpos")] = [(self.state[layer][string]["xpos"], 0, None)]
+                            all_keyframes[(string, layer, "xpos")] = [(self.state[layer][string]["xpos"], 0, None)]
                             remove_list = [n_org for n_org in self.state_org[layer] if n_org.split()[0] == n[0]]
                             for n_org in remove_list:
                                 del self.state_org[layer][n_org]
-                                for k in [k for k in all_anchor_points if isinstance(k, tuple) and k[0] == n_org and k[1] == layer]:
-                                    del all_anchor_points[k]
-                            sort_anchor_points()
+                                for k in [k for k in all_keyframes if isinstance(k, tuple) and k[0] == n_org and k[1] == layer]:
+                                    del all_keyframes[k]
+                            sort_keyframes()
                             renpy.show_screen("_action_editor", tab="images", layer=layer, name=string)
                             return
                     else:
@@ -984,12 +1007,12 @@ init -1600 python in _viewers:
                             renpy.show(name, layer=layer)
                             for p, d in self.props:
                                 self.state[layer][name][p] = self.get_property(layer, name.split()[0], p, False)
-                            all_anchor_points[(name, layer)] = {"xpos":[(self.state[layer][name]["xpos"], 0, None)]}
+                            all_keyframes[(name, layer, "xpos")] = [(self.state[layer][name]["xpos"], 0, None)]
                             remove_list = [n_org for n_org in self.state_org[layer] if n_org.split()[0] == n[0]]
                             for n_org in remove_list:
                                 del self.state_org[layer][n_org]
-                                transform_viewer.remove_anchor_points(n_org, layer)
-                            sort_anchor_points()
+                                transform_viewer.remove_keyframes(n_org, layer)
+                            sort_keyframes()
                             renpy.show_screen("_action_editor", tab="images", layer=layer, name=name)
                             return
                     default = tuple(name.split())
@@ -997,9 +1020,9 @@ init -1600 python in _viewers:
                     renpy.notify(_("Please type image name"))
                     return
 
-        def remove_anchor_points(self, name, layer):
-            for k in [k for k in all_anchor_points if isinstance(k, tuple) and k[0] == name and k[1] == layer]:
-                del all_anchor_points[k]
+        def remove_keyframes(self, name, layer):
+            for k in [k for k in all_keyframes if isinstance(k, tuple) and k[0] == name and k[1] == layer]:
+                del all_keyframes[k]
     transform_viewer = TransformViewer()
 
     ##########################################################################
@@ -1032,31 +1055,31 @@ init -1600 python in _viewers:
         def x_changed(self, v):
             v=int(v)
             renpy.store.camera_move(v - self.range_camera_pos, renpy.store._camera_y, renpy.store._camera_z, renpy.store._camera_rotate)
-            self.set_camera_anchor_point("_camera_x", v-self.range_camera_pos)
+            self.set_camera_keyframe("_camera_x", v-self.range_camera_pos)
             renpy.restart_interaction()
 
         def y_changed(self, v):
             v=int(v)
             renpy.store.camera_move(renpy.store._camera_x, v - self.range_camera_pos, renpy.store._camera_z, renpy.store._camera_rotate)
-            self.set_camera_anchor_point("_camera_y", v-self.range_camera_pos)
+            self.set_camera_keyframe("_camera_y", v-self.range_camera_pos)
             renpy.restart_interaction()
 
         def z_changed(self, v):
             v=int(v)
             renpy.store.camera_move(renpy.store._camera_x, renpy.store._camera_y, v - self.range_camera_pos, renpy.store._camera_rotate)
-            self.set_camera_anchor_point("_camera_z", v-self.range_camera_pos)
+            self.set_camera_keyframe("_camera_z", v-self.range_camera_pos)
             renpy.restart_interaction()
 
         def r_changed(self, v):
             v=int(v)
             renpy.store.camera_move(renpy.store._camera_x, renpy.store._camera_y, renpy.store._camera_z, v - self.range_rotate)
-            self.set_camera_anchor_point("_camera_rotate", v-self.range_camera_pos)
+            self.set_camera_keyframe("_camera_rotate", v-self.range_camera_pos)
             renpy.restart_interaction()
 
         def generate_layer_z_changed(self, l):
             def layer_z_changed(v):
                 renpy.store.layer_move(l, int(v))
-                self.set_layer_anchor_point(l)
+                self.set_layer_keyframe(l)
                 renpy.restart_interaction()
             return layer_z_changed
 
@@ -1085,55 +1108,55 @@ init -1600 python in _viewers:
                 except:
                     renpy.notify(_("Please type value"))
 
-        def set_camera_anchor_point(self, coordinate, value):
-            anchor_points = all_anchor_points.get(coordinate, [])
-            if anchor_points:
-                for i, (v, t, w) in enumerate(anchor_points):
+        def set_camera_keyframe(self, coordinate, value):
+            keyframes = all_keyframes.get(coordinate, [])
+            if keyframes:
+                for i, (v, t, w) in enumerate(keyframes):
                     if time < t:
-                        anchor_points.insert(i, (value, time, warper))
+                        keyframes.insert(i, (value, time, warper))
                         break
                     elif time == t:
-                        anchor_points[i] = (value, time, warper)
+                        keyframes[i] = (value, time, warper)
                         break
                 else:
-                    anchor_points.append((value, time, warper))
+                    keyframes.append((value, time, warper))
             else:
                 if time == 0:
-                    all_anchor_points[coordinate] = [(value, time, warper)]
+                    all_keyframes[coordinate] = [(value, time, warper)]
                 else:
-                    all_anchor_points[coordinate] = [(getattr(self, coordinate), 0, None), (value, time, warper)]
-            sort_anchor_points()
+                    all_keyframes[coordinate] = [(getattr(self, coordinate), 0, None), (value, time, warper)]
+            sort_keyframes()
 
-        def set_layer_anchor_point(self, layer):
-            anchor_points = all_anchor_points.get("layer "+layer, [])
-            if anchor_points:
-                for i, (v, t, w)  in enumerate(anchor_points):
+        def set_layer_keyframe(self, layer):
+            keyframes = all_keyframes.get("layer "+layer, [])
+            if keyframes:
+                for i, (v, t, w)  in enumerate(keyframes):
                     if time < t:
-                        anchor_points.insert(i, (renpy.store._3d_layers[layer], time, warper))
+                        keyframes.insert(i, (renpy.store._3d_layers[layer], time, warper))
                         break
                     elif time == t:
-                        anchor_points[i] = (renpy.store._3d_layers[layer], time, warper)
+                        keyframes[i] = (renpy.store._3d_layers[layer], time, warper)
                         break
                 else:
-                    anchor_points.append((renpy.store._3d_layers[layer], time, warper))
+                    keyframes.append((renpy.store._3d_layers[layer], time, warper))
             else:
                 if time == 0:
-                    all_anchor_points["layer "+layer] = [(renpy.store._3d_layers[layer], time, warper)]
+                    all_keyframes["layer "+layer] = [(renpy.store._3d_layers[layer], time, warper)]
                 else:
-                    all_anchor_points["layer "+layer] = [(self._3d_layers[layer], 0, None), (renpy.store._3d_layers[layer], time, warper)]
-            sort_anchor_points()
+                    all_keyframes["layer "+layer] = [(self._3d_layers[layer], 0, None), (renpy.store._3d_layers[layer], time, warper)]
+            sort_keyframes()
 
         def play(self, play):
             camera_check_points = {}
             for coordinate in ["_camera_x", "_camera_y", "_camera_z", "_camera_rotate"]:
-                if coordinate in all_anchor_points:
-                    camera_check_points[coordinate[8:]] = all_anchor_points[coordinate]
+                if coordinate in all_keyframes:
+                    camera_check_points[coordinate[8:]] = all_keyframes[coordinate]
 
             layer_check_points = {}
             loop = {}
             for layer in renpy.store._3d_layers:
-                if "layer "+layer in all_anchor_points:
-                    layer_check_points[layer] = all_anchor_points["layer "+layer]
+                if "layer "+layer in all_keyframes:
+                    layer_check_points[layer] = all_keyframes["layer "+layer]
                 loop[layer+"_loop"] = loops[layer+"_loop"]
             for coordinate in ["_camera_x", "_camera_y", "_camera_z", "_camera_rotate"]:
                 loop[coordinate[8:]+"_loop"] = loops[coordinate+"_loop"]
@@ -1196,9 +1219,9 @@ init -1600 python in _viewers:
                     self.cx = int(2*camera_viewer.range_camera_pos*( float(x)/renpy.config.screen_width - 0.5))
                     self.cy = int(2*camera_viewer.range_camera_pos*( float(y)/renpy.config.screen_height - 0.5))
                     if self.cx != renpy.store._camera_x:
-                        camera_viewer.set_camera_anchor_point("_camera_x", self.cx)
+                        camera_viewer.set_camera_keyframe("_camera_x", self.cx)
                     if self.cy != renpy.store._camera_y:
-                        camera_viewer.set_camera_anchor_point("_camera_y", self.cy)
+                        camera_viewer.set_camera_keyframe("_camera_y", self.cy)
                     renpy.store.camera_move(self.cx, self.cy, renpy.store._camera_z, renpy.store._camera_rotate)
                     self.x, self.y = x, y
                     renpy.restart_interaction()
@@ -1217,10 +1240,10 @@ init -1600 python in _viewers:
     ##########################################################################
     from collections import defaultdict
     loops = defaultdict(lambda:False)
-    all_anchor_points = {}
+    all_keyframes = {}
     time = 0
     moved_time = 0
-    sorted_anchor_points = []
+    sorted_keyframes = []
     warper = "linear"
 
     def edit_the_value(check_points, old, value_org, int=False):
@@ -1255,7 +1278,7 @@ init -1600 python in _viewers:
                 v = renpy.python.py_eval(v)
                 if v < 0:
                     return
-                move_anchor_point(v, old, check_points)
+                move_keyframe(v, old, check_points)
             except:
                 renpy.notify(_("Please type value"))
 
@@ -1272,27 +1295,27 @@ init -1600 python in _viewers:
                 renpy.notify(_("Please type value"))
 
     def next_time():
-        if not sorted_anchor_points:
+        if not sorted_keyframes:
             change_time(0)
             return
         else:
-            for i, t in enumerate(sorted_anchor_points):
+            for i, t in enumerate(sorted_keyframes):
                 if time < t:
-                    change_time(sorted_anchor_points[i])
+                    change_time(sorted_keyframes[i])
                     return
-            change_time(sorted_anchor_points[0])
+            change_time(sorted_keyframes[0])
 
     def prev_time():
-        if not sorted_anchor_points:
+        if not sorted_keyframes:
             change_time(0)
             return
         else:
-            for i, t in enumerate(sorted_anchor_points):
+            for i, t in enumerate(sorted_keyframes):
                 if time <= t:
-                    change_time(sorted_anchor_points[i-1])
+                    change_time(sorted_keyframes[i-1])
                     break
             else:
-                change_time(sorted_anchor_points[-1])
+                change_time(sorted_keyframes[-1])
 
     def select_time_warper():
         global warper
@@ -1300,59 +1323,69 @@ init -1600 python in _viewers:
         if v:
             warper = v
 
-    class ShowImage(renpy.store.Action):
+    @renpy.pure
+    class ShowImage(renpy.store.Action, renpy.store.DictEquality):
         def __init__(self, default, tag):
-            self.default=default
-            self.tag=tag
             self.string=""
             for e in default:
                 self.string += e + " "
             self.string += tag
+
         def __call__(self):
             for n in renpy.display.image.images:
-                if set(n) == set(self.default+(self.tag, )):
+                if set(n) == set(self.string.split()):
+                    self.string=""
+                    for e in n:
+                        self.string += e + " "
                     renpy.show_screen("_selected_image", self.string)
                     renpy.restart_interaction()
-                    break
+        #
+        # def get_sensitive(self):
+        #     for n in renpy.display.image.images:
+        #         if set(n) == set(self.string.split()):
+        #             return True
+        #     else:
+        #         return False
 
-    def clear_anchor_points():
-        all_anchor_points.clear()
-        sorted_anchor_points[:]=[]
+    def clear_keyframes():
+        all_keyframes.clear()
+        sorted_keyframes[:]=[]
 
-    def remove_anchor_point(time, k):
+    def remove_keyframe(remove_time, k):
         remove_list = []
-        for (v, t, w) in all_anchor_points[k]:
-            if t == time:
-                if time != 0 or (time == 0 and len(all_anchor_points[k]) == 1):
+        for (v, t, w) in all_keyframes[k]:
+            if t == remove_time:
+                if remove_time != 0 or (remove_time == 0 and len(all_keyframes[k]) == 1):
                     remove_list.append((v, t, w))
         for c in remove_list:
-            all_anchor_points[k].remove(c)
-            if not all_anchor_points[k]:
-                del all_anchor_points[k]
-        sort_anchor_points()
+            all_keyframes[k].remove(c)
+            if not all_keyframes[k]:
+                del all_keyframes[k]
+        sort_keyframes()
+        change_time(time)
 
-    def remove_anchor_points(time):
-        keylist = [k for k in all_anchor_points]
+    def remove_keyframes(time):
+        keylist = [k for k in all_keyframes]
         for k in keylist:
-            remove_anchor_point(time, k)
+            remove_keyframe(time, k)
 
-    def sort_anchor_points():
-        global sorted_anchor_points
-        sorted_anchor_points[:] = []
-        for anchor_points in all_anchor_points.values():
-            for (v, t, w) in anchor_points:
-                if t not in sorted_anchor_points:
-                    sorted_anchor_points.append(t)
-        sorted_anchor_points.sort()
+    def sort_keyframes():
+        global sorted_keyframes
+        sorted_keyframes[:] = []
+        for keyframes in all_keyframes.values():
+            for (v, t, w) in keyframes:
+                if t not in sorted_keyframes:
+                    sorted_keyframes.append(t)
+        sorted_keyframes.sort()
 
-    def move_anchor_points(new, old):
+    def move_keyframes(new, old):
         global moved_time
         moved_time = round(new, 2)
-        for k, v in all_anchor_points.items():
-            move_anchor_point(new, old, v)
+        for k, v in all_keyframes.items():
+            move_keyframe(new, old, v)
         renpy.restart_interaction()
 
-    def move_anchor_point(new, old, check_points):
+    def move_keyframe(new, old, check_points):
         new = round(new, 2)
         for i, c in enumerate(check_points):
             if c[1] == old:
@@ -1369,13 +1402,13 @@ init -1600 python in _viewers:
                     check_points.append((value, new, warper))
                 if old == 0 and new != 0:
                     check_points.insert(0, (value, 0, None))
-        sort_anchor_points()
+        sort_keyframes()
         renpy.restart_interaction()
 
-    def anchor_points_exist(k):
-        if k not in all_anchor_points:
+    def keyframes_exist(k):
+        if k not in all_keyframes:
             return False
-        check_points = all_anchor_points[k]
+        check_points = all_keyframes[k]
         for c in check_points:
             if c[1] == time:
                 return True
@@ -1390,12 +1423,12 @@ init -1600 python in _viewers:
 
     def rollback():
         renpy.store.camera_move(renpy.store._camera_x, renpy.store._camera_y, renpy.store._camera_z-100, renpy.store._camera_rotate)
-        camera_viewer.set_camera_anchor_point("_camera_z", renpy.store._camera_z)
+        camera_viewer.set_camera_keyframe("_camera_z", renpy.store._camera_z)
         renpy.restart_interaction()
 
     def rollforward():
         renpy.store.camera_move(renpy.store._camera_x, renpy.store._camera_y, renpy.store._camera_z+100, renpy.store._camera_rotate)
-        camera_viewer.set_camera_anchor_point("_camera_z", renpy.store._camera_z)
+        camera_viewer.set_camera_keyframe("_camera_z", renpy.store._camera_z)
         renpy.restart_interaction()
 
     def action_editor():
@@ -1406,7 +1439,7 @@ init -1600 python in _viewers:
         camera_viewer.init()
         loops.clear()
         renpy.invoke_in_new_context(renpy.call_screen, "_action_editor")
-        clear_anchor_points()
+        clear_keyframes()
         time = 0
         camera_viewer.layer_reset()
         camera_viewer.camera_reset()
@@ -1414,16 +1447,16 @@ init -1600 python in _viewers:
     def put_clipboard():
         camera_check_points = {}
         for coordinate in ["_camera_x", "_camera_y", "_camera_z", "_camera_rotate"]:
-            if coordinate in all_anchor_points:
-                camera_check_points[coordinate[8:]] = all_anchor_points[coordinate]
+            if coordinate in all_keyframes:
+                camera_check_points[coordinate[8:]] = all_keyframes[coordinate]
                 if len(camera_check_points[coordinate[8:]]) == 1 and camera_check_points[coordinate[8:]][0][0] == getattr(renpy.store._viewers.camera_viewer, coordinate):
                     del camera_check_points[coordinate[8:]]
 
         layer_check_points = {}
         loop = {}
         for layer in renpy.store._3d_layers:
-            if "layer "+layer in all_anchor_points:
-                layer_check_points[layer] = all_anchor_points["layer "+layer]
+            if "layer "+layer in all_keyframes:
+                layer_check_points[layer] = all_keyframes["layer "+layer]
                 if len(layer_check_points[layer]) == 1 and layer_check_points[layer][0][0] == camera_viewer._3d_layers[layer]:
                     del layer_check_points[layer]
                 if loops[layer+"_loop"]:
@@ -1439,7 +1472,7 @@ init -1600 python in _viewers:
 
         for layer in transform_viewer.state_org:
             for name, kwargs_org in {k: v for dic in [transform_viewer.state_org[layer], transform_viewer.state[layer]] for k, v in dic.items()}.items():
-                kwargs = {k[2]:v for k, v in all_anchor_points.items() if isinstance(k, tuple) and k[0] == name and k[1] == layer}
+                kwargs = {k[2]:v for k, v in all_keyframes.items() if isinstance(k, tuple) and k[0] == name and k[1] == layer}
                 if kwargs:
                     string += """
     show {} onlayer {}:
@@ -1474,3 +1507,122 @@ init -1600 python in _viewers:
         else:
             renpy.notify(_("Nothing to put"))
 
+    warp_spec = None
+
+    def warp():
+        """
+        Given a filename and line number, this attempts to warp the user
+        to that filename and line number.
+        """
+
+        global warp_spec
+
+        spec = warp_spec
+        warp_spec = None
+
+        if spec is None:
+            return None
+
+        if ':' not in spec:
+            raise Exception('No : found in warp location.')
+
+        filename, line = spec.split(':', 1)
+        line = int(line)
+
+        if not renpy.config.developer:
+            raise Exception("Can't warp, developer mode disabled.")
+
+        # First, compute for each statement reachable from a scene statement,
+        # one statement that reaches that statement.
+
+        prev = { }
+
+        workset = sets.Set([ n for n in renpy.game.script.namemap.itervalues() if isinstance(n, renpy.ast.Scene) ])
+        seenset = sets.Set(workset)
+
+        # This is called to indicate that next can be executed following node.
+        def add(node, next): #@ReservedAssignment
+            if next not in seenset:
+                seenset.add(next)
+                workset.add(next)
+                prev[next] = node
+
+        while workset:
+
+            n = workset.pop()
+
+            if isinstance(n, renpy.ast.Menu):
+                for i in n.items:
+                    if i[2] is not None:
+                        add(n, i[2][0])
+
+            if isinstance(n, renpy.ast.Jump):
+                if not n.expression and n.target in renpy.game.script.namemap:
+                    add(n, renpy.game.script.namemap[n.target])
+                    continue
+
+            if isinstance(n, renpy.ast.While):
+                add(n, n.block[0])
+
+            if isinstance(n, renpy.ast.If):
+
+                seen_true = False
+
+                for condition, block in n.entries:
+                    add(n, block[0])
+
+                    if condition == "True":
+                        seen_true = True
+
+                if seen_true:
+                    continue
+
+            if isinstance(n, renpy.ast.UserStatement):
+                add(n, n.get_next())
+
+            elif getattr(n, 'next', None) is not None:
+                add(n, n.next)
+
+        # Now, attempt to find a statement preceding the line that the
+        # user wants to warp to.
+
+        candidates = [ (n.linenumber, n)
+                       for n in seenset
+                       if n.filename.endswith('/' + filename) and n.linenumber <= line ]
+
+        # We didn't find any candidate statements, so give up the warp.
+        if not candidates:
+            return
+
+        # Sort the list of candidates, so they're ordered by linenumber.
+        candidates.sort()
+
+        # Pick the candidate immediately before (or on) the line.
+        node = candidates[-1][1]
+
+        # Now, determine a list of nodes to run while getting to this node.
+        run = [ ]
+        n = node
+
+        while True:
+            n = prev.get(n, None)
+            if n:
+                run.append(n)
+            else:
+                break
+
+        run.reverse()
+
+        # Determine which statements we want to execute, and then run
+        # only them.
+
+        toexecute = ( renpy.ast.Scene, renpy.ast.Show, renpy.ast.Hide )
+
+        for n in run:
+            if isinstance(n, toexecute):
+                n.execute()
+
+        # Now, return the name of the place where we will warp to. This
+        # becomes the new starting point of the game.
+
+        return node.name
