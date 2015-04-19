@@ -24,7 +24,7 @@
   * The x, y coordinates of the camera can be changed by dragging the camera icon.
   * The z coordinate of the camera can be changed by mouse wheel.
   * Each value can be inputted by keyboard.
-  * Anchor points can be added to the time bar.
+  * keyframes can be added to the time bar.
   * Each transform property of images, coordinates of the camera and layers or actions can be putted on clipboard.(v6.99 or later, only winows?)
 
 
