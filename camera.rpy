@@ -397,7 +397,7 @@ screen _action_editor(tab="images", layer="master", name="", time=0):
     key "L" action Function(_viewers.camera_viewer.x_changed, _camera_x+300+_viewers.camera_viewer.range_camera_pos)
 
     frame:
-        background "#0006"
+        background None
         if time:
             at _delay_show(time + 1)
         xfill True
@@ -570,23 +570,26 @@ screen _warper_selecter(default=""):
 
         label _("Select a warper function")
         viewport:
-            xfill True
-            ymaximum 50
             edgescroll (100, 100)
-            scrollbars "horizontal"
-            hbox:
+            xsize config.screen_width-500
+            ysize config.screen_height-200
+            scrollbars "vertical"
+            vbox:
                 for warper in renpy.atl.warpers:
                     textbutton warper action [SelectedIf((_viewers.warper == warper and not default) or (default and warper == default)), Return(warper)] hovered Show("_warper_graph", warper=warper) unhovered Hide("_warper")
+        hbox:
+            textbutton _("add") action OpenURL("http://renpy.org/wiki/renpy/doc/cookbook/Additional_basic_move_profiles")
+            textbutton _("close") action Return("")
 
-screen _warper_graph(warper="linear", t=120, length=300):
-    # add Solid("#000", xsize=3, ysize=1.236*length, xpos=100+length/2, ypos=length/2+100, rotate=45, anchor=(.5, .5)) 
-    add Solid("#CCC", xsize=length, ysize=length, xpos=100, ypos=200 ) 
-    add Solid("#000", xsize=length, ysize=3, xpos=100, ypos=length+200 ) 
-    add Solid("#000", xsize=length, ysize=3, xpos=100, ypos=200 ) 
-    add Solid("#000", xsize=3, ysize=length, xpos=100+length, ypos=200)
-    add Solid("#000", xsize=3, ysize=length, xpos=100, ypos=200)
+screen _warper_graph(warper="linear", t=120, length=300, xpos=config.screen_width-400, ypos=300):
+    # add Solid("#000", xsize=3, ysize=1.236*length, xpos=xpos+length/2, ypos=length/2+xpos, rotate=45, anchor=(.5, .5)) 
+    add Solid("#CCC", xsize=length, ysize=length, xpos=xpos, ypos=ypos ) 
+    add Solid("#000", xsize=length, ysize=3, xpos=xpos, ypos=length+ypos ) 
+    add Solid("#000", xsize=length, ysize=3, xpos=xpos, ypos=ypos ) 
+    add Solid("#000", xsize=3, ysize=length, xpos=xpos+length, ypos=ypos)
+    add Solid("#000", xsize=3, ysize=length, xpos=xpos, ypos=ypos)
     for i in range(1, t):
-        add Solid("#000", xsize=length/t, ysize=int(length*renpy.atl.warpers[warper](i/float(t))), xpos=100+i*length/t, ypos=length+200, yanchor=1.) 
+        add Solid("#000", xsize=length/t, ysize=int(length*renpy.atl.warpers[warper](i/float(t))), xpos=xpos+i*length/t, ypos=length+ypos, yanchor=1.) 
 
 screen _image_selecter(default):
     modal True
@@ -774,17 +777,8 @@ init -1600 python in _viewers:
         def image_reset(self):
             for layer in renpy.config.layers:
                 for name, props in {k: v for dic in [self.state_org[layer], self.state[layer]] for k, v in dic.items()}.iteritems():
-                    if name and props:
-                        kwargs = props.copy()
-                        for p, d in self.props:
-                            if kwargs[p] is None and p != "rotate":
-                                kwargs[p] = d
-                        renpy.show(name, [renpy.store.Transform(**kwargs)], layer=layer)
-                # for name in self.state[layer]:
-                #     renpy.hide(name, layer=layer)
-                #     del all_keyframes[(name, layer)]
-                # self.state[layer] = {}
-            renpy.restart_interaction()
+                    for prop in props:
+                        self.reset(name, layer, prop)
 
         def set_keyframe(self, layer, name, prop, value):
 
