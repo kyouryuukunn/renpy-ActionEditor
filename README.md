@@ -134,9 +134,10 @@
             """
              :doc: camera
 
-             Reset a camera and 3D layers positions. Please call this at least once
-             when the game has started. If this doesn't called, The position of 3D
-             layers don't be saved.
+	     Reset a camera and 3D layers positions. Please call this at least
+	     once when the game has started. If this doesn't called, The
+	     position of 3D layers don't be saved. This should be also called
+	     in labels replayed to, if you use replay.
              """
 
         def camera_move(x, y, z, rotate=0, duration=0, warper='linear', subpixel=True, loop=False, x_express=None, y_express=None, z_express=None, rotate_express=None):
@@ -447,9 +448,10 @@
              """
               :doc: camera
 
-              カメラとレイヤーを初期位置に戻します。ゲーム開始後に少くとも一度は呼
-              び出してください。呼び出されない場合、3Dレイヤーの座標が保存されませ
-              ん。
+	      カメラとレイヤーを初期位置に戻します。ゲーム開始後に少くとも一度
+	      は呼び出してください。呼び出されない場合、3Dレイヤーの座標が保存
+	      されません。リプレイを使用する場合は、リプレイ先のラベルでも呼び
+	      出してください。
               """
 
         def camera_move(x, y, z, rotate=0, duration=0, warper='linear', subpixel=True, loop=False, x_express=None, y_express=None, z_express=None, rotate_express=None):

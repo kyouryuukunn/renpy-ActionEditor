@@ -10,8 +10,8 @@ init -1600 python:
     _camera_y = 0
     _camera_z = 0
     _camera_rotate = 0
-    _focal_length = 147.40
-    _layer_z = 1848.9
+    _FOCAL_LENGTH = 147.40
+    _LAYER_Z = 1848.9
 
     def register_3d_layer(*layers):
         """
@@ -26,7 +26,7 @@ init -1600 python:
               This should be the string or strings of a layer name.
          """
         global _3d_layers
-        _3d_layers = {layer:_layer_z for layer in layers}
+        _3d_layers = {layer:_LAYER_Z for layer in layers}
 
     def camera_reset():
         """
@@ -39,7 +39,7 @@ init -1600 python:
         global _3d_layers
         _3d_layers = _3d_layers.copy()
         for layer in _3d_layers:
-            layer_move(layer, _layer_z)
+            layer_move(layer, _LAYER_Z)
         camera_move(0, 0, 0)
 
     def camera_move(x, y, z, rotate=0, duration=0, warper='linear', subpixel=True, loop=False, x_express=None, y_express=None, z_express=None, rotate_express=None):
@@ -260,17 +260,17 @@ init -1600 python:
         if layer_check_points is None:
             layer_check_points = {}
         rotate_loop = kwargs.get("rotate_loop", False)
-        start_xanchor = _focal_length*_camera_x/(renpy.config.screen_width *_layer_z) + .5
-        start_yanchor = _focal_length*_camera_y/(renpy.config.screen_height*_layer_z) + .5
+        start_xanchor = _FOCAL_LENGTH*_camera_x/(renpy.config.screen_width *_LAYER_Z) + .5
+        start_yanchor = _FOCAL_LENGTH*_camera_y/(renpy.config.screen_height*_LAYER_Z) + .5
         camera_check_points2 = { 'xanchor':[(start_xanchor, 0, None, )], 'yanchor':[(start_yanchor, 0, None, )], 'z': [(_camera_z, 0, None, )], 'rotate':[(_camera_rotate, 0, None, )] }
 
         for coordinate in ["x", "y", "z", "rotate"]:
             if coordinate not in camera_check_points:
                 camera_check_points[coordinate] = [(getattr(renpy.store, "_camera_"+coordinate), 0, None, )]
         for c in camera_check_points['x']:
-            camera_check_points2['xanchor'].append((_focal_length*c[0]/(renpy.config.screen_width *_layer_z) + .5, c[1], c[2], ))
+            camera_check_points2['xanchor'].append((_FOCAL_LENGTH*c[0]/(renpy.config.screen_width *_LAYER_Z) + .5, c[1], c[2], ))
         for c in camera_check_points['y']:
-            camera_check_points2['yanchor'].append((_focal_length*c[0]/(renpy.config.screen_height *_layer_z) + .5, c[1], c[2], ))
+            camera_check_points2['yanchor'].append((_FOCAL_LENGTH*c[0]/(renpy.config.screen_height *_LAYER_Z) + .5, c[1], c[2], ))
         camera_check_points2['z'].extend(camera_check_points['z'])
         camera_check_points2['rotate'].extend(camera_check_points['rotate'])
         for layer in _3d_layers:
@@ -298,7 +298,7 @@ init -1600 python:
                     distance = .1
                 if distance >= 0:
                     alpha = 1
-                    zoom = _layer_z / distance
+                    zoom = _LAYER_Z / distance
                     renpy.game.context().scene_lists.set_layer_at_list(layer, [Transform(xpos=.5, ypos=.5, alpha=alpha, transform_anchor=True, xanchor=xanchor, yanchor=yanchor, zoom=zoom, rotate=rotate)])
                 else:
                     alpha = 0
@@ -311,8 +311,8 @@ init -1600 python:
             _camera_z = camera_check_points['z'][-1][0]
             _camera_rotate = camera_check_points['rotate'][-1][0]
         else:
-            _camera_x         = int(((xanchor-.5)*renpy.config.screen_width*_layer_z)/_focal_length)
-            _camera_y         = int(((yanchor-.5)*renpy.config.screen_height*_layer_z)/_focal_length)
+            _camera_x         = int(((xanchor-.5)*renpy.config.screen_width*_LAYER_Z)/_FOCAL_LENGTH)
+            _camera_y         = int(((yanchor-.5)*renpy.config.screen_height*_LAYER_Z)/_FOCAL_LENGTH)
             _camera_z         = int(z)
             _camera_rotate    = int(rotate)
 
@@ -331,9 +331,9 @@ init -1600 python:
         tran.rotate = get_at_time(camera_check_points['rotate'], st, rotate_loop)
         layer_z = get_at_time(layer_check_points, st, layer_loop)
         if x_express:
-            tran.xanchor += _focal_length*x_express(st, at)/(renpy.config.screen_width *_layer_z)
+            tran.xanchor += _FOCAL_LENGTH*x_express(st, at)/(renpy.config.screen_width *_LAYER_Z)
         if y_express:
-            tran.yanchor += _focal_length*y_express(st, at)/(renpy.config.screen_height *_layer_z)
+            tran.yanchor += _FOCAL_LENGTH*y_express(st, at)/(renpy.config.screen_height *_LAYER_Z)
         if z_express:
             z += z_express(st, at)
         if rotate_express:
@@ -343,7 +343,7 @@ init -1600 python:
             distance = .1
         if distance >= 0:
             tran.alpha = 1
-            tran.zoom = _layer_z / distance
+            tran.zoom = _LAYER_Z / distance
         else:
             tran.alpha = 0
         return .005
@@ -370,8 +370,8 @@ init -1600 python:
 
     # def get_camera_coordinate(tran, z, layer, layer_z): #_3d_layers can't rollback?
     #     global _camera_x, _camera_y, _camera_z, _camera_rotate
-    #     _camera_x         = int(((tran.xanchor-.5)*renpy.config.screen_width*_layer_z)/_focal_length)
-    #     _camera_y         = int(((tran.yanchor-.5)*renpy.config.screen_height*_layer_z)/_focal_length)
+    #     _camera_x         = int(((tran.xanchor-.5)*renpy.config.screen_width*_LAYER_Z)/_FOCAL_LENGTH)
+    #     _camera_y         = int(((tran.yanchor-.5)*renpy.config.screen_height*_LAYER_Z)/_FOCAL_LENGTH)
     #     _camera_z         = int(z)
     #     _camera_rotate    = int(tran.rotate)
     #     _3d_layers[layer] = int(layer_z)
