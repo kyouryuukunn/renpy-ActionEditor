@@ -293,6 +293,14 @@ init -1600 python:
                 z = get_at_time(camera_check_points2['z'], st, z_loop)
                 rotate = get_at_time(camera_check_points2['rotate'], st, rotate_loop)
                 layer_z = get_at_time(layer_check_points2, st, layer_loop)
+                if x_express:
+                    xanchor += _FOCAL_LENGTH*x_express(st, st)/(renpy.config.screen_width *_LAYER_Z)
+                if y_express:
+                    yanchor += _FOCAL_LENGTH*y_express(st, st)/(renpy.config.screen_height *_LAYER_Z)
+                if z_express:
+                    z += z_express(st, st)
+                if rotate_express:
+                    rotate += rotate_express(st, st)
                 distance = float(layer_z - z)
                 if distance == 0:
                     distance = .1
@@ -454,13 +462,13 @@ screen _action_editor(tab="images", layer="master", name="", time=0):
                         if p not in _viewers.transform_viewer.force_float and ((state[name][p] is None and isinstance(d, int)) or isinstance(state[name][p], int)):
                             hbox:
                                 style_group "action_editor"
-                                textbutton "[p]" action [SensitiveIf((name, layer, p) in _viewers.all_keyframes), SelectedIf(_viewers.keyframes_exist((name, layer, p))), Show("_move_keyframe", k=(name, layer, p), int=True, loop=name+"_"+layer+"_"+p+"_loop")]
+                                textbutton "[p]" action [SensitiveIf((name, layer, p) in _viewers.all_keyframes), SelectedIf(_viewers.keyframes_exist((name, layer, p))), Show("_edit_keyframe", k=(name, layer, p), int=True, loop=name+"_"+layer+"_"+p+"_loop")]
                                 textbutton "[prop]" action Function(_viewers.transform_viewer.edit_value, f, True, default=prop) alternate Function(_viewers.transform_viewer.reset, name, layer, p)
                                 bar adjustment ui.adjustment(range=_viewers.transform_viewer.int_range*2, value=prop+_viewers.transform_viewer.int_range, page=1, changed=f) xalign 1. yalign .5
                         else:
                             hbox:
                                 style_group "action_editor"
-                                textbutton "[p]" action [SensitiveIf((name, layer, p) in _viewers.all_keyframes), SelectedIf(_viewers.keyframes_exist((name, layer, p))), Show("_move_keyframe", k=(name, layer, p), loop=name+"_"+layer+"_"+p+"_loop")]
+                                textbutton "[p]" action [SensitiveIf((name, layer, p) in _viewers.all_keyframes), SelectedIf(_viewers.keyframes_exist((name, layer, p))), Show("_edit_keyframe", k=(name, layer, p), loop=name+"_"+layer+"_"+p+"_loop")]
                                 textbutton "[prop:>.2f]" action Function(_viewers.transform_viewer.edit_value, f, False, default=prop) alternate Function(_viewers.transform_viewer.reset, name, layer, p)
                                 bar adjustment ui.adjustment(range=_viewers.transform_viewer.float_range*2, value=prop+_viewers.transform_viewer.float_range, page=.05, changed=f) xalign 1. yalign .5
             elif tab == "3D Camera" or tab == "2D Camera":
@@ -469,22 +477,22 @@ screen _action_editor(tab="images", layer="master", name="", time=0):
                 else:
                     hbox:
                         style_group "action_editor"
-                        textbutton "x" action [SensitiveIf("_camera_x" in _viewers.all_keyframes), SelectedIf(_viewers.keyframes_exist("_camera_x")), Show("_move_keyframe", k="_camera_x", loop="_camera_x_loop")]
+                        textbutton "x" action [SensitiveIf("_camera_x" in _viewers.all_keyframes), SelectedIf(_viewers.keyframes_exist("_camera_x")), Show("_edit_keyframe", k="_camera_x", loop="_camera_x_loop")]
                         textbutton "[_camera_x: >5]" action Function(_viewers.camera_viewer.edit_value, _viewers.camera_viewer.x_changed, _viewers.camera_viewer.range_camera_pos, default=_camera_x) alternate [Function(camera_move, _viewers.camera_viewer._camera_x, _camera_y, _camera_z, _camera_rotate), renpy.restart_interaction]
                         bar adjustment ui.adjustment(range=_viewers.camera_viewer.range_camera_pos*2, value=_camera_x+_viewers.camera_viewer.range_camera_pos, page=1, changed=_viewers.camera_viewer.x_changed) xalign 1. yalign .5
                     hbox:
                         style_group "action_editor"
-                        textbutton "y" action [SensitiveIf("_camera_y" in _viewers.all_keyframes), SelectedIf(_viewers.keyframes_exist("_camera_y")), Show("_move_keyframe", k="_camera_y", loop="_camera_y_loop")]
+                        textbutton "y" action [SensitiveIf("_camera_y" in _viewers.all_keyframes), SelectedIf(_viewers.keyframes_exist("_camera_y")), Show("_edit_keyframe", k="_camera_y", loop="_camera_y_loop")]
                         textbutton "[_camera_y: >5]" action Function(_viewers.camera_viewer.edit_value, _viewers.camera_viewer.y_changed, _viewers.camera_viewer.range_camera_pos, default=_camera_y) alternate [Function(camera_move, _camera_x, _viewers.camera_viewer._camera_y, _camera_z, _camera_rotate), renpy.restart_interaction]
                         bar adjustment ui.adjustment(range=_viewers.camera_viewer.range_camera_pos*2, value=_camera_y+_viewers.camera_viewer.range_camera_pos, page=1, changed=_viewers.camera_viewer.y_changed) xalign 1. yalign .5
                     hbox:
                         style_group "action_editor"
-                        textbutton "z" action [SensitiveIf("_camera_z" in _viewers.all_keyframes), SelectedIf(_viewers.keyframes_exist("_camera_z")), Show("_move_keyframe", k="_camera_z", loop="_camera_z_loop")]
+                        textbutton "z" action [SensitiveIf("_camera_z" in _viewers.all_keyframes), SelectedIf(_viewers.keyframes_exist("_camera_z")), Show("_edit_keyframe", k="_camera_z", loop="_camera_z_loop")]
                         textbutton "[_camera_z: >5]" action Function(_viewers.camera_viewer.edit_value, _viewers.camera_viewer.z_changed, _viewers.camera_viewer.range_camera_pos, default=_camera_z) alternate [Function(camera_move, _camera_x, _camera_y, _viewers.camera_viewer._camera_z, _camera_rotate), renpy.restart_interaction]
                         bar adjustment ui.adjustment(range=_viewers.camera_viewer.range_camera_pos*2, value=_camera_z+_viewers.camera_viewer.range_camera_pos, page=1, changed=_viewers.camera_viewer.z_changed) xalign 1. yalign .5
                     hbox:
                         style_group "action_editor"
-                        textbutton "rotate" action [SensitiveIf("_camera_rotate" in _viewers.all_keyframes), SelectedIf(_viewers.keyframes_exist("_camera_rotate")), Show("_move_keyframe", k="_camera_rotate", loop="_camera_rotate_loop")]
+                        textbutton "rotate" action [SensitiveIf("_camera_rotate" in _viewers.all_keyframes), SelectedIf(_viewers.keyframes_exist("_camera_rotate")), Show("_edit_keyframe", k="_camera_rotate", loop="_camera_rotate_loop")]
                         textbutton "[_camera_rotate: >5]" action Function(_viewers.camera_viewer.edit_value, _viewers.camera_viewer.r_changed, _viewers.camera_viewer.range_rotate, default=_camera_rotate) alternate [Function(camera_move, _camera_x, _camera_y, _camera_z, _viewers.camera_viewer._camera_rotate), renpy.restart_interaction]
                         bar adjustment ui.adjustment(range=_viewers.camera_viewer.range_rotate*2, value=_camera_rotate+_viewers.camera_viewer.range_rotate, page=1, changed=_viewers.camera_viewer.r_changed) xalign 1. yalign .5
             elif tab == "3D Layers":
@@ -494,7 +502,7 @@ screen _action_editor(tab="images", layer="master", name="", time=0):
                     for layer in sorted(_3d_layers.keys()):
                         hbox:
                             style_group "action_editor"
-                            textbutton "[layer]" action [SensitiveIf("layer "+layer in _viewers.all_keyframes), SelectedIf(_viewers.keyframes_exist("layer "+layer)), SetField(_viewers, "moved_time", _viewers.time), Show("_move_keyframe", k="layer "+layer, loop=layer+"_loop")]
+                            textbutton "[layer]" action [SensitiveIf("layer "+layer in _viewers.all_keyframes), SelectedIf(_viewers.keyframes_exist("layer "+layer)), SetField(_viewers, "moved_time", _viewers.time), Show("_edit_keyframe", k="layer "+layer, loop=layer+"_loop")]
                             textbutton "{}".format(_3d_layers[layer]) action Function(_viewers.camera_viewer.edit_value, _viewers.camera_viewer.generate_layer_z_changed(layer), 0, default=_3d_layers[layer]) alternate [Function(layer_move, layer, _viewers.camera_viewer._3d_layers[layer]), renpy.restart_interaction]
                             bar adjustment ui.adjustment(range=_viewers.camera_viewer.range_layer_z, value=_3d_layers[layer], page=1, changed=_viewers.camera_viewer.generate_layer_z_changed(layer)) xalign 1. yalign .5
             hbox:
@@ -646,12 +654,12 @@ screen _move_keyframes:
         bar adjustment ui.adjustment(range=7.0, value=_viewers.moved_time, changed=renpy.curry(_viewers.move_keyframes)(old=_viewers.moved_time)) xalign 1. yalign .5
         textbutton _("close") action Hide("_move_keyframes") xalign .98
 
-# _move_keyframe((name, layer), "xpos")
-# _move_keyframe(_camera_x)
-screen _move_keyframe(k, int=False, loop=None):
+# _edit_keyframe((name, layer), "xpos")
+# _edit_keyframe(_camera_x)
+screen _edit_keyframe(k, int=False, loop=None):
     $check_points = _viewers.all_keyframes[k]
     modal True
-    key "game_menu" action Hide("_move_keyframe")
+    key "game_menu" action Hide("_edit_keyframe")
     frame:
         background "#0009"
         style_group "action_editor"
@@ -667,7 +675,9 @@ screen _move_keyframe(k, int=False, loop=None):
                     bar adjustment ui.adjustment(range=7.0, value=t, changed=renpy.curry(_viewers.move_keyframe)(old=t, check_points=check_points)) xalign 1. yalign .5
         hbox:
             textbutton _("loop") action ToggleDict(_viewers.loops, loop)
-            textbutton _("close") action Hide("_move_keyframe") xalign .98
+            if k[:8] == "_camera_":
+                textbutton _("expression") action Function(_viewers.edit_expression, k)
+            textbutton _("close") action Hide("_edit_keyframe") xalign .98
 
 init -1098 python:
     # overwrite keymap
@@ -1147,15 +1157,17 @@ init -1600 python in _viewers:
                     camera_check_points[coordinate[8:]] = all_keyframes[coordinate]
 
             layer_check_points = {}
-            loop = {}
+            kwargs = {}
             for layer in renpy.store._3d_layers:
                 if "layer "+layer in all_keyframes:
                     layer_check_points[layer] = all_keyframes["layer "+layer]
-                loop[layer+"_loop"] = loops[layer+"_loop"]
+                kwargs[layer+"_loop"] = loops[layer+"_loop"]
             for coordinate in ["_camera_x", "_camera_y", "_camera_z", "_camera_rotate"]:
-                loop[coordinate[8:]+"_loop"] = loops[coordinate+"_loop"]
+                kwargs[coordinate[8:]+"_loop"] = loops[coordinate+"_loop"]
+            for coordinate in ["_camera_x", "_camera_y", "_camera_z", "_camera_rotate"]:
+                kwargs[coordinate[8:]+"_express"] = renpy.python.py_eval(expressions[coordinate])
             if camera_check_points or layer_check_points:
-                renpy.store.all_moves(camera_check_points=camera_check_points, layer_check_points=layer_check_points, play=play, **loop)
+                renpy.store.all_moves(camera_check_points=camera_check_points, layer_check_points=layer_check_points, play=play, **kwargs)
 
     camera_viewer = CameraViewer()
 
@@ -1234,11 +1246,24 @@ init -1600 python in _viewers:
     ##########################################################################
     from collections import defaultdict
     loops = defaultdict(lambda:False)
+    expressions = defaultdict(lambda:None)
     all_keyframes = {}
     time = 0
     moved_time = 0
     sorted_keyframes = []
     warper = "linear"
+
+    def edit_expression(k):
+        value = renpy.invoke_in_new_context(renpy.call_screen, "_input_screen", default=expressions[k])
+        try:
+            result = renpy.python.py_eval(value)(0, 0)
+            if isinstance(result, float) or isinstance(result, int):
+                expressions[k] = value
+            else:
+                raise
+        except:
+            renpy.notify(_("This isn't valid expression"))
+        renpy.restart_interaction()
 
     def edit_the_value(check_points, old, value_org, int=False):
         value = renpy.invoke_in_new_context(renpy.call_screen, "_input_screen", default=value_org)
@@ -1432,6 +1457,7 @@ init -1600 python in _viewers:
         transform_viewer.init()
         camera_viewer.init()
         loops.clear()
+        expressions.clear()
         renpy.invoke_in_new_context(renpy.call_screen, "_action_editor")
         clear_keyframes()
         time = 0
@@ -1447,22 +1473,35 @@ init -1600 python in _viewers:
                     del camera_check_points[coordinate[8:]]
 
         layer_check_points = {}
-        loop = {}
+        loop = ""
+        expression = ""
+        argments = ""
         for layer in renpy.store._3d_layers:
             if "layer "+layer in all_keyframes:
                 layer_check_points[layer] = all_keyframes["layer "+layer]
                 if len(layer_check_points[layer]) == 1 and layer_check_points[layer][0][0] == camera_viewer._3d_layers[layer]:
                     del layer_check_points[layer]
                 if loops[layer+"_loop"]:
-                    loop[layer+"_loop"] = True
+                    loop += layer+"_loop=True, "
         for coordinate in ["_camera_x", "_camera_y", "_camera_z", "_camera_rotate"]:
             if loops[coordinate+"_loop"]:
-                loop[coordinate[8:]+"_loop"] = True
+                loop += coordinate[8:]+"_loop=True, "
+            if expressions[coordinate]:
+                expression += coordinate[8:]+"_express="+expressions[coordinate]+", "
         string = ""
 
-        if camera_check_points or layer_check_points:
+        if camera_check_points:
+            argments += "camera_check_points={}, ".format(camera_check_points)
+        if layer_check_points:
+            argments += "layer_check_points={}, ".format(layer_check_points)
+        if expression:
+            argments += expression
+        if loop:
+            argments += loop
+
+        if argments:
             string += """
-    $all_moves(camera_check_points={}, layer_check_points={}, subpixel=True, **{})""".format(camera_check_points, layer_check_points, loop)
+    $all_moves({})""".format(argments[:-2])
 
         for layer in transform_viewer.state_org:
             for name, kwargs_org in {k: v for dic in [transform_viewer.state_org[layer], transform_viewer.state[layer]] for k, v in dic.items()}.items():
@@ -1500,123 +1539,3 @@ init -1600 python in _viewers:
                 renpy.notify("Putted\n{}\n\non clipboard".format(string).replace("{", "{{").replace("[", "[["))
         else:
             renpy.notify(_("Nothing to put"))
-
-    warp_spec = None
-
-    def warp():
-        """
-        Given a filename and line number, this attempts to warp the user
-        to that filename and line number.
-        """
-
-        global warp_spec
-
-        spec = warp_spec
-        warp_spec = None
-
-        if spec is None:
-            return None
-
-        if ':' not in spec:
-            raise Exception('No : found in warp location.')
-
-        filename, line = spec.split(':', 1)
-        line = int(line)
-
-        if not renpy.config.developer:
-            raise Exception("Can't warp, developer mode disabled.")
-
-        # First, compute for each statement reachable from a scene statement,
-        # one statement that reaches that statement.
-
-        prev = { }
-
-        workset = sets.Set([ n for n in renpy.game.script.namemap.itervalues() if isinstance(n, renpy.ast.Scene) ])
-        seenset = sets.Set(workset)
-
-        # This is called to indicate that next can be executed following node.
-        def add(node, next): #@ReservedAssignment
-            if next not in seenset:
-                seenset.add(next)
-                workset.add(next)
-                prev[next] = node
-
-        while workset:
-
-            n = workset.pop()
-
-            if isinstance(n, renpy.ast.Menu):
-                for i in n.items:
-                    if i[2] is not None:
-                        add(n, i[2][0])
-
-            if isinstance(n, renpy.ast.Jump):
-                if not n.expression and n.target in renpy.game.script.namemap:
-                    add(n, renpy.game.script.namemap[n.target])
-                    continue
-
-            if isinstance(n, renpy.ast.While):
-                add(n, n.block[0])
-
-            if isinstance(n, renpy.ast.If):
-
-                seen_true = False
-
-                for condition, block in n.entries:
-                    add(n, block[0])
-
-                    if condition == "True":
-                        seen_true = True
-
-                if seen_true:
-                    continue
-
-            if isinstance(n, renpy.ast.UserStatement):
-                add(n, n.get_next())
-
-            elif getattr(n, 'next', None) is not None:
-                add(n, n.next)
-
-        # Now, attempt to find a statement preceding the line that the
-        # user wants to warp to.
-
-        candidates = [ (n.linenumber, n)
-                       for n in seenset
-                       if n.filename.endswith('/' + filename) and n.linenumber <= line ]
-
-        # We didn't find any candidate statements, so give up the warp.
-        if not candidates:
-            return
-
-        # Sort the list of candidates, so they're ordered by linenumber.
-        candidates.sort()
-
-        # Pick the candidate immediately before (or on) the line.
-        node = candidates[-1][1]
-
-        # Now, determine a list of nodes to run while getting to this node.
-        run = [ ]
-        n = node
-
-        while True:
-            n = prev.get(n, None)
-            if n:
-                run.append(n)
-            else:
-                break
-
-        run.reverse()
-
-        # Determine which statements we want to execute, and then run
-        # only them.
-
-        toexecute = ( renpy.ast.Scene, renpy.ast.Show, renpy.ast.Hide )
-
-        for n in run:
-            if isinstance(n, toexecute):
-                n.execute()
-
-        # Now, return the name of the place where we will warp to. This
-        # becomes the new starting point of the game.
-
-        return node.name
