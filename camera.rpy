@@ -389,39 +389,58 @@ init 1600 python:
         register_3d_layer('master')
 
 screen _action_editor(tab="images", layer="master", name="", time=0):
-    if time:
-        timer time+1 action Function(_viewers.change_time, _viewers.time)
-    $state={k: v for dic in [_viewers.transform_viewer.state_org[layer], _viewers.transform_viewer.state[layer]] for k, v in dic.items()}
     key "game_menu" action Return()
     key "rollback"    action _viewers.rollback
     key "rollforward" action _viewers.rollforward
-    key "j" action Function(_viewers.camera_viewer.y_changed, _camera_y+100+_viewers.camera_viewer.range_camera_pos)
-    key "k" action Function(_viewers.camera_viewer.y_changed, _camera_y-100+_viewers.camera_viewer.range_camera_pos)
-    key "h" action Function(_viewers.camera_viewer.x_changed, _camera_x-100+_viewers.camera_viewer.range_camera_pos)
-    key "l" action Function(_viewers.camera_viewer.x_changed, _camera_x+100+_viewers.camera_viewer.range_camera_pos)
-    key "J" action Function(_viewers.camera_viewer.y_changed, _camera_y+300+_viewers.camera_viewer.range_camera_pos)
-    key "K" action Function(_viewers.camera_viewer.y_changed, _camera_y-300+_viewers.camera_viewer.range_camera_pos)
-    key "H" action Function(_viewers.camera_viewer.x_changed, _camera_x-300+_viewers.camera_viewer.range_camera_pos)
-    key "L" action Function(_viewers.camera_viewer.x_changed, _camera_x+300+_viewers.camera_viewer.range_camera_pos)
+    if _viewers.sorted_keyframes:
+        key "K_SPACE" action [SensitiveIf(_viewers.sorted_keyframes), Function(_viewers.camera_viewer.play, play=True), Function(_viewers.transform_viewer.play, play=True), Hide("_action_editor"), Show("_action_editor", tab=tab, layer=layer, name=name, time=_viewers.sorted_keyframes[-1]), renpy.restart_interaction]
+    else:
+        key "K_SPACE" action [SensitiveIf(_viewers.sorted_keyframes), Function(_viewers.camera_viewer.play, play=True), Function(_viewers.transform_viewer.play, play=True), Hide("_action_editor"), Show("_action_editor", tab=tab, layer=layer, name=name), renpy.restart_interaction]
+    if _viewers.fps_keymap:
+        key "s" action Function(_viewers.camera_viewer.y_changed, _camera_y+100+_viewers.camera_viewer.range_camera_pos)
+        key "w" action Function(_viewers.camera_viewer.y_changed, _camera_y-100+_viewers.camera_viewer.range_camera_pos)
+        key "a" action Function(_viewers.camera_viewer.x_changed, _camera_x-100+_viewers.camera_viewer.range_camera_pos)
+        key "d" action Function(_viewers.camera_viewer.x_changed, _camera_x+100+_viewers.camera_viewer.range_camera_pos)
+        key "S" action Function(_viewers.camera_viewer.y_changed, _camera_y+300+_viewers.camera_viewer.range_camera_pos)
+        key "W" action Function(_viewers.camera_viewer.y_changed, _camera_y-300+_viewers.camera_viewer.range_camera_pos)
+        key "A" action Function(_viewers.camera_viewer.x_changed, _camera_x-300+_viewers.camera_viewer.range_camera_pos)
+        key "D" action Function(_viewers.camera_viewer.x_changed, _camera_x+300+_viewers.camera_viewer.range_camera_pos)
+    else:
+        key "j" action Function(_viewers.camera_viewer.y_changed, _camera_y+100+_viewers.camera_viewer.range_camera_pos)
+        key "k" action Function(_viewers.camera_viewer.y_changed, _camera_y-100+_viewers.camera_viewer.range_camera_pos)
+        key "h" action Function(_viewers.camera_viewer.x_changed, _camera_x-100+_viewers.camera_viewer.range_camera_pos)
+        key "l" action Function(_viewers.camera_viewer.x_changed, _camera_x+100+_viewers.camera_viewer.range_camera_pos)
+        key "J" action Function(_viewers.camera_viewer.y_changed, _camera_y+300+_viewers.camera_viewer.range_camera_pos)
+        key "K" action Function(_viewers.camera_viewer.y_changed, _camera_y-300+_viewers.camera_viewer.range_camera_pos)
+        key "H" action Function(_viewers.camera_viewer.x_changed, _camera_x-300+_viewers.camera_viewer.range_camera_pos)
+        key "L" action Function(_viewers.camera_viewer.x_changed, _camera_x+300+_viewers.camera_viewer.range_camera_pos)
+
+    if time:
+        timer time+1 action Function(_viewers.change_time, _viewers.time)
+    $state={k: v for dic in [_viewers.transform_viewer.state_org[layer], _viewers.transform_viewer.state[layer]] for k, v in dic.items()}
+
+    if _viewers.default_rot and store._first_load:
+        $store._first_load = False
+        on "show" action Show("_rot")
 
     frame:
-        background None
+        background "#0006"
         if time:
             at _delay_show(time + 1)
-        xfill True
         vbox:
 
             hbox:
+                style_group "action_editor_a"
                 textbutton _("time: [_viewers.time:>.2f] s") action Function(_viewers.edit_time)
                 textbutton _("<") action Function(_viewers.prev_time)
                 textbutton _(">") action Function(_viewers.next_time)
                 bar adjustment ui.adjustment(range=7.0, value=_viewers.time, changed=_viewers.change_time) xalign 1. yalign .5
             hbox:
-                xfill True
+                style_group "action_editor_a"
                 hbox:
-                    textbutton _("warper") action _viewers.select_time_warper
-                    textbutton _("ROT") action [SelectedIf(renpy.get_screen("_rot")), If(renpy.get_screen("_rot"), true=Hide("_rot"), false=Show("_rot"))]
-                    textbutton _("Hide") action HideInterface()
+                    textbutton _("default warper") action _viewers.select_default_warper
+                    textbutton _("rot") action [SelectedIf(renpy.get_screen("_rot")), If(renpy.get_screen("_rot"), true=Hide("_rot"), false=Show("_rot"))]
+                    textbutton _("hide") action HideInterface()
                     if _viewers.sorted_keyframes:
                         textbutton _("play") action [SensitiveIf(_viewers.sorted_keyframes), Function(_viewers.camera_viewer.play, play=True), Function(_viewers.transform_viewer.play, play=True), Hide("_action_editor"), Show("_action_editor", tab=tab, layer=layer, name=name, time=_viewers.sorted_keyframes[-1]), renpy.restart_interaction]
                     else:
@@ -431,6 +450,7 @@ screen _action_editor(tab="images", layer="master", name="", time=0):
                     xalign 1.
                     textbutton _("close") action Return()
             hbox:
+                style_group "action_editor_a"
                 textbutton _("clear keyframes") action [SensitiveIf(_viewers.sorted_keyframes), Function(_viewers.clear_keyframes), renpy.restart_interaction]
                 textbutton _("remove keyframes") action [SensitiveIf(_viewers.time in _viewers.sorted_keyframes), Function(_viewers.remove_keyframes, _viewers.time), renpy.restart_interaction]
                 textbutton _("move keyframes") action [SensitiveIf(_viewers.time in _viewers.sorted_keyframes), SetField(_viewers, "moved_time", _viewers.time), Show("_move_keyframes")]
@@ -531,7 +551,15 @@ screen _action_editor(tab="images", layer="master", name="", time=0):
 
 init -1600:
     style action_editor_button size_group "action_editor"
-    style action_editor_button_text xalign .5
+    style action_editor_button idle_background None
+    style action_editor_button insensitive_background None
+    style action_editor_button_text color "#aaa"
+    style action_editor_button_text selected_color "#fff"
+    style action_editor_button_text insensitive_color "#777"
+    style action_editor_a_button take action_editor_button
+    style action_editor_a_button size_group None
+    style action_editor_a_button_text take action_editor_button_text
+
     style action_editor_label xminimum 110
     style action_editor_vbox xfill True
 
@@ -563,10 +591,10 @@ transform _delay_show(time):
 
 screen _rot(): #show rule of thirds
     for i in range(1, 3):
-        add Solid("#F00", xsize=config.screen_width, ysize=1, ypos=config.screen_height*i/3) 
+        add Solid("#F00", xsize=config.screen_width, ysize=1, ypos=config.screen_height*i/3)
         add Solid("#F00", xsize=1, ysize=config.screen_height, xpos=config.screen_width*i/3)
 
-screen _warper_selecter(default=""):
+screen _warper_selecter(current_warper=""):
     modal True
     key "game_menu" action Return("")
 
@@ -578,18 +606,23 @@ screen _warper_selecter(default=""):
 
         label _("Select a warper function")
         viewport:
+            mousewheel True
             edgescroll (100, 100)
             xsize config.screen_width-500
             ysize config.screen_height-200
             scrollbars "vertical"
             vbox:
-                for warper in renpy.atl.warpers:
-                    textbutton warper action [SelectedIf((_viewers.warper == warper and not default) or (default and warper == default)), Return(warper)] hovered Show("_warper_graph", warper=warper) unhovered Hide("_warper")
+                for warper in sorted(renpy.atl.warpers.keys()):
+                    textbutton warper action [SelectedIf((_viewers.warper == warper and not current_warper) or warper == current_warper), Return(warper)] hovered Show("_warper_graph", warper=warper) unhovered Hide("_warper")
         hbox:
             textbutton _("add") action OpenURL("http://renpy.org/wiki/renpy/doc/cookbook/Additional_basic_move_profiles")
             textbutton _("close") action Return("")
 
-screen _warper_graph(warper="linear", t=120, length=300, xpos=config.screen_width-400, ypos=300):
+screen _warper_graph(warper):
+    $ t=120
+    $ length=300
+    $ xpos=config.screen_width-400
+    $ ypos=300
     # add Solid("#000", xsize=3, ysize=1.236*length, xpos=xpos+length/2, ypos=length/2+xpos, rotate=45, anchor=(.5, .5)) 
     add Solid("#CCC", xsize=length, ysize=length, xpos=xpos, ypos=ypos ) 
     add Solid("#000", xsize=length, ysize=3, xpos=xpos, ypos=length+ypos ) 
@@ -625,6 +658,7 @@ screen _image_selecter(default):
         else:
             $s = {name[0] for name in renpy.display.image.images}
         viewport:
+            mousewheel True
             xmaximum 400
             ymaximum 300
             edgescroll (100, 100)
@@ -662,13 +696,13 @@ screen _edit_keyframe(k, int=False, loop=None):
     key "game_menu" action Hide("_edit_keyframe")
     frame:
         background "#0009"
-        style_group "action_editor"
+        xfill True
         has vbox
         label _("KeyFrames") xalign .5
         for v, t, w in check_points:
             if t != 0:
                 hbox:
-                    textbutton _("remove") action [Function(_viewers.remove_keyframe, remove_time=t, k=k), renpy.restart_interaction]
+                    textbutton _("x") action [Function(_viewers.remove_keyframe, remove_time=t, k=k), renpy.restart_interaction] background None
                     textbutton _("{}".format(v)) action Function(_viewers.edit_the_value, check_points=check_points, old=t, value_org=v, int=int)
                     textbutton _("{}".format(w)) action Function(_viewers.edit_the_warper, check_points=check_points, old=t, value_org=w)
                     textbutton _("[t:>.2f] s") action Function(_viewers.edit_moved_time, check_points=check_points, old=t)
@@ -714,7 +748,10 @@ init 1100 python:
 
 
 init -1600 python in _viewers:
-
+    default_rot = False
+    # FPS(wasd) or vim(hjkl)
+    fps_keymap = False
+    default_warper = "linear"
     ##########################################################################
     # TransformViewer
     class TransformViewer(object):
@@ -1165,7 +1202,8 @@ init -1600 python in _viewers:
             for coordinate in ["_camera_x", "_camera_y", "_camera_z", "_camera_rotate"]:
                 kwargs[coordinate[8:]+"_loop"] = loops[coordinate+"_loop"]
             for coordinate in ["_camera_x", "_camera_y", "_camera_z", "_camera_rotate"]:
-                kwargs[coordinate[8:]+"_express"] = renpy.python.py_eval(expressions[coordinate])
+                if expressions[coordinate]:
+                    kwargs[coordinate[8:]+"_express"] = renpy.python.py_eval(expressions[coordinate])
             if camera_check_points or layer_check_points:
                 renpy.store.all_moves(camera_check_points=camera_check_points, layer_check_points=layer_check_points, play=play, **kwargs)
 
@@ -1251,7 +1289,7 @@ init -1600 python in _viewers:
     time = 0
     moved_time = 0
     sorted_keyframes = []
-    warper = "linear"
+    warper = default_warper
 
     def edit_expression(k):
         value = renpy.invoke_in_new_context(renpy.call_screen, "_input_screen", default=expressions[k])
@@ -1282,7 +1320,7 @@ init -1600 python in _viewers:
         renpy.restart_interaction()
 
     def edit_the_warper(check_points, old, value_org):
-        warper = renpy.invoke_in_new_context(renpy.call_screen, "_warper_selecter", default=value_org)
+        warper = renpy.invoke_in_new_context(renpy.call_screen, "_warper_selecter", current_warper=value_org)
         if warper:
             for i, (v, t, w) in enumerate(check_points):
                 if t == old:
@@ -1336,7 +1374,7 @@ init -1600 python in _viewers:
             else:
                 change_time(sorted_keyframes[-1])
 
-    def select_time_warper():
+    def select_default_warper():
         global warper
         v = renpy.invoke_in_new_context(renpy.call_screen, "_warper_selecter")
         if v:
@@ -1458,6 +1496,7 @@ init -1600 python in _viewers:
         camera_viewer.init()
         loops.clear()
         expressions.clear()
+        renpy.store._first_load = True
         renpy.invoke_in_new_context(renpy.call_screen, "_action_editor")
         clear_keyframes()
         time = 0
