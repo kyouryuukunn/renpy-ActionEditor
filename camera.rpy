@@ -855,6 +855,8 @@ init -1600 python in _viewers:
                     for prop, d in self.props:
                         if (name, layer, prop) in all_keyframes:
                             check_points[prop] = all_keyframes[(name, layer, prop)]
+                    if not check_points: # ビューワー上でのアニメーション(フラッシュ等)の誤動作を抑制
+                        continue
                     loop = {prop+"_loop": loops[name+"_"+layer+"_"+prop+"_loop"] for prop, d in self.props}
                     if play:
                         renpy.show(name, [renpy.store.Transform(function=renpy.curry(self.transform)(check_points=check_points, loop=loop))], layer=layer)
