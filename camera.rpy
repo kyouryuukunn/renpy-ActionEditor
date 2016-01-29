@@ -1346,44 +1346,6 @@ init -1600 python in _viewers:
         if v:
             warper = v
 
-    @renpy.pure
-    class ShowImage(renpy.store.Action, renpy.store.DictEquality):
-        def __init__(self, default, tag):
-            self.string=""
-            for e in default:
-                self.string += e + " "
-            self.string += tag
-            self.check = None
-
-        def __call__(self):
-            if self.check is None:
-                for n in renpy.display.image.images:
-                    if set(n) == set(self.string.split()):
-                        self.string=""
-                        for e in n:
-                            self.string += e + " "
-                        try:
-                            for fn in renpy.display.image.images[n].predict_files():
-                                if not renpy.loader.loadable(fn):
-                                    self.check = False
-                                    break
-                            else:
-                                self.check = True
-                        except:
-                            self.check = True #text displayable
-            if self.check:
-                renpy.show(self.string, at_list=[renpy.store.truecenter], layer="screens", tag="preview")
-            else:
-                renpy.show("preview", what=renpy.text.text.Text("No files", color="#F00"), at_list=[renpy.store.truecenter], layer="screens")
-            renpy.restart_interaction()
-
-        # def get_sensitive(self):
-        #     for n in renpy.display.image.images:
-        #         if set(n) == set(self.string.split()):
-        #             return True
-        #     else:
-        #         return False
-
     def clear_keyframes():
         all_keyframes.clear()
         sorted_keyframes[:]=[]
