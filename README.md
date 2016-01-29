@@ -3,8 +3,8 @@
 
  日本語マニュアルはドキュメント後半にあります。
 
- This script adds Ren'Py GUI Action editor and 3D camera functions. Please
- copy camera.rpy and camera.png to your game directory.
+ This script adds Ren'Py GUI Action editor and 3D camera functions, Image Viewer.
+ copy all files in the camera directory to your game directory.
 
  Ren'Py <http://www.renpy.org/>
 
@@ -26,6 +26,11 @@
   * Each value can be inputted by keyboard.
   * keyframes can be added to the time bar.
   * Each transform property of images, coordinates of the camera and layers or actions can be putted on clipboard.(v6.99 or later, only winows?)
+
+ Image Viewer
+================
+ 
+ Press Shift+U and open Image Viewer
 
 
  Camera
@@ -340,7 +345,7 @@
 
 
 
- このスクリプトはRen'PyにGUIの演出エディターとカメラ機能、便利なワーパー関数を追加します。camera.rpyとcamera.png、 00warper.rpy、00camera_statements.rpyをgameフォルダにコピーしてください。
+ このスクリプトはRen'PyにGUIの演出エディターとカメラ機能、画像ビューワー、便利なワーパー関数を追加します。フォルダ内のファイルをgameフォルダにコピーしてください。
 
 
  演出エディター
@@ -358,6 +363,11 @@
  * 動画編集ソフトの用にキーフレームを設定して時間軸にそった演出を作成
  * 画像の変換プロパティーやカメラ、レイヤー座標、時間軸にそった演出をそれぞれクリップボードに送る(v6.99以上, Windows限定? Macで動作するかは判りま
    せん。)
+
+ イメージビューワー
+================
+ 
+ Shift+Uで開きます。
 
 
  カメラ
@@ -453,6 +463,14 @@
 	      は呼び出してください。呼び出されない場合、3Dレイヤーの座標が保存
 	      されません。リプレイを使用する場合は、リプレイ先のラベルでも呼び
 	      出してください。
+              """
+
+         def camera_restore():
+             """
+              :doc: camera
+
+	      カメラとレイヤーを現在設定されている位置に戻します。
+	      sceneステートメントや、show layerステートメントで画像位置が狂ったときの修正ようです。
               """
 
         def camera_move(x, y, z, rotate=0, duration=0, warper='linear', subpixel=True, loop=False, x_express=None, y_express=None, z_express=None, rotate_express=None):

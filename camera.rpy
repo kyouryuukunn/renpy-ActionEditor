@@ -42,6 +42,13 @@ init -1600 python:
             layer_move(layer, _LAYER_Z)
         camera_move(0, 0, 0)
 
+    def camera_restore():
+        """
+         :doc: camera
+
+         """
+        camera_move(_camera_x, _camera_y, _camera_z)
+
     def camera_move(x, y, z, rotate=0, duration=0, warper='linear', subpixel=True, loop=False, x_express=None, y_express=None, z_express=None, rotate_express=None):
         """
          :doc: camera
@@ -457,7 +464,7 @@ screen _action_editor(tab="images", layer="master", name="", time=0):
 
             null height 10
             hbox:
-                style_group "action_editor"
+                style_group "action_editor_a"
                 xfill False
                 textbutton _("Images") action [SelectedIf(tab == "images"), Show("_action_editor", tab="images")]
                 textbutton _("2D Camera") action [SensitiveIf(_3d_layers.keys() == ["master"]), SelectedIf(tab == "2D Camera"), Show("_action_editor", tab="2D Camera")]
@@ -465,15 +472,15 @@ screen _action_editor(tab="images", layer="master", name="", time=0):
                 textbutton _("3D Camera") action [SelectedIf(tab == "3D Camera"), Show("_action_editor", tab="3D Camera")]
             if tab == "images":
                 hbox:
-                    style_group "action_editor"
+                    style_group "action_editor_a"
                     for l in config.layers:
                         if l not in ["screens", "transient", "overlay"]:
                             textbutton "[l]" action [SelectedIf(l == layer), Show("_action_editor", tab=tab, layer=l)]
                 hbox:
-                    style_group "action_editor"
+                    style_group "action_editor_a"
+                    textbutton _("+") action Function(_viewers.transform_viewer.add_image, layer)
                     for n in state:
                         textbutton "{}".format(n.split()[0]) action [SelectedIf(n == name), Show("_action_editor", tab=tab, layer=layer, name=n)]
-                    textbutton _("+") action Function(_viewers.transform_viewer.add_image, layer)
 
                 if name in state:
                     for p, d in _viewers.transform_viewer.props:
@@ -622,7 +629,7 @@ screen _warper_graph(warper):
     $ t=120
     $ length=300
     $ xpos=config.screen_width-400
-    $ ypos=300
+    $ ypos=100
     # add Solid("#000", xsize=3, ysize=1.236*length, xpos=xpos+length/2, ypos=length/2+xpos, rotate=45, anchor=(.5, .5)) 
     add Solid("#CCC", xsize=length, ysize=length, xpos=xpos, ypos=ypos ) 
     add Solid("#000", xsize=length, ysize=3, xpos=xpos, ypos=length+ypos ) 
@@ -630,53 +637,11 @@ screen _warper_graph(warper):
     add Solid("#000", xsize=3, ysize=length, xpos=xpos+length, ypos=ypos)
     add Solid("#000", xsize=3, ysize=length, xpos=xpos, ypos=ypos)
     for i in range(1, t):
-        add Solid("#000", xsize=length/t, ysize=int(length*renpy.atl.warpers[warper](i/float(t))), xpos=xpos+i*length/t, ypos=length+ypos, yanchor=1.) 
-
-screen _image_selecter(default):
-    modal True
-    zorder 10
-    key "game_menu" action Return("")
-    $default_set = set(default)
-
-    frame:
-        background "#0006"
-        xalign 1.
-        has vbox
-
-        label _("Type a image name")
-        $string=""
-        for e in default:
-            $string += e + " "
-        input default string
-
-        if default:
-            $s = set()
-            for name in renpy.display.image.images:
-                $name_set = set(name)
-                if default_set < name_set:
-                    $s.update(name_set-default_set)
+        $ysize=int(length*renpy.atl.warpers[warper](i/float(t)))
+        if ysize >= 0:
+            add Solid("#000", xsize=length/t, ysize=ysize, xpos=xpos+i*length/t, ypos=length+ypos, yanchor=1.) 
         else:
-            $s = {name[0] for name in renpy.display.image.images}
-        viewport:
-            mousewheel True
-            xmaximum 400
-            ymaximum 300
-            edgescroll (100, 100)
-            scrollbars "both"
-            has vbox
-            $s=tuple(s)
-            for x in range(0, len(s), 4):
-                if x+5 < len(s):
-                    hbox:
-                        for tag in s[x:x+4]:
-                            textbutton tag action Return(default + (tag, )) hovered _viewers.ShowImage(default, tag) unhovered Hide("_selected_image")
-                else:
-                    hbox:
-                        for tag in s[x:]:
-                            textbutton tag action Return(default + (tag, )) hovered _viewers.ShowImage(default, tag) unhovered Hide("_selected_image")
-
-screen _selected_image(string):
-    add string at truecenter
+            add Solid("#000", xsize=length/t, ysize=-ysize, xpos=xpos+i*length/t, ypos=length+ypos-ysize, yanchor=1.) 
 
 screen _move_keyframes:
     modal True
@@ -734,6 +699,7 @@ init -1098 python:
         profile_once = _profile_once,
         self_voicing = Preference("self voicing", "toggle"),
         action_editor = _viewers.action_editor,
+        image_viewer = _open_image_viewer,
         )
 
     config.underlay = [ km ]
@@ -744,6 +710,7 @@ init -1098 python:
 init 1100 python:
     config.locked = False
     config.keymap["action_editor"] = ['P']
+    config.keymap["image_viewer"] = ['U']
     config.locked = True
 
 
@@ -1018,11 +985,8 @@ init -1600 python in _viewers:
         def add_image(self, layer):
             default = ()
             while True:
-                try:
-                    name = renpy.invoke_in_new_context(renpy.call_screen, "_image_selecter", default=default)
-                except:
-                    return
-                if isinstance(name, tuple):
+                name = renpy.invoke_in_new_context(renpy.call_screen, "_image_selecter", default=default)
+                if isinstance(name, tuple): #press button
                     for n in renpy.display.image.images:
                         if set(n) == set(name):
                             string=""
@@ -1043,21 +1007,21 @@ init -1600 python in _viewers:
                             return
                     else:
                         default = name
-                elif name:
-                    for n in renpy.display.image.images:
-                        if set(n) == set(name.split()):
-                            self.state[layer][name] = {}
-                            renpy.show(name, layer=layer)
-                            for p, d in self.props:
-                                self.state[layer][name][p] = self.get_property(layer, name.split()[0], p, False)
-                            all_keyframes[(name, layer, "xpos")] = [(self.state[layer][name]["xpos"], 0, None)]
-                            remove_list = [n_org for n_org in self.state_org[layer] if n_org.split()[0] == n[0]]
-                            for n_org in remove_list:
-                                del self.state_org[layer][n_org]
-                                transform_viewer.remove_keyframes(n_org, layer)
-                            sort_keyframes()
-                            renpy.show_screen("_action_editor", tab="images", layer=layer, name=name)
-                            return
+                elif name: #from input text
+                    # for n in renpy.display.image.images: #テキスト入力からはいきなり表示しないようにする。
+                    #     if set(n) == set(name.split()):
+                    #         self.state[layer][name] = {}
+                    #         renpy.show(name, layer=layer)
+                    #         for p, d in self.props:
+                    #             self.state[layer][name][p] = self.get_property(layer, name.split()[0], p, False)
+                    #         all_keyframes[(name, layer, "xpos")] = [(self.state[layer][name]["xpos"], 0, None)]
+                    #         remove_list = [n_org for n_org in self.state_org[layer] if n_org.split()[0] == n[0]]
+                    #         for n_org in remove_list:
+                    #             del self.state_org[layer][n_org]
+                    #             transform_viewer.remove_keyframes(n_org, layer)
+                    #         sort_keyframes()
+                    #         renpy.show_screen("_action_editor", tab="images", layer=layer, name=name)
+                    #         return
                     default = tuple(name.split())
                 else:
                     renpy.notify(_("Please type image name"))
@@ -1389,16 +1353,30 @@ init -1600 python in _viewers:
             for e in default:
                 self.string += e + " "
             self.string += tag
+            self.check = None
 
         def __call__(self):
-            for n in renpy.display.image.images:
-                if set(n) == set(self.string.split()):
-                    self.string=""
-                    for e in n:
-                        self.string += e + " "
-                    renpy.show_screen("_selected_image", self.string)
-                    renpy.restart_interaction()
-        #
+            if self.check is None:
+                for n in renpy.display.image.images:
+                    if set(n) == set(self.string.split()):
+                        self.string=""
+                        for e in n:
+                            self.string += e + " "
+                        try:
+                            for fn in renpy.display.image.images[n].predict_files():
+                                if not renpy.loader.loadable(fn):
+                                    self.check = False
+                                    break
+                            else:
+                                self.check = True
+                        except:
+                            self.check = True #text displayable
+            if self.check:
+                renpy.show(self.string, at_list=[renpy.store.truecenter], layer="screens", tag="preview")
+            else:
+                renpy.show("preview", what=renpy.text.text.Text("No files", color="#F00"), at_list=[renpy.store.truecenter], layer="screens")
+            renpy.restart_interaction()
+
         # def get_sensitive(self):
         #     for n in renpy.display.image.images:
         #         if set(n) == set(self.string.split()):
