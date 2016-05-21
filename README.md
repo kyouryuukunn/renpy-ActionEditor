@@ -3,7 +3,7 @@
 
  日本語マニュアルはドキュメント後半にあります。
 
- This script adds the ability to simulate a 3D camera within Ren'Py, as well as an
+ This script adds the ability to simulate a 3D camera within Ren'Py, along with an
  in-game Action Editor and Image Viewer GUI to assist in animating the camera.
  To install, copy all files in the camera directory to your game directory.
 
@@ -12,11 +12,11 @@
  Action Editor
 ================
 
- This allows you to adjusts coordinates of the camera, 3D layers, and transform properties
+ This allows you to adjusts coordinates of the simulated camera, 3D layers, and transform properties
  of images in real-time with a GUI. It can then generate a script based on these changes and
- put it on the clipboard to be pasted into your Ren'Py scripts.
+ place it on the clipboard for later pasting into Ren'Py scripts.
 
- When :var:`config.developer` is True, pressing action_editor (by default,
+ When `config.developer` is True, pressing action_editor (by default,
  "shift+P") will open the Action editor.
  
  The Action Editor has the following features:
@@ -26,7 +26,7 @@
   * Adjust the z coordinate of the camera with the mouse wheel.
   * Alternatively, each value can be adjusted with the keyboard without going back to the original script.
   * Add, delete, and edit keyframes on a timeline.
-  * After setting up a scene with the desired look and animations, the Action Editor will generate a script add place it on your clipboard for pasting into your Ren'Py scripts. (v6.99 and later only)
+  * After setting up a scene with the desired look and animations, the Action Editor will generate a script and place it on your clipboard for pasting into your Ren'Py scripts. (v6.99 and later only)
 
  Image Viewer
 ================
