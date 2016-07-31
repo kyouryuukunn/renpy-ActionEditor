@@ -187,6 +187,48 @@
                  result of this is added to the rotate coordinate of the camera.
              """
 
+        def camera_relative_move(x, y, z, rotate=0, duration=0, warper='linear', subpixel=True, loop=False, x_express=None, y_express=None, z_express=None, rotate_express=None):
+            """
+             :doc: camera
+
+             Move the coordinate and rotate of a camera relatively and apply transforms to all 3D layers.
+
+             `x`
+                  the x coordinate of a camera relative to the current one.
+             `y`
+                  the y coordinate of a camera relative to the current one.
+             `z`
+                  the z coordinate of a camera relative to the current one.
+             `rotate`
+                  Defaul 0, the rotate of a camera relative to the current one.
+             `duration`
+                  Default 0, this is the second times taken to move a camera.
+             `warper`
+                  Default 'linear', this should be string and the name of a warper
+                  registered with ATL.
+             `subpixel`
+                  Default True, if True, causes things to be drawn on the screen
+                  using subpixel positioning
+             `loop`
+                  Default False, if True, this motion repeats.
+             'x_express'
+                 This should be callable, which is called with the shown timebase
+                 and the animation timebase, in seconds and return a number. The
+                 result of this is added to the x coordinate of the camera.
+             'y_express'
+                 This should be callable, which is called with the shown timebase
+                 and the animation timebase, in seconds and return a number. The
+                 result of this is added to the y coordinate of the camera.
+             'z_express'
+                 This should be callable, which is called with the shown timebase
+                 and the animation timebase, in seconds and return a number. The
+                 result of this is added to the z coordinate of the camera.
+             'rotate_express'
+                 This should be callable, which is called with the shown timebase
+                 and the animation timebase, in seconds and return a number. The
+                 result of this is added to the rotate coordinate of the camera.
+             """
+
         def layer_move(layer, z, duration=0, warper='linear', subpixel=True, loop=False, x_express=None, y_express=None, z_express=None, rotate_express=None):
             """
              :doc: camera
@@ -487,6 +529,48 @@
                    カメラのy座標の数字です。
               `rotate`
                    デフォルトは0で、カメラの傾きの数字です。
+              `duration`
+                   デフォルトは0で、カメラ移動にかかる時間の秒数です。
+              `loop`
+                   デフォルトは Falseで、True ならこのモーションが繰り替えされます。
+              `warper`
+                   デフォルトは'linear'で, 時間補間に使用する関数名の文字列です。こ
+                   れにはATLに登録された時間補間関数が指定出来ます。
+              `subpixel`
+                   デフォルトは Trueで、 True なら、1 pixel 以下の値を使用して画面
+                   に描画します。
+             'x_express'
+                   これは呼出可能なオブジェクトで、出現時間軸とアニメーション時間
+                   軸の秒数を引数に呼び出され、数字を返します。この結果はカメラの
+                   x座標に加えられます。
+             'y_express'
+                   これは呼出可能なオブジェクトで、出現時間軸とアニメーション時間
+                   軸の秒数を引数に呼び出され、数字を返します。この結果はカメラの
+                   y座標に加えられます。
+             'z_express'
+                   これは呼出可能なオブジェクトで、出現時間軸とアニメーション時間
+                   軸の秒数を引数に呼び出され、数字を返します。この結果はカメラの
+                   z座標に加えられます。
+             'rotate_express'
+                   これは呼出可能なオブジェクトで、出現時間軸とアニメーション時間
+                   軸の秒数を引数に呼び出され、数字を返します。この結果はカメラの
+                   rotate座標に加えられます。
+              """
+
+        def camera_relative_move(x, y, z, rotate=0, duration=0, warper='linear', subpixel=True, loop=False, x_express=None, y_express=None, z_express=None, rotate_express=None):
+             """
+              :doc: camera
+
+              カメラの座標と角度を指定の時間かけて変更します。
+
+              `x`
+                   現在の座標に対して相対的なカメラのx座標の数字です。
+              `y`
+                   現在の座標に対して相対的なカメラのy座標の数字です。
+              `z`
+                   現在の座標に対して相対的なカメラのy座標の数字です。
+              `rotate`
+                   デフォルトは0で、現在の角度に対して相対的なカメラの傾きの数字です。
               `duration`
                    デフォルトは0で、カメラ移動にかかる時間の秒数です。
               `loop`

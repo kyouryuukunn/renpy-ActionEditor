@@ -12,6 +12,7 @@ init -1600 python:
     _camera_rotate = 0
     _FOCAL_LENGTH = 147.40
     _LAYER_Z = 1848.9
+    _last_camera_arguments = None
 
     def register_3d_layer(*layers):
         """
@@ -92,6 +93,50 @@ init -1600 python:
          """
 
         camera_moves([(x, y, z, rotate, duration, warper, ),], subpixel=subpixel, loop=loop, x_express=x_express, y_express=y_express, z_express=z_express, rotate_express=rotate_express)
+
+    def camera_relative_move(x, y, z, rotate=0, duration=0, warper='linear', subpixel=True, loop=False, x_express=None, y_express=None, z_express=None, rotate_express=None):
+        """
+         :doc: camera
+
+         Move the coordinate and rotate of a camera relatively and apply transforms to all 3D layers.
+
+         `x`
+              the x coordinate of a camera relative to the current one.
+         `y`
+              the y coordinate of a camera relative to the current one.
+         `z`
+              the z coordinate of a camera relative to the current one.
+         `rotate`
+              Defaul 0, the rotate of a camera relative to the current one.
+         `duration`
+              Default 0, this is the second times taken to move a camera.
+         `warper`
+              Default 'linear', this should be string and the name of a warper
+              registered with ATL.
+         `subpixel`
+              Default True, if True, causes things to be drawn on the screen
+              using subpixel positioning
+         `loop`
+              Default False, if True, this motion repeats.
+         'x_express'
+             This should be callable, which is called with the shown timebase
+             and the animation timebase, in seconds and return a number. The
+             result of this is added to the x coordinate of the camera.
+         'y_express'
+             This should be callable, which is called with the shown timebase
+             and the animation timebase, in seconds and return a number. The
+             result of this is added to the y coordinate of the camera.
+         'z_express'
+             This should be callable, which is called with the shown timebase
+             and the animation timebase, in seconds and return a number. The
+             result of this is added to the z coordinate of the camera.
+         'rotate_express'
+             This should be callable, which is called with the shown timebase
+             and the animation timebase, in seconds and return a number. The
+             result of this is added to the rotate coordinate of the camera.
+         """
+        camera_move(x+_camera_x, y+_camera_y, z+_camera_z, rotate+_camera_rotate, duration, warper, subpixel, loop, x_express, y_express, z_express, rotate_express)
+
 
     def layer_move(layer, z, duration=0, warper='linear', subpixel=True, loop=False, x_express=None, y_express=None, z_express=None, rotate_express=None):
         """
@@ -258,7 +303,7 @@ init -1600 python:
              and the animation timebase, in seconds and return a number. The
              result of this is added to the rotate coordinate of the camera.
          """
-        global _camera_x, _camera_y, _camera_z, _camera_rotate, _3d_layers
+        global _camera_x, _camera_y, _camera_z, _camera_rotate, _3d_layers, _last_camera_arguments
         from math import sin, pi
         from random import random
 
@@ -266,7 +311,8 @@ init -1600 python:
             camera_check_points = {}
         if layer_check_points is None:
             layer_check_points = {}
-        rotate_loop = kwargs.get("rotate_loop", False)
+        if config.developer:
+            _last_camera_arguments = (camera_check_points, layer_check_points, x_loop, y_loop, z_loop, rotate_loop, x_express, y_express, z_express, rotate_express, kwargs, _camera_x, _camera_y, _camera_z, _camera_rotate, _3d_layers.copy())
         start_xanchor = _FOCAL_LENGTH*_camera_x/(renpy.config.screen_width *_LAYER_Z) + .5
         start_yanchor = _FOCAL_LENGTH*_camera_y/(renpy.config.screen_height*_LAYER_Z) + .5
         camera_check_points2 = { 'xanchor':[(start_xanchor, 0, None, )], 'yanchor':[(start_yanchor, 0, None, )], 'z': [(_camera_z, 0, None, )], 'rotate':[(_camera_rotate, 0, None, )] }
@@ -283,7 +329,7 @@ init -1600 python:
         for layer in _3d_layers:
 
             if layer not in layer_check_points:
-                layer_check_points[layer] = ((_3d_layers[layer], 0, None), )
+                layer_check_points[layer] = [(_3d_layers[layer], 0, None), ]
             layer_check_points2 = [(_3d_layers[layer], 0, None), ]
             for c in layer_check_points[layer]:
                 layer_check_points2.append((c[0], float(c[1]), c[2]))
@@ -408,19 +454,19 @@ screen _action_editor(tab="images", layer="master", name="", time=0):
         key "w" action Function(_viewers.camera_viewer.y_changed, _camera_y-100+_viewers.camera_viewer.range_camera_pos)
         key "a" action Function(_viewers.camera_viewer.x_changed, _camera_x-100+_viewers.camera_viewer.range_camera_pos)
         key "d" action Function(_viewers.camera_viewer.x_changed, _camera_x+100+_viewers.camera_viewer.range_camera_pos)
-        key "S" action Function(_viewers.camera_viewer.y_changed, _camera_y+300+_viewers.camera_viewer.range_camera_pos)
-        key "W" action Function(_viewers.camera_viewer.y_changed, _camera_y-300+_viewers.camera_viewer.range_camera_pos)
-        key "A" action Function(_viewers.camera_viewer.x_changed, _camera_x-300+_viewers.camera_viewer.range_camera_pos)
-        key "D" action Function(_viewers.camera_viewer.x_changed, _camera_x+300+_viewers.camera_viewer.range_camera_pos)
+        key "S" action Function(_viewers.camera_viewer.y_changed, _camera_y+1000+_viewers.camera_viewer.range_camera_pos)
+        key "W" action Function(_viewers.camera_viewer.y_changed, _camera_y-1000+_viewers.camera_viewer.range_camera_pos)
+        key "A" action Function(_viewers.camera_viewer.x_changed, _camera_x-1000+_viewers.camera_viewer.range_camera_pos)
+        key "D" action Function(_viewers.camera_viewer.x_changed, _camera_x+1000+_viewers.camera_viewer.range_camera_pos)
     else:
         key "j" action Function(_viewers.camera_viewer.y_changed, _camera_y+100+_viewers.camera_viewer.range_camera_pos)
         key "k" action Function(_viewers.camera_viewer.y_changed, _camera_y-100+_viewers.camera_viewer.range_camera_pos)
         key "h" action Function(_viewers.camera_viewer.x_changed, _camera_x-100+_viewers.camera_viewer.range_camera_pos)
         key "l" action Function(_viewers.camera_viewer.x_changed, _camera_x+100+_viewers.camera_viewer.range_camera_pos)
-        key "J" action Function(_viewers.camera_viewer.y_changed, _camera_y+300+_viewers.camera_viewer.range_camera_pos)
-        key "K" action Function(_viewers.camera_viewer.y_changed, _camera_y-300+_viewers.camera_viewer.range_camera_pos)
-        key "H" action Function(_viewers.camera_viewer.x_changed, _camera_x-300+_viewers.camera_viewer.range_camera_pos)
-        key "L" action Function(_viewers.camera_viewer.x_changed, _camera_x+300+_viewers.camera_viewer.range_camera_pos)
+        key "J" action Function(_viewers.camera_viewer.y_changed, _camera_y+1000+_viewers.camera_viewer.range_camera_pos)
+        key "K" action Function(_viewers.camera_viewer.y_changed, _camera_y-1000+_viewers.camera_viewer.range_camera_pos)
+        key "H" action Function(_viewers.camera_viewer.x_changed, _camera_x-1000+_viewers.camera_viewer.range_camera_pos)
+        key "L" action Function(_viewers.camera_viewer.x_changed, _camera_x+1000+_viewers.camera_viewer.range_camera_pos)
 
     if time:
         timer time+1 action Function(_viewers.change_time, _viewers.time)
@@ -448,6 +494,7 @@ screen _action_editor(tab="images", layer="master", name="", time=0):
                     textbutton _("default warper") action _viewers.select_default_warper
                     textbutton _("rot") action [SelectedIf(renpy.get_screen("_rot")), If(renpy.get_screen("_rot"), true=Hide("_rot"), false=Show("_rot"))]
                     textbutton _("hide") action HideInterface()
+                    # textbutton _("window") action _viewers.AddWindow() #renpy.config.empty_window
                     if _viewers.sorted_keyframes:
                         textbutton _("play") action [SensitiveIf(_viewers.sorted_keyframes), Function(_viewers.camera_viewer.play, play=True), Function(_viewers.transform_viewer.play, play=True), Hide("_action_editor"), Show("_action_editor", tab=tab, layer=layer, name=name, time=_viewers.sorted_keyframes[-1]), renpy.restart_interaction]
                     else:
@@ -461,7 +508,7 @@ screen _action_editor(tab="images", layer="master", name="", time=0):
                 textbutton _("clear keyframes") action [SensitiveIf(_viewers.sorted_keyframes), Function(_viewers.clear_keyframes), renpy.restart_interaction]
                 textbutton _("remove keyframes") action [SensitiveIf(_viewers.time in _viewers.sorted_keyframes), Function(_viewers.remove_keyframes, _viewers.time), renpy.restart_interaction]
                 textbutton _("move keyframes") action [SensitiveIf(_viewers.time in _viewers.sorted_keyframes), SetField(_viewers, "moved_time", _viewers.time), Show("_move_keyframes")]
-
+                textbutton _("last moves") action [SensitiveIf(_last_camera_arguments), Function(_viewers.last_moves), renpy.restart_interaction]
             null height 10
             hbox:
                 style_group "action_editor_a"
@@ -1346,6 +1393,59 @@ init -1600 python in _viewers:
         if v:
             warper = v
 
+    @renpy.pure
+    class ShowImage(renpy.store.Action, renpy.store.DictEquality):
+        def __init__(self, default, tag):
+            self.string=""
+            for e in default:
+                self.string += e + " "
+            self.string += tag
+            self.check = None
+
+        def __call__(self):
+            if self.check is None:
+                for n in renpy.display.image.images:
+                    if set(n) == set(self.string.split()):
+                        self.string=""
+                        for e in n:
+                            self.string += e + " "
+                        try:
+                            for fn in renpy.display.image.images[n].predict_files():
+                                if not renpy.loader.loadable(fn):
+                                    self.check = False
+                                    break
+                            else:
+                                self.check = True
+                        except:
+                            self.check = True #text displayable
+            if self.check:
+                renpy.show(self.string, at_list=[renpy.store.truecenter], layer="screens", tag="preview")
+            else:
+                renpy.show("preview", what=renpy.text.text.Text("No files", color="#F00"), at_list=[renpy.store.truecenter], layer="screens")
+            renpy.restart_interaction()
+
+        # def get_sensitive(self):
+        #     for n in renpy.display.image.images:
+        #         if set(n) == set(self.string.split()):
+        #             return True
+        #     else:
+        #         return False
+    @renpy.pure
+    class AddWindow(renpy.store.Action, renpy.store.DictEquality):
+        def __init__(self):
+            pass
+        def __call__(self):
+            if renpy.shown_window():
+                renpy.scene("window")
+            else:
+                renpy.add_layer("window", below="screens")
+                renpy.config.empty_window()
+            renpy.restart_interaction()
+        def get_selected(self):
+            if renpy.shown_window():
+                return True
+            return False
+
     def clear_keyframes():
         all_keyframes.clear()
         sorted_keyframes[:]=[]
@@ -1444,6 +1544,33 @@ init -1600 python in _viewers:
         time = 0
         camera_viewer.layer_reset()
         camera_viewer.camera_reset()
+
+    def last_moves():
+        all_keyframes["_camera_x"] = renpy.store._last_camera_arguments[0]["x"]
+        all_keyframes["_camera_y"] = renpy.store._last_camera_arguments[0]["y"]
+        all_keyframes["_camera_z"] = renpy.store._last_camera_arguments[0]["z"]
+        all_keyframes["_camera_rotate"] = renpy.store._last_camera_arguments[0]["rotate"]
+        all_keyframes["_camera_z"] = renpy.store._last_camera_arguments[0]["z"]
+        for k in renpy.store._last_camera_arguments[1]:
+            all_keyframes["layer "+k] = renpy.store._last_camera_arguments[1][k]
+        loops["_camera_x_loop"] = renpy.store._last_camera_arguments[2]
+        loops["_camera_y_loop"] = renpy.store._last_camera_arguments[3]
+        loops["_camera_z_loop"] = renpy.store._last_camera_arguments[4]
+        loops["_camera_rotate_loop"] = renpy.store._last_camera_arguments[5]
+        expressions["_camera_x"] = renpy.store._last_camera_arguments[6]
+        expressions["_camera_y"] = renpy.store._last_camera_arguments[7]
+        expressions["_camera_z"] = renpy.store._last_camera_arguments[8]
+        expressions["_camera_rotate"] = renpy.store._last_camera_arguments[9]
+        for k in renpy.store._last_camera_arguments[10]:
+            loops[k] = renpy.store._last_camera_arguments[10][k]
+        all_keyframes["_camera_x"].insert(0, (renpy.store._last_camera_arguments[11], 0, None))
+        all_keyframes["_camera_y"].insert(0, (renpy.store._last_camera_arguments[12], 0, None))
+        all_keyframes["_camera_z"].insert(0, (renpy.store._last_camera_arguments[13], 0, None))
+        all_keyframes["_camera_rotate"].insert(0, (renpy.store._last_camera_arguments[14], 0, None))
+        for k in renpy.store._last_camera_arguments[1]:
+            all_keyframes["layer "+k].insert(0, (renpy.store._last_camera_arguments[15][k], 0, None))
+        sort_keyframes()
+        change_time(0)
 
     def put_clipboard():
         camera_check_points = {}
