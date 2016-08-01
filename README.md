@@ -3,101 +3,103 @@
 
  日本語マニュアルはドキュメント後半にあります。
 
- This script adds Ren'Py GUI Action editor and 3D camera functions, Image Viewer.
- copy all files in the camera directory to your game directory.
+ This script adds the ability to simulate a 3D camera within Ren'Py, along with an
+ in-game Action Editor and Image Viewer GUI to assist in animating the camera.
+ To install, copy all files in the camera directory to your game directory.
 
  Ren'Py <http://www.renpy.org/>
 
- Action editor
+ Action Editor
 ================
 
- This allows you to adjusts coordinates of the camera or 3D layers or values
- of transform properties of images by GUI. This generates a script based on
- the result of the adjustment and puts it on clipboard.
+ This allows you to adjusts coordinates of the simulated camera, 3D layers, and transform properties
+ of images in real-time with a GUI. It can then generate a script based on these changes and
+ place it on the clipboard for later pasting into Ren'Py scripts.
 
- When :var:`config.developer` is True, pressing action_editor (by default,
- "shift+P"), will open Action editor.
+ When `config.developer` is True, pressing action_editor (by default,
+ "shift+P") will open the Action editor.
  
- Action editor has below features.:
+ The Action Editor has the following features:
  
-  * Each transform property of images, coordinates of the camera or layers can be changed by bars.
-  * The x, y coordinates of the camera can be changed by dragging the camera icon.
-  * The z coordinate of the camera can be changed by mouse wheel.
-  * Each value can be inputted by keyboard.
-  * keyframes can be added to the time bar.
-  * Each transform property of images, coordinates of the camera and layers or actions can be putted on clipboard.(v6.99 or later, only winows?)
+  * View and adjust the transform properties of images, camera coordinates, and 3D layer depth with bars
+  * View and adjust the x and y coordinates of the camera with a mouse-positionable camera
+  * Adjust the z coordinate of the camera with the mouse wheel.
+  * Alternatively, each value can be adjusted with the keyboard without going back to the original script.
+  * Add, delete, and edit keyframes on a timeline.
+  * After setting up a scene with the desired look and animations, the Action Editor will generate a script and place it on your clipboard for pasting into your Ren'Py scripts. (v6.99 and later only)
 
  Image Viewer
 ================
  
- Press Shift+U and open Image Viewer
+ Press Shift+U to open Image Viewer and view all currently generated displayables.
 
 
  Camera
 ================
 
- With some limitations, Ren'Py can simulate 3D camera motion. This will easily
+ With some limitations, Ren'Py can simulate 3D camera motion. This will
  let you achieve a parallax effect by placing sprites and assets on a 3D field.
- This script applies transforms to each layers which are registered as 3D layer by
- positions of a camera and 3D layers on a 3D field to simulate 3D camera motion.
+ This script works by applying ATL transforms to all displayables on 3D layers in a manner that respects distance from a virtual camera.
 
- If you use this feature, in the first, set additional layers to be registered
- as 3D layer. If anything isn't registered as 3D layers, this script register
- "master" layer as 3D layers.
+ To start using the 3D camera, set additional layers to be registered
+ as 3D layers. If no layers are registered as 3D layers, this script will 
+ register the default `master` layer as a 3D layer.
 
- For example, Write a code like below in options.rpy and add 'background', 'middle', 'forward'  layers.::
+ To get started, add the following to options.rpy to add `background`, `middle`, and `forward` as regular 2D layers:
 
          config.layers = ['master', 'background', 'middle', 'forward', 'transient', 'screens', 'overlay']
 
- Second, register layers which participate to a 3D motion as 3d layers by
- :func:`register_3d_layer`. The z coordinates of these layers can be moved and
- applied transforms to by positions of the camera and 3D layers. If anything
- isn't registered as 3D layers, this script registers 'master' layer as 3D
- layer.::
+ Second, register any layers that you want to respect 3D motion as 3d layers by using
+ :func:`register_3d_layer`. The z coordinates of these layers can be moved and can have their positions and transforms affected by the camera. If no layers are registered as 3D layers, the default `master` layer becomes the sole 3D layer:
 
          init python:
              register_3d_layer('background', 'middle', 'forward')
 
- Then, a camera and layers can move. ::
+ This sample script should give an idea of how the system works:
 
           label start:
-              # reset the camera and layers positions and allow layers position to be saved.
+              # Resets the camera and layers positions and allows layer positions to be saved.
               $ camera_reset()
-              # It takes 0 second to move layers
+              # Instantly sets layer distances from the camera
               $ layer_move("background", 2000)
               $ layer_move("middle", 1500)
               $ layer_move("forward", 1000)
               scene bg onlayer background
+              # WARNING: The 'scene' command will reset the depth of whatever layer the image
+              # is displayed on. Make sure you reset the depth after you call the 'scene' command.
+              $ layer_move("background", 2000)
               show A onlayer middle
               show B onlayer forward
               with dissolve
-              'It takes 1 second to move a camera to (1800, 0, 0)'
+              "Moves the camera to (1800, 0, 0) in 1 second."
               $ camera_move(1800, 0, 0, 0, 1)
-              'It takes 5 seconds to move a camera to (0, 0, 1600)'
+              "Moves the camera to (0, 0, 1600) in 5 seconds."
               $ camera_move(0, 0, 1600, 0, 5)
-              'A camera moves to (0, 0, 0) at the moment'
+              "Moves the camera to (0, 0, 0) instantaneously."
               $ camera_move(0, 0, 0)
-              'It takes 1 second to rotate a camera to 180 degrees'
+              "Rotates the camera 180 degrees in 1 second.""
               $ camera_move(0, 0, 0, 180, 1)
-              'It takes 1 second to rotate a camera to -180 degrees and 0.5 second to move a camera to (-1800, 0, 500)'
+              'Rotates the camera -180 degrees in 1 second and subsequently moves the camera to (-1800, 0, 500) in 1.5 seconds'
               $ camera_moves( ( (0, 0, 0, 0, 1, 'linear'), (-1800, 0, 500, 0, 1.5, 'linear') ) )
-              'a camera shuttles between (-1800, 0, 500) and (0, 0, 0)'
+              'Continually moves the camera between (-1800, 0, 500) and (0, 0, 0), taking 0.5 seconds for the first move and 1 second for the second until the action is interrupted.'
               $ camera_moves( ( (0, 0, 0, 0, .5, 'linear'), (-1800, 0, 500, 0, 1, 'linear') ), loop=True)
 
- Notice that 3D camera motion has some limits.:
+ There are some limitations to the 3D camera:
 
- * 3D camera motion applies transforms to 3D layers, so the show layer statement or
-   :func:`renpy.show_layer_at` to 3D layers can't be usable.
+ * Only rotations perpindicular to the camera (Z rotations) can be performed due to the 3D camera relying
+   on Ren'Py's existing transform system.
 
- * z coordinates of 3D layers don't affect the stacking order of 3d layers.
+ * 3D camera motion applies its own transforms to 3D layers, so the `show layer` statement or
+   :func:`renpy.show_layer_at` can't be used with registered 3D layers.
 
- * camera_move, camera_moves, layer_move, layer_moves, all_moves can't play
-   within the same interaction. The last one only follows a instruction and
-   others works momentarily if they are called from within the same
-   interaction.
+ * Layers still stack in the order they are registered, regardless of what their z coordinates are. In our above example, `background` will always be below the other layers because it was registered first, even if its z coordinate was at `0` and the `forward` layer's z coordinate was at `1000`.
 
- * By default, the scene, hide statements use master or the given layer
-   only. If you use 3D layers preferentially, write code like below.::
+ * `camera_move`, `camera_moves`, `layer_move`, `layer_moves`, and `all_moves` can't play
+   simultaneously within the same interaction. If multiple camera actions are called in the same interaction,
+   only the last one will play out and earlier actions will be done instantenously before the last action is played.
+
+ * By default, the `scene` and `hide` statements use the `master` layer or a specified layer.
+   If you use 3D layers preferentially, write code like below:
 
 
 	init -1 python hide:
@@ -122,269 +124,276 @@
  Camera Functions
  ----------------
 
-        def register_3d_layer(*layers):
-            """
-             :doc: camera
+    def register_3d_layer(*layers):
+        """
+         :doc: camera
 
-             Register layers as 3D layers. 3D layers are applied transforms to by
-             positions of a camera and 3D layers. This should be called in init
-             block. If anything isn't registered as 3D layers, this script
-             register "master" layer as 3D layers
+         Register layers as 3D layers. Only 3D layers will be affected by camera
+         movement and 3D layer transforms. This should be called in an init
+         block. If no layers are registered as 3D layers, the 'master' layer
+         will become a 3D layer by default.
 
-             `layers`
-                  This should be the string or strings of a layer name.
-             """
+         `layers`
+              This should be a string or a group of strings naming registered layers.
+         """
 
-        def camera_reset():
-            """
-             :doc: camera
+    def camera_reset():
+        """
+         :doc: camera
 
-	     Reset a camera and 3D layers positions. Please call this at least
-	     once when the game has started. If this doesn't called, The
-	     position of 3D layers don't be saved. This should be also called
-	     in labels replayed to, if you use replay.
-             """
+         Resets the camera and 3D layers positions. This needs to be called at least once,
+         or 3D layer depth may behave erratically and the 3D camera will not be able to properly save
+         3D layer depth.
+         """
 
-        def camera_move(x, y, z, rotate=0, duration=0, warper='linear', subpixel=True, loop=False, x_express=None, y_express=None, z_express=None, rotate_express=None):
-            """
-             :doc: camera
+    def camera_restore():
+        """
+         :doc: camera
 
-             Move the coordinate and rotate the camera.
+         Safety method used internally to deal with unexpected camera behavior.
 
-             `x`
-                  The x coordinate of the camera
-             `y`
-                  The y coordinate of the camera
-             `z`
-                  The z coordinate of the camera
-             `rotate`
-                  Defaul 0, the angle of the camera
-             `duration`
-                  Default 0, this is the second times taken to move the camera.
-             `loop`
-                  Default False, if True, this motion repeats.
-             `warper`
-                  Default 'linear', this should be the string of the name of a
-                  warper registered with ATL.
-             `subpixel`
-                  Default True, if True, causes things to be drawn on the screen
-                  using subpixel positioning
-             'x_express'
-                 This should be callable, which is called with the shown timebase
-                 and the animation timebase, in seconds and return a number. The
-                 result of this is added to the x coordinate of the camera.
-             'y_express'
-                 This should be callable, which is called with the shown timebase
-                 and the animation timebase, in seconds and return a number. The
-                 result of this is added to the y coordinate of the camera.
-             'z_express'
-                 This should be callable, which is called with the shown timebase
-                 and the animation timebase, in seconds and return a number. The
-                 result of this is added to the z coordinate of the camera.
-             'rotate_express'
-                 This should be callable, which is called with the shown timebase
-                 and the animation timebase, in seconds and return a number. The
-                 result of this is added to the rotate coordinate of the camera.
-             """
+         """
 
-        def camera_relative_move(x, y, z, rotate=0, duration=0, warper='linear', subpixel=True, loop=False, x_express=None, y_express=None, z_express=None, rotate_express=None):
-            """
-             :doc: camera
+    def camera_move(x, y, z, rotate=0, duration=0, warper='linear', subpixel=True, loop=False, x_express=None, y_express=None, z_express=None, rotate_express=None):
+        """
+         :doc: camera
 
-             Move the coordinate and rotate of a camera relatively and apply transforms to all 3D layers.
+         Moves the camera to a given coordinate and rotation.
 
-             `x`
-                  the x coordinate of a camera relative to the current one.
-             `y`
-                  the y coordinate of a camera relative to the current one.
-             `z`
-                  the z coordinate of a camera relative to the current one.
-             `rotate`
-                  Defaul 0, the rotate of a camera relative to the current one.
-             `duration`
-                  Default 0, this is the second times taken to move a camera.
-             `warper`
-                  Default 'linear', this should be string and the name of a warper
-                  registered with ATL.
-             `subpixel`
-                  Default True, if True, causes things to be drawn on the screen
-                  using subpixel positioning
-             `loop`
-                  Default False, if True, this motion repeats.
-             'x_express'
-                 This should be callable, which is called with the shown timebase
-                 and the animation timebase, in seconds and return a number. The
-                 result of this is added to the x coordinate of the camera.
-             'y_express'
-                 This should be callable, which is called with the shown timebase
-                 and the animation timebase, in seconds and return a number. The
-                 result of this is added to the y coordinate of the camera.
-             'z_express'
-                 This should be callable, which is called with the shown timebase
-                 and the animation timebase, in seconds and return a number. The
-                 result of this is added to the z coordinate of the camera.
-             'rotate_express'
-                 This should be callable, which is called with the shown timebase
-                 and the animation timebase, in seconds and return a number. The
-                 result of this is added to the rotate coordinate of the camera.
-             """
+         `x`
+              The x coordinate to move the camera to.
+         `y`
+              The y coordinate to move the camera to.
+         `z`
+              The z coordinate to move the camera to.
+         `rotate`
+              Rotation of the camera, perpindicular to the scene, in degrees.
+         `duration`
+              The time, in seconds, to complete the camera move. If no time is given,
+              the move will happen instantaneously.
+         `warper`
+              A string that points to a registered ATL warper, like \'ease\'.
+              If no warper is given, this will default to \'linear\'.
+         `subpixel`
+              If True, transforms caused by the 3D camera will be rendered with
+              subpixel precision. This defaults to True.
+         `loop`
+              If true, the camera move will continually loop until another camera
+              action interrupts. This defaults to False.
+         `x_express`
+             This should be a callable function that is called with the shown 
+             timebase and is given an animation timebase in seconds. The
+             result of this function is added to the x coordinate of the camera.
+         `y_express`
+             This should be a callable function that is called with the shown 
+             timebase and is given an animation timebase in seconds. The
+             result of this function is added to the y coordinate of the camera.
+         `z_express`
+             This should be a callable function that is called with the shown 
+             timebase and is given an animation timebase in seconds. The
+             result of this function is added to the z coordinate of the camera.
+         `rotate_express`
+             This should be a callable function that is called with the shown 
+             timebase and is given an animation timebase in seconds. The
+             result of this function is added to the rotation value of the camera.
+         """
 
-        def layer_move(layer, z, duration=0, warper='linear', subpixel=True, loop=False, x_express=None, y_express=None, z_express=None, rotate_express=None):
-            """
-             :doc: camera
+    def camera_relative_move(x, y, z, rotate=0, duration=0, warper='linear', subpixel=True, loop=False, x_express=None, y_express=None, z_express=None, rotate_express=None):
+        """
+         :doc: camera
 
-             Move the z coordinate of a layer.
+         Move the coordinate and rotate of a camera relatively and apply transforms to all 3D layers.
 
-             `layer`
-                  The string of a layer name to be moved
-             `z`
-                  The z coordinate of a layer
-             `duration`
-                  Default 0, this is the second times taken to move a layer.
-             `loop`
-                  Default False, if True, this motion repeats.
-             `warper`
-                  Default 'linear', this should be the string of the name of a
-                  warper registered with ATL.
-             `subpixel`
-                  Default True, if True, causes things to be drawn on the screen
-                  using subpixel positioning
-             'x_express'
-                 This should be callable, which is called with the shown timebase
-                 and the animation timebase, in seconds and return a number. The
-                 result of this is added to the x coordinate of the camera.
-             'y_express'
-                 This should be callable, which is called with the shown timebase
-                 and the animation timebase, in seconds and return a number. The
-                 result of this is added to the y coordinate of the camera.
-             'z_express'
-                 This should be callable, which is called with the shown timebase
-                 and the animation timebase, in seconds and return a number. The
-                 result of this is added to the z coordinate of the camera.
-             'rotate_express'
-                 This should be callable, which is called with the shown timebase
-                 and the animation timebase, in seconds and return a number. The
-                 result of this is added to the rotate coordinate of the camera.
-             """
+         `x`
+              the x coordinate of a camera relative to the current one.
+         `y`
+              the y coordinate of a camera relative to the current one.
+         `z`
+              the z coordinate of a camera relative to the current one.
+         `rotate`
+              Defaul 0, the rotate of a camera relative to the current one.
+         `duration`
+              Default 0, this is the second times taken to move a camera.
+         `warper`
+              Default 'linear', this should be string and the name of a warper
+              registered with ATL.
+         `subpixel`
+              Default True, if True, causes things to be drawn on the screen
+              using subpixel positioning
+         `loop`
+              Default False, if True, this motion repeats.
+         'x_express'
+             This should be callable, which is called with the shown timebase
+             and the animation timebase, in seconds and return a number. The
+             result of this is added to the x coordinate of the camera.
+         'y_express'
+             This should be callable, which is called with the shown timebase
+             and the animation timebase, in seconds and return a number. The
+             result of this is added to the y coordinate of the camera.
+         'z_express'
+             This should be callable, which is called with the shown timebase
+             and the animation timebase, in seconds and return a number. The
+             result of this is added to the z coordinate of the camera.
+         'rotate_express'
+             This should be callable, which is called with the shown timebase
+             and the animation timebase, in seconds and return a number. The
+             result of this is added to the rotate coordinate of the camera.
+         """
 
-        def camera_moves(check_points, loop=False, subpixel=True, x_express=None, y_express=None, z_express=None, rotate_express=None):
-            """
-             :doc: camera
+    def layer_move(layer, z, duration=0, warper='linear', subpixel=True, loop=False, x_express=None, y_express=None, z_express=None, rotate_express=None):
+        """
+         :doc: camera
 
-             Move a camera through check points.
+         Moves the z coordinate of a layer and applies a transform to the layer.
 
-             `check_points`
-                  A list of tuples of x, y, z, rotate, duration, warper.
-             `loop`
-                  Default False, if True, this sequence of motions repeats.
-             `subpixel`
-                  Default True, if True, causes things to be drawn on the screen
-                  using subpixel positioning
-             'x_express'
-                 This should be callable, which is called with the shown timebase
-                 and the animation timebase, in seconds and return a number. The
-                 result of this is added to the x coordinate of the camera.
-             'y_express'
-                 This should be callable, which is called with the shown timebase
-                 and the animation timebase, in seconds and return a number. The
-                 result of this is added to the y coordinate of the camera.
-             'z_express'
-                 This should be callable, which is called with the shown timebase
-                 and the animation timebase, in seconds and return a number. The
-                 result of this is added to the z coordinate of the camera.
-             'rotate_express'
-                 This should be callable, which is called with the shown timebase
-                 and the animation timebase, in seconds and return a number. The
-                 result of this is added to the rotate coordinate of the camera.
-             """
+         `layer`
+              A string that names a registered 3D layer to be moved.
+         `z`
+              The z coordinate to move the 3D layer to.
+         `duration`
+              The time, in seconds, to complete the layer move. If no time is given,
+              the move will happen instantaneously.
+         `warper`
+              A string that points to a registered ATL warper, like \'ease\'.
+              If no warper is given, this will default to \'linear\'.
+         `subpixel`
+              If True, the resulting layer move will be rendered with
+              subpixel precision. This defaults to True.
+         `loop`
+              If true, the layer move will continually loop until another camera
+              action interrupts. This defaults to False.
+         `x_express`
+             This should be a callable function that is called with the shown 
+             timebase and is given an animation timebase in seconds. The
+             result of this function is added to the x coordinate of the camera.
+         `y_express`
+             This should be a callable function that is called with the shown 
+             timebase and is given an animation timebase in seconds. The
+             result of this function is added to the y coordinate of the camera.
+         `z_express`
+             This should be a callable function that is called with the shown 
+             timebase and is given an animation timebase in seconds. The
+             result of this function is added to the z coordinate of the camera.
+         `rotate_express`
+             This should be a callable function that is called with the shown 
+             timebase and is given an animation timebase in seconds. The
+             result of this function is added to the rotation value of the camera.
+         """
 
-        def layer_moves(layer, check_points, loop=False, subpixel=True, x_express=None, y_express=None, z_express=None, rotate_express=None):
-            """
-             :doc: camera
+    def camera_moves(check_points, loop=False, subpixel=True, x_express=None, y_express=None, z_express=None, rotate_express=None):
+        """
+         :doc: camera
 
-             Move the z coordinate of a layer through check points.
+         Allows multiple camera moves to happen in succession.
 
-             `layer`
-                  the string of a layer name to be moved
-             `check_points`
-                  A list of tuples of z, duration, warper
-             `loop`
-                  Default False, if True, this sequence of motions repeats.
-             `subpixel`
-                  Default True, if True, causes things to be drawn on the screen
-                  using subpixel positioning
-             'x_express'
-                 This should be callable, which is called with the shown timebase
-                 and the animation timebase, in seconds and return a number. The
-                 result of this is added to the x coordinate of the camera.
-             'y_express'
-                 This should be callable, which is called with the shown timebase
-                 and the animation timebase, in seconds and return a number. The
-                 result of this is added to the y coordinate of the camera.
-             'z_express'
-                 This should be callable, which is called with the shown timebase
-                 and the animation timebase, in seconds and return a number. The
-                 result of this is added to the z coordinate of the camera.
-             'rotate_express'
-                 This should be callable, which is called with the shown timebase
-                 and the animation timebase, in seconds and return a number. The
-                 result of this is added to the rotate coordinate of the camera.
-             """
+         `check_points`
+              A list of camera moves, in the format of (x, y, z, rotate, duration, warper)
+         `loop`
+              If true, the camera moves will continually loop until another camera
+              action interrupts. This defaults to False.
+         `subpixel`
+              If True, transforms caused by the 3D camera will be rendered with
+              subpixel precision. This defaults to True.
+         `x_express`
+             This should be a callable function that is called with the shown 
+             timebase and is given an animation timebase in seconds. The
+             result of this function is added to the x coordinate of the camera.
+         `y_express`
+             This should be a callable function that is called with the shown 
+             timebase and is given an animation timebase in seconds. The
+             result of this function is added to the y coordinate of the camera.
+         `z_express`
+             This should be a callable function that is called with the shown 
+             timebase and is given an animation timebase in seconds. The
+             result of this function is added to the z coordinate of the camera.
+         `rotate_express`
+             This should be a callable function that is called with the shown 
+             timebase and is given an animation timebase in seconds. The
+             result of this function is added to the rotation value of the camera.
+         """
 
-        def all_moves(camera_check_points=None, layer_check_points=None, subpixel=True, play=True, x_loop=False, y_loop=False, z_loop=False, rotate_loop=False, x_express=None, y_express=None, z_express=None, rotate_express=None, **kwargs):
-            """
-             :doc: camera
+    def layer_moves(layer, check_points, loop=False, subpixel=True, x_express=None, y_express=None, z_express=None, rotate_express=None):
+        """
+         :doc: camera
 
-             Move the camera and layers through check points.
+         Move a layer through check points and apply transform to the layer.
 
-             `camera_check_points`
-                  This is the map from the string of a camera parameter name to list of
-                  tuples of value, duration, warper.
-                  {
-                      'x':[(x, duration, warper)...],
-                      'y':[(y, duration, warper)...],
-                      'z':[(z, duration, warper)...],
-                      'rotate':[(rotate, duration, warper)...],
-                  }
-             `layer_check_points`
-                  This is the map from the string of a layer name to list of
-                  tuples of z, duration, warper.
-                  {
-                      'layer name':[(z, duration, warper)...]
-                  }
-             `loop_x`
-                  Default False, if True, this sequence of motions repeats.
-             `loop_y`
-                  Default False, if True, this sequence of motions repeats.
-             `loop_z`
-                  Default False, if True, this sequence of motions repeats.
-             `loop_rotate`
-                  Default False, if True, this sequence of motions repeats.
-             `subpixel`
-                  Default True, if True, causes things to be drawn on the screen
-                  using subpixel positioning
-             'x_express'
-                 This should be callable, which is called with the shown timebase
-                 and the animation timebase, in seconds and return a number. The
-                 result of this is added to the x coordinate of the camera.
-             'y_express'
-                 This should be callable, which is called with the shown timebase
-                 and the animation timebase, in seconds and return a number. The
-                 result of this is added to the y coordinate of the camera.
-             'z_express'
-                 This should be callable, which is called with the shown timebase
-                 and the animation timebase, in seconds and return a number. The
-                 result of this is added to the z coordinate of the camera.
-             'rotate_express'
-                 This should be callable, which is called with the shown timebase
-                 and the animation timebase, in seconds and return a number. The
-                 result of this is added to the rotate coordinate of the camera.
+         `layer`
+              A string that names a registered 3D layer to be moved.
+         `check_points`
+              A list of layer moves, in the format of (z, duration, warper)
+         `loop`
+              If true, the layer moves will continually loop until another camera
+              action interrupts. This defaults to False.
+         `subpixel`
+              If True, the resulting layer moves will be rendered with
+              subpixel precision. This defaults to True.
+         `x_express`
+             This should be a callable function that is called with the shown 
+             timebase and is given an animation timebase in seconds. The
+             result of this function is added to the x coordinate of the camera.
+         `y_express`
+             This should be a callable function that is called with the shown 
+             timebase and is given an animation timebase in seconds. The
+             result of this function is added to the y coordinate of the camera.
+         `z_express`
+             This should be a callable function that is called with the shown 
+             timebase and is given an animation timebase in seconds. The
+             result of this function is added to the z coordinate of the camera.
+         `rotate_express`
+             This should be a callable function that is called with the shown 
+             timebase and is given an animation timebase in seconds. The
+             result of this function is added to the rotation value of the camera.
+         """
 
-              If keyword arguments 'layer name'_loop is given, the layer motion is repeats.
-             """
+    def all_moves(camera_check_points=None, layer_check_points=None, subpixel=True, play=True, x_loop=False, y_loop=False, z_loop=False, rotate_loop=False, x_express=None, y_express=None, z_express=None, rotate_express=None, **kwargs):
+        """
+         :doc: camera
 
+         Allows for both camera moves and layer moves to happen within the same interaction, in any given combination. The Action Editor will usually generate these.
 
-
+         `camera_check_points`
+             A list of check points for the camera to go through, split by coordinate in the following format:
+              {
+                  'x':[(x, duration, warper)...]
+                  'y':[(y, duration, warper)...]
+                  'z':[(z, duration, warper)...]
+                  'rotate':[(rotate, duration, warper)...]
+              }
+         `layer_check_points`
+             A list of check points for layers to go through, in the following format:
+              {
+                  'layer name':[(z, duration, warper)...]
+              }
+         `loop_x`
+              If True, all x coordinate check points will loop continuously. This defaults to False.
+         `loop_y`
+              If True, all y coordinate check points will loop continuously. This defaults to False.
+         `loop_z`
+              If True, all z coordinate check points will loop continuously. This defaults to False.
+         `loop_rotate`
+              If True, all rotation check points will loop continuously. This defaults to False.
+         `subpixel`
+              If True, all transforms caused by this function will be drawn with subpixel precision. This defaults to True.
+         `<layer name>_loop`
+              If True, all layer move check points for the given layer will loop continuously. This defaults to False.
+         `x_express`
+             This should be a callable function that is called with the shown 
+             timebase and is given an animation timebase in seconds. The
+             result of this function is added to the x coordinate of the camera.
+         `y_express`
+             This should be a callable function that is called with the shown 
+             timebase and is given an animation timebase in seconds. The
+             result of this function is added to the y coordinate of the camera.
+         `z_express`
+             This should be a callable function that is called with the shown 
+             timebase and is given an animation timebase in seconds. The
+             result of this function is added to the z coordinate of the camera.
+         `rotate_express`
+             This should be a callable function that is called with the shown 
+             timebase and is given an animation timebase in seconds. The
+             result of this function is added to the rotation value of the camera.
+         """
 
 
  このスクリプトはRen'PyにGUIの演出エディターとカメラ機能、画像ビューワー、便利なワーパー関数を追加します。フォルダ内のファイルをgameフォルダにコピーしてください。
