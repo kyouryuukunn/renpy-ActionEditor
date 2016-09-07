@@ -154,7 +154,7 @@
 
          """
 
-    def camera_move(x, y, z, rotate=0, duration=0, warper='linear', subpixel=True, loop=False, x_express=None, y_express=None, z_express=None, rotate_express=None):
+    def camera_move(x, y, z, rotate=0, duration=0, warper='linear', subpixel=True, loop=False, x_express=None, y_express=None, z_express=None, rotate_express=None, **kwargs):
         """
          :doc: camera
 
@@ -196,9 +196,13 @@
              This should be a callable function that is called with the shown 
              timebase and is given an animation timebase in seconds. The
              result of this function is added to the rotation value of the camera.
+         `<layer name>_express`
+             This should be a callable function that is called with the shown 
+             timebase and is given an animation timebase in seconds. The
+             result of this function is added to the coordinate of the given layer.
          """
 
-    def camera_relative_move(x, y, z, rotate=0, duration=0, warper='linear', subpixel=True, loop=False, x_express=None, y_express=None, z_express=None, rotate_express=None):
+    def camera_relative_move(x, y, z, rotate=0, duration=0, warper='linear', subpixel=True, loop=False, x_express=None, y_express=None, z_express=None, rotate_express=None, **kwargs):
         """
          :doc: camera
 
@@ -238,9 +242,13 @@
              This should be callable, which is called with the shown timebase
              and the animation timebase, in seconds and return a number. The
              result of this is added to the rotate coordinate of the camera.
+         `<layer name>_express`
+             This should be a callable function that is called with the shown 
+             timebase and is given an animation timebase in seconds. The
+             result of this function is added to the coordinate of the given layer.
          """
 
-    def layer_move(layer, z, duration=0, warper='linear', subpixel=True, loop=False, x_express=None, y_express=None, z_express=None, rotate_express=None):
+    def layer_move(layer, z, duration=0, warper='linear', subpixel=True, loop=False, x_express=None, y_express=None, z_express=None, rotate_express=None, layer_express=None):
         """
          :doc: camera
 
@@ -278,9 +286,13 @@
              This should be a callable function that is called with the shown 
              timebase and is given an animation timebase in seconds. The
              result of this function is added to the rotation value of the camera.
+         `layer_express`
+             This should be a callable function that is called with the shown 
+             timebase and is given an animation timebase in seconds. The
+             result of this function is added to the coordinate of the layer.
          """
 
-    def camera_moves(check_points, loop=False, subpixel=True, x_express=None, y_express=None, z_express=None, rotate_express=None):
+    def camera_moves(check_points, loop=False, subpixel=True, x_express=None, y_express=None, z_express=None, rotate_express=None, spline=False, **kwargs):
         """
          :doc: camera
 
@@ -310,9 +322,15 @@
              This should be a callable function that is called with the shown 
              timebase and is given an animation timebase in seconds. The
              result of this function is added to the rotation value of the camera.
+         `<layer name>_express`
+             This should be a callable function that is called with the shown 
+             timebase and is given an animation timebase in seconds. The
+             result of this function is added to the coordinate of the given layer.
+         `spline`
+             Enable spline interpolation for the coordinates of the camera. If this is True, warpers are ignored. This defaults to False.
          """
 
-    def layer_moves(layer, check_points, loop=False, subpixel=True, x_express=None, y_express=None, z_express=None, rotate_express=None):
+    def layer_moves(layer, check_points, loop=False, subpixel=True, x_express=None, y_express=None, z_express=None, rotate_express=None, layer_express=None, spline=False):
         """
          :doc: camera
 
@@ -328,6 +346,10 @@
          `subpixel`
               If True, the resulting layer moves will be rendered with
               subpixel precision. This defaults to True.
+         `layer_express`
+             This should be a callable function that is called with the shown 
+             timebase and is given an animation timebase in seconds. The
+             result of this function is added to the coordinate of the layer.
          `x_express`
              This should be a callable function that is called with the shown 
              timebase and is given an animation timebase in seconds. The
@@ -344,9 +366,11 @@
              This should be a callable function that is called with the shown 
              timebase and is given an animation timebase in seconds. The
              result of this function is added to the rotation value of the camera.
+         `spline`
+             Enable spline interpolation for the coordinates of the layer. If this is True, warpers are ignored. This defaults to False.
          """
 
-    def all_moves(camera_check_points=None, layer_check_points=None, subpixel=True, play=True, x_loop=False, y_loop=False, z_loop=False, rotate_loop=False, x_express=None, y_express=None, z_express=None, rotate_express=None, **kwargs):
+    def all_moves(camera_check_points=None, layer_check_points=None, subpixel=True, play=True, x_loop=False, y_loop=False, z_loop=False, rotate_loop=False, x_express=None, y_express=None, z_express=None, rotate_express=None, camera_spline=False, **kwargs):
         """
          :doc: camera
 
@@ -365,13 +389,13 @@
               {
                   'layer name':[(z, duration, warper)...]
               }
-         `loop_x`
+         `x_loop`
               If True, all x coordinate check points will loop continuously. This defaults to False.
-         `loop_y`
+         `y_loop`
               If True, all y coordinate check points will loop continuously. This defaults to False.
-         `loop_z`
+         `z_loop`
               If True, all z coordinate check points will loop continuously. This defaults to False.
-         `loop_rotate`
+         `rotate_loop`
               If True, all rotation check points will loop continuously. This defaults to False.
          `subpixel`
               If True, all transforms caused by this function will be drawn with subpixel precision. This defaults to True.
@@ -393,6 +417,14 @@
              This should be a callable function that is called with the shown 
              timebase and is given an animation timebase in seconds. The
              result of this function is added to the rotation value of the camera.
+         `<layer name>_express`
+             This should be a callable function that is called with the shown 
+             timebase and is given an animation timebase in seconds. The
+             result of this function is added to the coordinate of the given layer.
+         `camera_spline`
+             Enable spline interpolation for the coordinates of the camera. If this is True, warpers are ignored. This defaults to False.
+         `<layer name>_spline`
+             Enable spline interpolation for the coordinates of the given layer. If this is True, warpers are ignored. This defaults to False.
          """
 
 
@@ -524,7 +556,7 @@
 	      sceneステートメントや、show layerステートメントで画像位置が狂ったときの修正ようです。
               """
 
-        def camera_move(x, y, z, rotate=0, duration=0, warper='linear', subpixel=True, loop=False, x_express=None, y_express=None, z_express=None, rotate_express=None):
+        def camera_move(x, y, z, rotate=0, duration=0, warper='linear', subpixel=True, loop=False, x_express=None, y_express=None, z_express=None, rotate_express=None, **kwargs):
              """
               :doc: camera
 
@@ -564,9 +596,13 @@
                    これは呼出可能なオブジェクトで、出現時間軸とアニメーション時間
                    軸の秒数を引数に呼び出され、数字を返します。この結果はカメラの
                    rotate座標に加えられます。
+             `<layer name>_express`
+                   これは呼出可能なオブジェクトで、出現時間軸とアニメーション時
+                   間軸の秒数を引数に呼び出され、数字を返します。この結果は指定
+                   したレイヤーの座標に加えられます。
               """
 
-        def camera_relative_move(x, y, z, rotate=0, duration=0, warper='linear', subpixel=True, loop=False, x_express=None, y_express=None, z_express=None, rotate_express=None):
+        def camera_relative_move(x, y, z, rotate=0, duration=0, warper='linear', subpixel=True, loop=False, x_express=None, y_express=None, z_express=None, rotate_express=None, **kwargs):
              """
               :doc: camera
 
@@ -606,9 +642,13 @@
                    これは呼出可能なオブジェクトで、出現時間軸とアニメーション時間
                    軸の秒数を引数に呼び出され、数字を返します。この結果はカメラの
                    rotate座標に加えられます。
+             `<layer name>_express`
+                   これは呼出可能なオブジェクトで、出現時間軸とアニメーション時
+                   間軸の秒数を引数に呼び出され、数字を返します。この結果は指定
+                   したレイヤーの座標に加えられます。
               """
 
-        def camera_moves(check_points, loop=False, subpixel=True, x_express=None, y_express=None, z_express=None, rotate_express=None):
+        def camera_moves(check_points, loop=False, subpixel=True, x_express=None, y_express=None, z_express=None, rotate_express=None, spline=False, **kwargs):
              """
               :doc: camera
 
@@ -640,28 +680,34 @@
                    これは呼出可能なオブジェクトで、出現時間軸とアニメーション時間
                    軸の秒数を引数に呼び出され、数字を返します。この結果はカメラの
                    rotate座標に加えられます。
+             `<layer name>_express`
+                   これは呼出可能なオブジェクトで、出現時間軸とアニメーション時
+                   間軸の秒数を引数に呼び出され、数字を返します。この結果は指定
+                   したレイヤーの座標に加えられます。
+             `spline`
+                 カメラの座標に対してスプライン補間を有効にします。True ならワーパーは無視されます。これはデフォルトでFalseです。
               """
 
-        def layer_move(layer, z, duration=0, warper='linear', subpixel=True, loop=False, x_express=None, y_express=None, z_express=None, rotate_express=None):
+        def layer_move(layer, z, duration=0, warper='linear', subpixel=True, loop=False, x_express=None, y_express=None, z_express=None, rotate_express=None, layer_express=None):
              """
               :doc: camera
 
-              レイヤーのz座標を指定の時間かけて変更します。
+              1つ以上のチェックポイントを通ってカメラを動かします。
 
-              `layer`
-                   移動するレイヤー名の文字列です。
-              `z`
-                   レイヤーの移動先z座標の数字です。
-              `duration`
-                   デフォルトは0で、レイヤー移動にかかる時間の秒数です。
+              `check_points`
+                   カメラのx,y,z座標、傾き、カメラの移動開始からその位置に到達
+                   するまでの秒数、その間の時間補間関数名の文字列からなるタプル
+                   のリストです。カメラはここで指定された各タプルを順番に移動す
+                   るので、タプルは時系列に沿って並べてください。
               `loop`
                    デフォルトは Falseで、True ならこのモーションが繰り替えされます。
-              `warper`
-                   デフォルトは'linear'で, 時間補間に使用する関数名の文字列です。こ
-                   れにはATLに登録された時間補間関数が指定出来ます。
               `subpixel`
                    デフォルトは Trueで、 True なら、1 pixel 以下の値を使用して画面
-                   に描画します。
+                  に描画します。
+             `layer_express`
+                   これは呼出可能なオブジェクトで、出現時間軸とアニメーション時
+                   間軸の秒数を引数に呼び出され、数字を返します。この結果はレイ
+                   ヤーの座標に加えられます。
              'x_express'
                    これは呼出可能なオブジェクトで、出現時間軸とアニメーション時間
                    軸の秒数を引数に呼び出され、数字を返します。この結果はカメラの
@@ -678,9 +724,15 @@
                    これは呼出可能なオブジェクトで、出現時間軸とアニメーション時間
                    軸の秒数を引数に呼び出され、数字を返します。この結果はカメラの
                    rotate座標に加えられます。
-             """
+             `<layer name>_express`
+                   これは呼出可能なオブジェクトで、出現時間軸とアニメーション時
+                   間軸の秒数を引数に呼び出され、数字を返します。この結果は指定
+                   したレイヤーの座標に加えられます。
+             `spline`
+                 レイヤーの座標に対してスプライン補間を有効にします。True ならワーパーは無視されます。これはデフォルトでFalseです。
+              """
 
-        def layer_moves(layer, check_points, loop=False, subpixel=True, x_express=None, y_express=None, z_express=None, rotate_express=None):
+        def layer_moves(layer, check_points, loop=False, subpixel=True, x_express=None, y_express=None, z_express=None, rotate_express=None, layer_express=None, spline=False):
              """
               :doc: camera
 
@@ -698,6 +750,10 @@
               `subpixel`
                    デフォルトは Trueで、 True なら、1 pixel 以下の値を使用して画面
                    に描画します。
+             `layer_express`
+                   これは呼出可能なオブジェクトで、出現時間軸とアニメーション時
+                   間軸の秒数を引数に呼び出され、数字を返します。この結果はレイ
+                   ヤーの座標に加えられます。
              'x_express'
                    これは呼出可能なオブジェクトで、出現時間軸とアニメーション時間
                    軸の秒数を引数に呼び出され、数字を返します。この結果はカメラの
@@ -714,9 +770,11 @@
                    これは呼出可能なオブジェクトで、出現時間軸とアニメーション時間
                    軸の秒数を引数に呼び出され、数字を返します。この結果はカメラの
                    rotate座標に加えられます。
+             `spline`
+                 レイヤーの座標に対してスプライン補間を有効にします。True ならワーパーは無視されます。これはデフォルトでFalseです。
              """
 
-        def all_moves(camera_check_points=None, layer_check_points=None, subpixel=True, x_loop=False, y_loop=False, z_loop=False, rotate_loop=False, x_express=None, y_express=None, z_express=None, rotate_express=None, **kwargs):
+        def all_moves(camera_check_points=None, layer_check_points=None, subpixel=True, play=True, x_loop=False, y_loop=False, z_loop=False, rotate_loop=False, x_express=None, y_express=None, z_express=None, rotate_express=None, camera_spline=False, **kwargs):
             """
              :doc: camera
 
@@ -739,15 +797,15 @@
                    の時間補間関数の文字列からなるタプルのリストを値に持つ辞書で
                    す。レイヤーはここで指定された各タプルを順番に移動するので、タ
                    プルは時系列に沿って並べてください。
-              `loop_x`
+             `x_loop`
                    デフォルトは Falseで、True ならカメラのモーションが繰り替えされます。
-              `loop_y`
+             `y_loop`
                    デフォルトは Falseで、True ならカメラのモーションが繰り替えされます。
-              `loop_z`
+             `z_loop`
                    デフォルトは Falseで、True ならカメラのモーションが繰り替えされます。
-              `loop_rotate`
+             `rotate_loop`
                    デフォルトは Falseで、True ならカメラのモーションが繰り替えされます。
-              `subpixel`
+             `subpixel`
                    デフォルトは Trueで、 True なら、1 pixel 以下の値を使用して画面
                    に描画します。
              'x_express'
@@ -766,6 +824,14 @@
                    これは呼出可能なオブジェクトで、出現時間軸とアニメーション時間
                    軸の秒数を引数に呼び出され、数字を返します。この結果はカメラの
                    rotate座標に加えられます。
+             `<layer name>_express`
+                   これは呼出可能なオブジェクトで、出現時間軸とアニメーション時
+                   間軸の秒数を引数に呼び出され、数字を返します。この結果は指定
+                   したレイヤーの座標に加えられます。
+             `camera_spline`
+                 カメラの座標に対してスプライン補間を有効にします。True ならワーパーは無視されます。これはデフォルトでFalseです。
+             `spline`
+                 レイヤーの座標に対してスプライン補間を有効にします。True ならワーパーは無視されます。これはデフォルトでFalseです。
 
               キーワード引数として <レイヤー名>_loop をとります。デフォルトは Falseで、True ならそのレイヤーのモーションが繰り替えされます。
              """
