@@ -1,11 +1,13 @@
+
+init 1600:
+    if getattr(store, "_3d_layers"):
+        default _3d_layers = _3d_layers
+    else:
+        default _3d_layers = {"master":_LAYER_Z}
 init -1600 python:
 
     ##########################################################################
     # Camera functions
-
-    # value of _3d_layers isn't included in rollback.
-    # so I copy it many times.
-    _3d_layers = {}
     _camera_x = 0
     _camera_y = 0
     _camera_z = 0
@@ -33,12 +35,8 @@ init -1600 python:
         """
          :doc: camera
 
-         Resets the camera and 3D layers positions. This needs to be called at least once,
-         or 3D layer depth may behave erratically and the 3D camera will not be able to properly save
-         3D layer depth.
+         Resets the camera and 3D layers positions.
          """
-        global _3d_layers
-        _3d_layers = _3d_layers.copy()
         for layer in _3d_layers:
             layer_move(layer, _LAYER_Z)
         camera_move(0, 0, 0)
@@ -428,7 +426,17 @@ init -1600 python:
             _camera_rotate    = int(rotate)
 
     def _camera_trans(tran, st, at, camera_check_points, layer_check_points, layer_loop, x_loop, y_loop, z_loop, rotate_loop, subpixel, x_express, y_express, z_express, rotate_express, layer_express):
-        # camera_check_points = (z, r, xanchor, yanchor, duration, warper)
+        if not (layer_loop or x_loop or y_loop or z_loop or rotate_loop or x_express or y_express or z_express or rotate_express or layer_express):
+            for check_point in camera_check_points.items():
+                if check_point[-1][1] and  check_point[-1][1] >= st:
+                    break
+            else:
+                for check_point in layer_check_points.items():
+                    if check_point[-1][1] and  check_point[-1][1] >= st:
+                            break
+                    else:
+                        return
+        # camera_check_points = {xanchor:(value, duration, warper), yanchor, z, rotate}
         # layer_check_points = (layer_z, duration, warper)
         from math import sin, pi
         from random import random
@@ -521,10 +529,6 @@ init -1600 python:
             yield n
             n += step
         yield end
-
-init 1600 python:
-    if not _3d_layers:
-        register_3d_layer('master')
 
 screen _action_editor(tab="images", layer="master", name="", time=0):
     key "game_menu" action Return()
