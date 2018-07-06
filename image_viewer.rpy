@@ -28,8 +28,8 @@ screen _image_selecter(default, string=""):
         background "#0006"
         xalign 1.
         has vbox
-        label _("Type a image name")
-        input default string #changed _tag_input
+        label _("Type a image name") style "image_selecter_input"
+        input default string style "image_selecter_input" #changed _tag_input
         if default:
             $s = set()
             for name in renpy.display.image.images:
@@ -61,9 +61,14 @@ screen _image_selecter(default, string=""):
             #             for tag in s[x:]:
             #                 textbutton tag action Return(default + (tag, )) hovered _viewers.ShowImage(default, tag) unhovered Function(renpy.hide, "preview", layer="screens")
 init:
-    style image_selecter_button size_group "image_selecter"
-    style image_selecter_button_text xalign .0
-    style image_selecter_button idle_background None
+    style image_selecter_input:
+        outlines [ (absolute(3), "#000", absolute(0), absolute(0)) ]
+    style image_selecter_button:
+        size_group "image_selecter"
+        idle_background None
+    style image_selecter_button_text:
+        xalign .0
+        outlines [ (absolute(3), "#000", absolute(0), absolute(0)) ]
 init -2000 python:
     def _open_image_viewer():
         if not renpy.config.developer:

@@ -79,19 +79,19 @@ init -1600 python:
               If true, the camera move will continually loop until another camera
               action interrupts. This defaults to False.
          `x_express`
-             This should be a callable function that is called with the shown 
+             This should be a callable function that is called with the shown
              timebase and is given an animation timebase in seconds. The
              result of this function is added to the x coordinate of the camera.
          `y_express`
-             This should be a callable function that is called with the shown 
+             This should be a callable function that is called with the shown
              timebase and is given an animation timebase in seconds. The
              result of this function is added to the y coordinate of the camera.
          `z_express`
-             This should be a callable function that is called with the shown 
+             This should be a callable function that is called with the shown
              timebase and is given an animation timebase in seconds. The
              result of this function is added to the z coordinate of the camera.
          `rotate_express`
-             This should be a callable function that is called with the shown 
+             This should be a callable function that is called with the shown
              timebase and is given an animation timebase in seconds. The
              result of this function is added to the rotation value of the camera.
          """
@@ -165,19 +165,19 @@ init -1600 python:
               If true, the layer move will continually loop until another camera
               action interrupts. This defaults to False.
          `x_express`
-             This should be a callable function that is called with the shown 
+             This should be a callable function that is called with the shown
              timebase and is given an animation timebase in seconds. The
              result of this function is added to the x coordinate of the camera.
          `y_express`
-             This should be a callable function that is called with the shown 
+             This should be a callable function that is called with the shown
              timebase and is given an animation timebase in seconds. The
              result of this function is added to the y coordinate of the camera.
          `z_express`
-             This should be a callable function that is called with the shown 
+             This should be a callable function that is called with the shown
              timebase and is given an animation timebase in seconds. The
              result of this function is added to the z coordinate of the camera.
          `rotate_express`
-             This should be a callable function that is called with the shown 
+             This should be a callable function that is called with the shown
              timebase and is given an animation timebase in seconds. The
              result of this function is added to the rotation value of the camera.
          """
@@ -199,19 +199,19 @@ init -1600 python:
               If True, transforms caused by the 3D camera will be rendered with
               subpixel precision. This defaults to True.
          `x_express`
-             This should be a callable function that is called with the shown 
+             This should be a callable function that is called with the shown
              timebase and is given an animation timebase in seconds. The
              result of this function is added to the x coordinate of the camera.
          `y_express`
-             This should be a callable function that is called with the shown 
+             This should be a callable function that is called with the shown
              timebase and is given an animation timebase in seconds. The
              result of this function is added to the y coordinate of the camera.
          `z_express`
-             This should be a callable function that is called with the shown 
+             This should be a callable function that is called with the shown
              timebase and is given an animation timebase in seconds. The
              result of this function is added to the z coordinate of the camera.
          `rotate_express`
-             This should be a callable function that is called with the shown 
+             This should be a callable function that is called with the shown
              timebase and is given an animation timebase in seconds. The
              result of this function is added to the rotation value of the camera.
          """
@@ -245,19 +245,19 @@ init -1600 python:
               If True, the resulting layer moves will be rendered with
               subpixel precision. This defaults to True.
          `x_express`
-             This should be a callable function that is called with the shown 
+             This should be a callable function that is called with the shown
              timebase and is given an animation timebase in seconds. The
              result of this function is added to the x coordinate of the camera.
          `y_express`
-             This should be a callable function that is called with the shown 
+             This should be a callable function that is called with the shown
              timebase and is given an animation timebase in seconds. The
              result of this function is added to the y coordinate of the camera.
          `z_express`
-             This should be a callable function that is called with the shown 
+             This should be a callable function that is called with the shown
              timebase and is given an animation timebase in seconds. The
              result of this function is added to the z coordinate of the camera.
          `rotate_express`
-             This should be a callable function that is called with the shown 
+             This should be a callable function that is called with the shown
              timebase and is given an animation timebase in seconds. The
              result of this function is added to the rotation value of the camera.
          """
@@ -295,19 +295,19 @@ init -1600 python:
          `<layer name>_loop`
               If True, all layer move check points for the given layer will loop continuously. This defaults to False.
          `x_express`
-             This should be a callable function that is called with the shown 
+             This should be a callable function that is called with the shown
              timebase and is given an animation timebase in seconds. The
              result of this function is added to the x coordinate of the camera.
          `y_express`
-             This should be a callable function that is called with the shown 
+             This should be a callable function that is called with the shown
              timebase and is given an animation timebase in seconds. The
              result of this function is added to the y coordinate of the camera.
          `z_express`
-             This should be a callable function that is called with the shown 
+             This should be a callable function that is called with the shown
              timebase and is given an animation timebase in seconds. The
              result of this function is added to the z coordinate of the camera.
          `rotate_express`
-             This should be a callable function that is called with the shown 
+             This should be a callable function that is called with the shown
              timebase and is given an animation timebase in seconds. The
              result of this function is added to the rotation value of the camera.
          """
@@ -390,7 +390,7 @@ init -1600 python:
         # layer_check_points = (layer_z, duration, warper)
         from math import sin, pi
         from random import random
-        tran.xpos    = .5 
+        tran.xpos    = .5
         tran.ypos    = .5
         tran.subpixel = subpixel
         tran.transform_anchor = True
@@ -612,17 +612,23 @@ screen _action_editor(tab="images", layer="master", name="", time=0):
         add _viewers.dragged
 
 init -1600:
-    style action_editor_button size_group "action_editor"
-    style action_editor_button idle_background None
-    style action_editor_button insensitive_background None
-    style action_editor_button_text color "#aaa"
-    style action_editor_button_text selected_color "#fff"
-    style action_editor_button_text insensitive_color "#777"
-    style action_editor_a_button take action_editor_button
-    style action_editor_a_button size_group None
+    style action_editor_button:
+        size_group "action_editor"
+        outlines [ (absolute(3), "#000", absolute(0), absolute(0)) ]
+        idle_background None
+        insensitive_background None
+    style action_editor_button_text:
+        color "#aaa"
+        selected_color "#fff"
+        insensitive_color "#777"
+        outlines [ (absolute(3), "#000", absolute(0), absolute(0)) ]
+    style action_editor_a_button:
+        take action_editor_button
+        size_group None
     style action_editor_a_button_text take action_editor_button_text
 
-    style action_editor_label xminimum 110
+    style action_editor_label:
+        xminimum 110
     style action_editor_vbox xfill True
 
 screen _input_screen(message="type value", default=""):
@@ -685,18 +691,18 @@ screen _warper_graph(warper):
     $ length=300
     $ xpos=config.screen_width-400
     $ ypos=100
-    # add Solid("#000", xsize=3, ysize=1.236*length, xpos=xpos+length/2, ypos=length/2+xpos, rotate=45, anchor=(.5, .5)) 
-    add Solid("#CCC", xsize=length, ysize=length, xpos=xpos, ypos=ypos ) 
-    add Solid("#000", xsize=length, ysize=3, xpos=xpos, ypos=length+ypos ) 
-    add Solid("#000", xsize=length, ysize=3, xpos=xpos, ypos=ypos ) 
+    # add Solid("#000", xsize=3, ysize=1.236*length, xpos=xpos+length/2, ypos=length/2+xpos, rotate=45, anchor=(.5, .5))
+    add Solid("#CCC", xsize=length, ysize=length, xpos=xpos, ypos=ypos )
+    add Solid("#000", xsize=length, ysize=3, xpos=xpos, ypos=length+ypos )
+    add Solid("#000", xsize=length, ysize=3, xpos=xpos, ypos=ypos )
     add Solid("#000", xsize=3, ysize=length, xpos=xpos+length, ypos=ypos)
     add Solid("#000", xsize=3, ysize=length, xpos=xpos, ypos=ypos)
     for i in range(1, t):
         $ysize=int(length*renpy.atl.warpers[warper](i/float(t)))
         if ysize >= 0:
-            add Solid("#000", xsize=length/t, ysize=ysize, xpos=xpos+i*length/t, ypos=length+ypos, yanchor=1.) 
+            add Solid("#000", xsize=length/t, ysize=ysize, xpos=xpos+i*length/t, ypos=length+ypos, yanchor=1.)
         else:
-            add Solid("#000", xsize=length/t, ysize=-ysize, xpos=xpos+i*length/t, ypos=length+ypos-ysize, yanchor=1.) 
+            add Solid("#000", xsize=length/t, ysize=-ysize, xpos=xpos+i*length/t, ypos=length+ypos-ysize, yanchor=1.)
 
 screen _move_keyframes:
     modal True
@@ -766,18 +772,18 @@ init -1600 python in _viewers:
             self.state = {}
             # ((property, default)...), default is used when property can't be got.
             self.props = (
-            ("xpos", 0.), 
-            ("ypos", 0.), 
-            ("xanchor", 0.), 
-            ("yanchor", 0.), 
-            # ("xoffset", 0.), 
-            # ("yoffset", 0.), 
-            ("xzoom", 1.), 
-            ("yzoom", 1.), 
-            ("zoom", 1.), 
+            ("xpos", 0.),
+            ("ypos", 0.),
+            ("xanchor", 0.),
+            ("yanchor", 0.),
+            # ("xoffset", 0.),
+            # ("yoffset", 0.),
+            ("xzoom", 1.),
+            ("yzoom", 1.),
+            ("zoom", 1.),
             ("rotate", 0,),
-            ("alpha", 1.), 
-            ("additive", 0.), 
+            ("alpha", 1.),
+            ("additive", 0.),
             )
             self.force_float = ["zoom", "xzoom", "yzoom", "alpha", "additive"]
 
