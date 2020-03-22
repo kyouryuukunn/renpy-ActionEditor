@@ -123,3 +123,31 @@ init -1 python:
         #             return True
         #     else:
         #         return False
+
+# init python:
+#     @renpy.pure
+#     class _ImageInputValue(ScreenVariableInputValue, FieldEquality):
+#
+#         def __init__(self, variable, default=True):
+#             super(_ImageInputValue, self).__init__(variable, default, returnable=True)
+#
+#         def set_text(self, s):
+#             if s and s[-1] == " ":
+#                 for n in renpy.display.image.images:
+#                     if set(n) == set(name.split()):
+#                         self.state[layer][name] = {}
+#                         renpy.show(name, layer=layer)
+#                         for p, d in self.props:
+#                             self.state[layer][name][p] = self.get_property(layer, name.split()[0], p, False)
+#                         all_keyframes[(name, layer, "xpos")] = [(self.state[layer][name]["xpos"], 0, None)]
+#                         remove_list = [n_org for n_org in self.state_org[layer] if n_org.split()[0] == n[0]]
+#                         for n_org in remove_list:
+#                             del self.state_org[layer][n_org]
+#                             transform_viewer.remove_keyframes(n_org, layer)
+#                         sort_keyframes()
+#                         renpy.show_screen("_action_editor", tab="images", layer=layer, name=name)
+#                         return
+#                 default = tuple(s.split())
+#                 renpy.show_screen("_image_selecter", default=default)
+#             super(_ImageInputValue, self).set_text(s)
+#
