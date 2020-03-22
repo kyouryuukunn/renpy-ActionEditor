@@ -693,17 +693,23 @@ screen _action_editor(tab="images", layer="master", name="", time=0):
         add _viewers.dragged
 
 init -1600:
-    style action_editor_button size_group "action_editor"
-    style action_editor_button idle_background None
-    style action_editor_button insensitive_background None
-    style action_editor_button_text color "#aaa"
-    style action_editor_button_text selected_color "#fff"
-    style action_editor_button_text insensitive_color "#777"
-    style action_editor_a_button take action_editor_button
-    style action_editor_a_button size_group None
+    style action_editor_button:
+        size_group "action_editor"
+        outlines [ (absolute(1), "#000", absolute(0), absolute(0)) ]
+        idle_background None
+        insensitive_background None
+    style action_editor_button_text:
+        color "#aaa"
+        selected_color "#fff"
+        insensitive_color "#777"
+        outlines [ (absolute(1), "#000", absolute(0), absolute(0)) ]
+    style action_editor_a_button:
+        take action_editor_button
+        size_group None
     style action_editor_a_button_text take action_editor_button_text
 
-    style action_editor_label xminimum 110
+    style action_editor_label:
+        xminimum 110
     style action_editor_vbox xfill True
 
 screen _input_screen(message="type value", default=""):
@@ -819,34 +825,12 @@ screen _edit_keyframe(k, int=False):
             textbutton _("close") action Hide("_edit_keyframe") xalign .98
 
 init -1098 python:
-    # overwrite keymap
-    km = renpy.Keymap(
-        rollback = renpy.rollback,
-        screenshot = _screenshot,
-        toggle_fullscreen = renpy.toggle_fullscreen,
-        toggle_skip = _keymap_toggle_skipping,
-        fast_skip = _fast_skip,
-        game_menu = _invoke_game_menu,
-        hide_windows = renpy.curried_call_in_new_context("_hide_windows"),
-        launch_editor = _launch_editor,
-        reload_game = _reload_game,
-        developer = _developer,
-        quit = renpy.quit_event,
-        iconify = renpy.iconify,
-        help = _help,
-        choose_renderer = renpy.curried_call_in_new_context("_choose_renderer"),
-        console = _console.enter,
-        profile_once = _profile_once,
-        self_voicing = Preference("self voicing", "toggle"),
+    # Added keymap
+    config.underlay.append(renpy.Keymap(
+        # self_voicing = Preference("self voicing", "toggle"), #TODO ???
         action_editor = _viewers.action_editor,
         image_viewer = _open_image_viewer,
-        )
-
-    config.underlay = [ km ]
-
-    del km
-
-
+        ))
 init 1100 python:
     config.locked = False
     config.keymap["action_editor"] = ['P']
