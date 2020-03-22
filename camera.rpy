@@ -831,12 +831,6 @@ init -1098 python:
         action_editor = _viewers.action_editor,
         image_viewer = _open_image_viewer,
         ))
-init 1100 python:
-    config.locked = False
-    config.keymap["action_editor"] = ['P']
-    config.keymap["image_viewer"] = ['U']
-    config.locked = True
-
 
 init -1600 python in _viewers:
     default_rot = False
