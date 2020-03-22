@@ -29,6 +29,7 @@ screen _image_selecter(default, string=""):
         xalign 1.
         has vbox
         label _("Type a image name") style "image_selecter_input"
+        # input value ScreenVariableInputValue("string")  #自動絞り込み 謎バグにより使用不可
         input default string style "image_selecter_input" #changed _tag_input
         if default:
             $s = set()
