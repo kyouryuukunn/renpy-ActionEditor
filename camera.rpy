@@ -1,6 +1,6 @@
 
 init 1600:
-    if getattr(store, "_3d_layers"):
+    if getattr(store, "_3d_layers", None):
         default _3d_layers = _3d_layers
     else:
         default _3d_layers = {"master":_LAYER_Z}
