@@ -1180,7 +1180,7 @@ init -1600 python in _viewers:
         def x_changed(self, v):
             v=int(v)
             renpy.store.camera_move(v - self.range_camera_pos, renpy.store._camera_y, renpy.store._camera_z, renpy.store._camera_rotate)
-            self.set_camera_keyframe("_camera_x", v-self.range_camera_pos)
+            self.set_camera_keyframe("_camera_x", v-self.range_rotate)
             renpy.restart_interaction()
 
         def y_changed(self, v):
