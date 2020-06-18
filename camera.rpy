@@ -247,6 +247,54 @@ init -1600 python:
         kwargs["rotate_loop"]=loop
         all_moves(camera_check_points=camera_check_points, loop=loop, subpixel=subpixel, x_express=x_express, y_express=y_express, z_express=z_express, rotate_express=rotate_express, camera_spline=spline, **kwargs)
 
+    def camera_relative_moves(relative_check_points, loop=False, subpixel=True, x_express=None, y_express=None, z_express=None, rotate_express=None, spline=False, **kwargs):
+        """
+         :doc: camera
+
+         Allows relative multiple camera moves to happen in succession.
+
+         `relative_check_points`
+              A list of camera moves, in the format of (x, y, z, rotate, duration, warper)
+         `loop`
+              If true, the camera moves will continually loop until another camera
+              action interrupts. This defaults to False.
+         `subpixel`
+              If True, transforms caused by the 3D camera will be rendered with
+              subpixel precision. This defaults to True.
+         `x_express`
+             This should be a callable function that is called with the shown 
+             timebase and is given an animation timebase in seconds. The
+             result of this function is added to the x coordinate of the camera.
+         `y_express`
+             This should be a callable function that is called with the shown 
+             timebase and is given an animation timebase in seconds. The
+             result of this function is added to the y coordinate of the camera.
+         `z_express`
+             This should be a callable function that is called with the shown 
+             timebase and is given an animation timebase in seconds. The
+             result of this function is added to the z coordinate of the camera.
+         `rotate_express`
+             This should be a callable function that is called with the shown 
+             timebase and is given an animation timebase in seconds. The
+             result of this function is added to the rotation value of the camera.
+         `<layer name>_express`
+             This should be a callable function that is called with the shown 
+             timebase and is given an animation timebase in seconds. The
+             result of this function is added to the coordinate of the given layer.
+         `spline`
+             Enable spline interpolation for the coordinates of the camera. If this is True, warpers are ignored. This defaults to False.
+         """
+        for i in len(relative_check_points):
+            relative_check_points[i] = (
+                    relative_check_points[i][0]+_camera_x, 
+                    relative_check_points[i][1]+_camera_y, 
+                    relative_check_points[i][2]+_camera_z, 
+                    relative_check_points[i][3]+_camera_rotate, 
+                    relative_check_points[i][4], 
+                    relative_check_points[i][5]
+                    ) 
+        camera_moves(relative_check_points, loop=loop, subpixel=subpixel, x_express=x_express, y_express=y_express, z_express=z_express, rotate_express=rotate_express, spline=spline, **kwargs)
+
     def layer_moves(layer, check_points, loop=False, subpixel=True, x_express=None, y_express=None, z_express=None, rotate_express=None, layer_express=None, spline=False):
         """
          :doc: camera
@@ -1180,7 +1228,7 @@ init -1600 python in _viewers:
         def x_changed(self, v):
             v=int(v)
             renpy.store.camera_move(v - self.range_camera_pos, renpy.store._camera_y, renpy.store._camera_z, renpy.store._camera_rotate)
-            self.set_camera_keyframe("_camera_x", v-self.range_rotate)
+            self.set_camera_keyframe("_camera_x", v-self.range_camera_pos)
             renpy.restart_interaction()
 
         def y_changed(self, v):
@@ -1198,7 +1246,7 @@ init -1600 python in _viewers:
         def r_changed(self, v):
             v=int(v)
             renpy.store.camera_move(renpy.store._camera_x, renpy.store._camera_y, renpy.store._camera_z, v - self.range_rotate)
-            self.set_camera_keyframe("_camera_rotate", v-self.range_camera_pos)
+            self.set_camera_keyframe("_camera_rotate", v-self.range_rotate)
             renpy.restart_interaction()
 
         def generate_layer_z_changed(self, l):

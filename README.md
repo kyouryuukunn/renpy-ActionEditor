@@ -328,6 +328,44 @@
              Enable spline interpolation for the coordinates of the camera. If this is True, warpers are ignored. This defaults to False.
          """
 
+    def camera_relative_moves(relative_check_points, loop=False, subpixel=True, x_express=None, y_express=None, z_express=None, rotate_express=None, spline=False, **kwargs):
+        """
+         :doc: camera
+
+         Allows relative multiple camera moves to happen in succession.
+
+         `relative_check_points`
+              A list of camera moves, in the format of (x, y, z, rotate, duration, warper)
+         `loop`
+              If true, the camera moves will continually loop until another camera
+              action interrupts. This defaults to False.
+         `subpixel`
+              If True, transforms caused by the 3D camera will be rendered with
+              subpixel precision. This defaults to True.
+         `x_express`
+             This should be a callable function that is called with the shown 
+             timebase and is given an animation timebase in seconds. The
+             result of this function is added to the x coordinate of the camera.
+         `y_express`
+             This should be a callable function that is called with the shown 
+             timebase and is given an animation timebase in seconds. The
+             result of this function is added to the y coordinate of the camera.
+         `z_express`
+             This should be a callable function that is called with the shown 
+             timebase and is given an animation timebase in seconds. The
+             result of this function is added to the z coordinate of the camera.
+         `rotate_express`
+             This should be a callable function that is called with the shown 
+             timebase and is given an animation timebase in seconds. The
+             result of this function is added to the rotation value of the camera.
+         `<layer name>_express`
+             This should be a callable function that is called with the shown 
+             timebase and is given an animation timebase in seconds. The
+             result of this function is added to the coordinate of the given layer.
+         `spline`
+             Enable spline interpolation for the coordinates of the camera. If this is True, warpers are ignored. This defaults to False.
+         """
+
     def layer_moves(layer, check_points, loop=False, subpixel=True, x_express=None, y_express=None, z_express=None, rotate_express=None, layer_express=None, spline=False):
         """
          :doc: camera
@@ -663,6 +701,47 @@
                    するまでの秒数、その間の時間補間関数名の文字列からなるタプル
                    のリストです。カメラはここで指定された各タプルを順番に移動す
                    るので、タプルは時系列に沿って並べてください。
+              `loop`
+                   デフォルトは Falseで、True ならこのモーションが繰り替えされます。
+              `subpixel`
+                   デフォルトは Trueで、 True なら、1 pixel 以下の値を使用して画面
+                   に描画します。
+             'x_express'
+                   これは呼出可能なオブジェクトで、出現時間軸とアニメーション時間
+                   軸の秒数を引数に呼び出され、数字を返します。この結果はカメラの
+                   x座標に加えられます。
+             'y_express'
+                   これは呼出可能なオブジェクトで、出現時間軸とアニメーション時間
+                   軸の秒数を引数に呼び出され、数字を返します。この結果はカメラの
+                   y座標に加えられます。
+             'z_express'
+                   これは呼出可能なオブジェクトで、出現時間軸とアニメーション時間
+                   軸の秒数を引数に呼び出され、数字を返します。この結果はカメラの
+                   z座標に加えられます。
+             'rotate_express'
+                   これは呼出可能なオブジェクトで、出現時間軸とアニメーション時間
+                   軸の秒数を引数に呼び出され、数字を返します。この結果はカメラの
+                   rotate座標に加えられます。
+             `<layer name>_express`
+                   これは呼出可能なオブジェクトで、出現時間軸とアニメーション時
+                   間軸の秒数を引数に呼び出され、数字を返します。この結果は指定
+                   したレイヤーの座標に加えられます。
+             `spline`
+                 カメラの座標に対してスプライン補間を有効にします。True ならワーパーは無視されます。これはデフォルトでFalseです。
+              """
+
+        def camera_relative_move(relative_check_points, loop=False, subpixel=True, x_express=None, y_express=None, z_express=None, rotate_express=None, spline=False, **kwargs):
+             """
+              :doc: camera
+
+              1つ以上のチェックポイントを通ってカメラを動かします。
+
+              `relative_check_points`
+                   現在地に対する相対的なカメラのx,y,z座標、傾きおよびカメラの
+                   移動開始からその位置に到達するまでの秒数、その間の時間補間関
+                   数名の文字列からなるタプルのリストです。カメラはここで指定さ
+                   れた各タプルを順番に移動するので、タプルは時系列に沿って並べ
+                   てください。
               `loop`
                    デフォルトは Falseで、True ならこのモーションが繰り替えされます。
               `subpixel`
