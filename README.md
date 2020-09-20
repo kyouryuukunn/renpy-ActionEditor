@@ -141,7 +141,7 @@
         """
          :doc: camera
 
-         Resets the camera and 3D layers positions.
+         Resets the camera, 3D layers positions and the focus position, the depth of field.
          """
 
     def camera_restore():
@@ -406,7 +406,40 @@
              Enable spline interpolation for the coordinates of the layer. If this is True, warpers are ignored. This defaults to False.
          """
 
-    def all_moves(camera_check_points=None, layer_check_points=None, subpixel=True, play=True, x_loop=False, y_loop=False, z_loop=False, rotate_loop=False, x_express=None, y_express=None, z_express=None, rotate_express=None, camera_spline=False, **kwargs):
+    def focus_set(focus, duration=0, warper='linear', **kwargs):
+        """
+         :doc: camera
+
+         Set the focus position.
+
+         `focus`
+              `focus` decides the focus position. It is the z coordinate which is sum of this value and 
+              the z coordinate of camera.
+         `duration`
+              The time, in seconds, to complete the focus change. If no time is given,
+              the change will happen instantaneously.
+         `warper`
+              A string that points to a registered ATL warper, like \'ease\'.
+              If no warper is given, this will default to \'linear\'.
+         """
+
+    def dof_set(dof, duration=0, warper='linear', **kwargs):
+        """
+         :doc: camera
+
+         Set the depth of field.
+
+         `dof`
+              `dof` is the z range where layers aren't blured. it defaults to 9999999.
+         `duration`
+              The time, in seconds, to complete the dof change. If no time is given,
+              the change will happen instantaneously.
+         `warper`
+              A string that points to a registered ATL warper, like \'ease\'.
+              If no warper is given, this will default to \'linear\'.
+         """
+
+    def all_moves(camera_check_points=None, layer_check_points=None, focus_check_points=None, subpixel=True, play=True, x_loop=False, y_loop=False, z_loop=False, rotate_loop=False, x_express=None, y_express=None, z_express=None, rotate_express=None, camera_spline=False, **kwargs):
         """
          :doc: camera
 
@@ -425,6 +458,16 @@
               {
                   'layer name':[(z, duration, warper)...]
               }
+         `focus_check_points`
+             A list of check points for the depth of field & the focus position,
+             in the following format:
+              {
+                  'focus':[(z, duration, warper)...]
+                  'dof':[(dof, duration, warper)...]
+              }
+            `dof` is the z range where layers aren't blured. it defaults to 9999999.
+            `focus` decides the focus position. It is the z coordinate which is sum of this value and 
+            the z coordinate of camera.
          `x_loop`
               If True, all x coordinate check points will loop continuously. This defaults to False.
          `y_loop`
@@ -587,7 +630,7 @@
              """
               :doc: camera
 
-	      カメラとレイヤーを初期位置に戻します。
+	      カメラとレイヤー,フォーカス位置、被写界深度を初期値に戻します。
              """
 
          def camera_restore():
@@ -884,6 +927,16 @@
                    の時間補間関数の文字列からなるタプルのリストを値に持つ辞書で
                    す。レイヤーはここで指定された各タプルを順番に移動するので、タ
                    プルは時系列に沿って並べてください。
+             `focus_check_points`
+                   被写界深度とフォーカス位置の辞書で、その値、その値になるまでの
+                   秒その間の時間補間関数名の文字列からなるタプルのリストを値とします。
+                  {
+                      'focus':[(z, duration, warper)...]
+                      'dof':[(dof, duration, warper)...]
+                  }
+                `dof` はレイヤーにブラーの掛らないフォーカス位置からのZ値の範囲で、
+                デフォルトでは9999999です。
+                `focus` の値にカメラのZ座標を足したものがカメラのフォーカス位置となります。
              `x_loop`
                    デフォルトは Falseで、True ならカメラのモーションが繰り替えされます。
              `y_loop`
