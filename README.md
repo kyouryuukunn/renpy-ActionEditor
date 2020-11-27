@@ -24,9 +24,16 @@
   * View and adjust the transform properties of images, camera coordinates, and 3D layer depth with bars
   * View and adjust the x and y coordinates of the camera with a mouse-positionable camera
   * Adjust the z coordinate of the camera with the mouse wheel.
+  * Adjust the x,y coordinate of the camera with the keyboard(hjkl, HJKL).
   * Alternatively, each value can be adjusted with the keyboard without going back to the original script.
   * Add, delete, and edit keyframes on a timeline.
-  * After setting up a scene with the desired look and animations, the Action Editor will generate a script and place it on your clipboard for pasting into your Ren'Py scripts. (v6.99 and later only)
+  * After setting up a scene with the desired look and animations, the Action
+    Editor will generate a script and place it on your clipboard for pasting
+    into your Ren'Py scripts. (v6.99 and later only)
+  * Supported the concept of depth of field using blur after v7.40(gl2 or ANGLE2 is required).
+    1pixel blur is used where the distance from the focus position is dof.
+    DOF is used to adjust the sharp range. Focus is used to adjust the focus position.
+    You can adjust dof config in camera_config.rpy
 
  Image Viewer
 ================
@@ -39,7 +46,8 @@
 
  With some limitations, Ren'Py can simulate 3D camera motion. This will
  let you achieve a parallax effect by placing sprites and assets on a 3D field.
- This script works by applying ATL transforms to all displayables on 3D layers in a manner that respects distance from a virtual camera.
+ This script works by applying ATL transforms to all displayables on 3D layers
+ in a manner that respects distance from a virtual camera.
 
  To start using the 3D camera, set additional layers to be registered
  as 3D layers. If no layers are registered as 3D layers, this script will 
@@ -50,7 +58,10 @@
          config.layers = ['master', 'background', 'middle', 'forward', 'transient', 'screens', 'overlay']
 
  Second, register any layers that you want to respect 3D motion as 3d layers by using
- :func:`register_3d_layer`. The z coordinates of these layers can be moved and can have their positions and transforms affected by the camera. If no layers are registered as 3D layers, the default `master` layer becomes the sole 3D layer:
+ :func:`register_3d_layer`. The z coordinates of these layers can be moved and
+ can have their positions and transforms affected by the camera. If no layers
+ are registered as 3D layers, the default `master` layer becomes the sole 3D
+ layer:
 
          init python:
              register_3d_layer('background', 'middle', 'forward')
@@ -97,6 +108,8 @@
  * `camera_move`, `camera_moves`, `layer_move`, `layer_moves`, and `all_moves` can't play
    simultaneously within the same interaction. If multiple camera actions are called in the same interaction,
    only the last one will play out and earlier actions will be done instantenously before the last action is played.
+
+ * DOF is simulated using blur for layers, so note the back layer is often seen through the front layer.
 
  * By default, the `scene` and `hide` statements use the `master` layer or a specified layer.
    If you use 3D layers preferentially, write code like below:
@@ -524,9 +537,16 @@
  演出エディターでは以下の機能が利用可能です。:
  
  * 各画像の変換プロパティーやカメラ、レイヤー座標を直接入力またはバーの操作により変更
+ * 数値を右クリックでリセット
  * カメラアイコンのドラッグまたはマウスホイール、キーボード(hjkl,HJKL)によるカメラ移動
  * 動画編集ソフトの様にキーフレームを設定して時間軸にそった演出を作成
  * 作成した演出のコードをクリップボードに送る(v6.99以上, Windows限定)
+ * v7.40以降ではブラー機能を流用して擬似的に被写界深度(dof)の概念を導入しています
+   (gl2またはAngle2の有効化が必要です)
+   カメラからフォーカス分前方の位置からDOF離れた位置で1ピクセルのブラーが発生します。
+   DOFの数値でピントの合う範囲、Focusでピント位置を調整できます。
+   camera_config.rpyで細かい挙動を調整できます。
+   
 
  イメージビューワー
 ================
@@ -588,8 +608,9 @@
  * カメラモーションは3Dレイヤーに対して変換を適用して再現しているため、3Dレイヤーに対して show layer ステートメントや renpy.show_layer_at 関数は使用出来ません。
  * レイヤーの重なり順はレイヤーのz座標を反映しません。
  * camera_move, camera_moves, layer_move, layer_moves, all_moves はそれぞれ排他的です。ひとつのインタラクション中に複数回呼び出されると、最後に呼び出されたもののみが正常に動作し、それ以外は瞬時に移動します。
+ * 被写界深度はレイヤー毎のブラーを流用しているため、本物のブラーと違い裏側が透けて見えることがあります。
 
- デフォルトではRen'Pyの scene, show, hide ステートメントは master レイヤー又は指定されたレイヤーにのみ作用します。3Dレイヤーに対して優先的に作用させたい場合は以下のようにしてRen'Pyの設定を変更してください。
+ * デフォルトではRen'Pyの scene, show, hide ステートメントは master レイヤー又は指定されたレイヤーにのみ作用します。3Dレイヤーに対して優先的に作用させたい場合は以下のようにしてRen'Pyの設定を変更してください。
 
         init -1 python hide:
 
@@ -902,6 +923,22 @@
                    rotate座標に加えられます。
              `spline`
                  レイヤーの座標に対してスプライン補間を有効にします。True ならワーパーは無視されます。これはデフォルトでFalseです。
+             """
+
+        def dof_set(dof, duration=0, warper='linear', **kwargs):
+            """
+             :doc: camera
+
+             被写界深度を設定します。
+
+             `dof`
+                  `dof` はlayerにブラーがかからないz値の範囲で、デフォルトで9999999です
+             `duration`
+                  dof の変化が完了するのにかかる秒数です。時間を指定しなけれあば、
+                  瞬時に変化します。
+             `warper`
+                  \'ease\' のような登録された ATL warper も文字列です。
+                  指定されなければデフォルトで \'linear\' です。
              """
 
         def all_moves(camera_check_points=None, layer_check_points=None, subpixel=True, play=True, x_loop=False, y_loop=False, z_loop=False, rotate_loop=False, x_express=None, y_express=None, z_express=None, rotate_express=None, camera_spline=False, **kwargs):
