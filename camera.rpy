@@ -634,27 +634,27 @@ init -1599 python:
     def _ready_spline_camera_interpolation(camera_check_points):
         new_camera_check_points = {}
         new_camera_check_points["rotate"] = camera_check_points["rotate"]
-        new_camera_check_points["xanchor"] = []
-        new_camera_check_points["yanchor"] = []
-        new_camera_check_points["z"] = []
         MINTIME = 0.1
-        sx = [(t, v) for i, (v, t, w) in enumerate(camera_check_points["xanchor"]) if i+1 == len(camera_check_points["xanchor"]) or t != camera_check_points["xanchor"][i+1][1]]
-        sy = [(t, v) for i, (v, t, w) in enumerate(camera_check_points["yanchor"]) if i+1 == len(camera_check_points["yanchor"]) or t != camera_check_points["yanchor"][i+1][1]]
-        sz = [(t, v) for i, (v, t, w) in enumerate(camera_check_points["z"]) if i+1 == len(camera_check_points["z"]) or t != camera_check_points["z"][i+1][1]]
-        for i in _drange(0, camera_check_points["xanchor"][-1][1], MINTIME):
-            new_camera_check_points["xanchor"].append((_spline(sx, i), i, "linear"))
-        for i in _drange(0, camera_check_points["yanchor"][-1][1], MINTIME):
-            new_camera_check_points["yanchor"].append((_spline(sy, i), i, "linear"))
-        for i in _drange(0, camera_check_points["z"][-1][1], MINTIME):
-            new_camera_check_points["z"].append((_spline(sz, i), i, "linear"))
+        for coordinate in ["xanchor", "yanchor", "z"]:
+            sv = [(t, v) for i, (v, t, w) in enumerate(camera_check_points[coordinate]) if i+1 == len(camera_check_points[coordinate]) or t != camera_check_points[coordinate][i+1][1]]
+            if len(sv) > 2:
+                new_camera_check_points[coordinate] = []
+                for i in _drange(0, camera_check_points[coordinate][-1][1], MINTIME):
+                    new_camera_check_points[coordinate].append((_spline(sv, i), i, "linear"))
+            else:
+                new_camera_check_points[coordinate] = camera_check_points[coordinate]
+
         return new_camera_check_points
 
     def _ready_spline_layer_interpolation(layer_check_points):
-        new_layer_check_points = []
         MINTIME = 0.1
         sz = [(t, v) for i, (v, t, w) in enumerate(layer_check_points) if i+1 == len(layer_check_points) or t != layer_check_points[i+1][1]]
-        for i in _drange(0, layer_check_points[-1][1], MINTIME):
-            new_layer_check_points.append((_spline(sz, i), i, "linear"))
+        if len(sz) > 2:
+            new_layer_check_points = []
+            for i in _drange(0, layer_check_points[-1][1], MINTIME):
+                new_layer_check_points.append((_spline(sz, i), i, "linear"))
+        else:
+            new_layer_check_points = layer_check_points
         return new_layer_check_points
 
     def _drange(begin, end, step):
