@@ -1,5 +1,7 @@
  youtube sample
- <https://www.youtube.com/watch?v=XQDl9x9L-es>
+ <https://www.youtube.com/watch?v=VMMBj4-7k_Q>
+ <https://www.youtube.com/watch?v=lhA8Ib3iKE8>
+ 
 
  日本語マニュアルはドキュメント後半にあります。
 
