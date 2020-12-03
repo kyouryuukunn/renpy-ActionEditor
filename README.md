@@ -56,7 +56,7 @@
  as 3D layers. If no layers are registered as 3D layers, this script will 
  register the default `master` layer as a 3D layer.
 
- To get started, add the layers you need. For example, the following to 
+ To get started, add the layers you need. For example,  add the following to 
  options.rpy to add `background`, `middle`, and `forward` as regular 2D layers:
 
          config.layers = ['master', 'background', 'middle', 'forward', 'transient', 'screens', 'overlay']
