@@ -348,10 +348,10 @@ init -1598 python in _viewers:
                 self.state[layer] = {}
                 for tag in sle.layers[layer]:
                     if not tag[0]:
-                        break
+                        continue
                     d = sle.get_displayable_by_tag(layer, tag[0])
                     if isinstance(d, renpy.display.screen.ScreenDisplayable):
-                        break
+                        continue
                     pos = renpy.get_placement(d)
                     state = getattr(d, "state", None)
 
