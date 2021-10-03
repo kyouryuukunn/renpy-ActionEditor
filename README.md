@@ -1,5 +1,8 @@
  youtube sample
- <https://www.youtube.com/watch?v=XQDl9x9L-es>
+ Introduction <https://www.youtube.com/watch?v=VMMBj4-7k_Q>
+
+ Sample <https://www.youtube.com/watch?v=lhA8Ib3iKE8>
+ 
 
  日本語マニュアルはドキュメント後半にあります。
 
@@ -53,7 +56,8 @@
  as 3D layers. If no layers are registered as 3D layers, this script will 
  register the default `master` layer as a 3D layer.
 
- To get started, add the following to options.rpy to add `background`, `middle`, and `forward` as regular 2D layers:
+ To get started, add the layers you need. For example,  add the following to 
+ options.rpy to add `background`, `middle`, and `forward` as regular 2D layers:
 
          config.layers = ['master', 'background', 'middle', 'forward', 'transient', 'screens', 'overlay']
 
@@ -566,16 +570,16 @@
 
  例
 
-         options.rpy に以下のような設定を加え、'background', 'middle', 'forward' レイヤーを追加します。
+         options.rpy に3Dレイヤーにしたいレイヤーを追加します。例えば 'background', 'middle', 'forward' レイヤーを以下のように設定に追加します。
 
                 config.layers = [ 'master', 'background', 'middle', 'forward', 'transient', 'screens', 'overlay']
 
- 次に register_3d_layer 関数で3Dレイヤーを登録します。これらのレイヤーはz座標を移動出来、カメラの影響を受けます。register_3d_layerが使用されないと、デフォルトで"master"レイヤーが登録されます。
+ 次に register_3d_layer 関数で3Dレイヤーを登録します。登録したレイヤーはz座標を移動出来、カメラの影響を受けます。register_3d_layerが使用されないと、デフォルトで"master"レイヤーが登録されます。
 
         init python:
             register_3d_layer( 'background', 'middle', 'forward',)
 
- 以上の設定で、ゲーム中でカメラ動かせるようになります。
+ 以上の設定で、ゲーム中でカメラを動かすと3Dレイヤーが三次元を再現するように動作します。
 
         label start:
             # カメラ、レイヤー位置をリセット
