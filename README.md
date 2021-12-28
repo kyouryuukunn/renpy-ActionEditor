@@ -1,3 +1,11 @@
+With the introduction of 3Dstage in Ren'Py v7.46, this version has been discontinued.
+Now, ActionEditor3 is available
+https://github.com/kyouryuukunn/renpy-ActionEditor3
+
+Ren'Py v7.4.6で導入された3Dstageに合せて本バージョンは開発停止しました。
+以後のバージョンではActionEditor3をご利用ください。
+https://github.com/kyouryuukunn/renpy-ActionEditor3
+
  youtube sample
  Introduction <https://www.youtube.com/watch?v=VMMBj4-7k_Q>
 
